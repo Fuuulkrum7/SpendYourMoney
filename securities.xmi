@@ -63,7 +63,7 @@
       <packagedElement xmi:type="uml:Class" xmi:id="u8HzyUDSif6LQ" name="SecurityInfo">
         <ownedAttribute xmi:type="uml:Property" xmi:id="ucDV6rbTGIWSJ" name="figi" visibility="implementation" type="uQ6yOihUTNO99"/>
         <ownedAttribute xmi:type="uml:Property" xmi:id="u06ny0oQCP4at" name="ticker" visibility="implementation" type="uQ6yOihUTNO99"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="u5rKBlSojiSn5" name="issuer" visibility="implementation" type="uQ6yOihUTNO99"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="u5rKBlSojiSn5" name="name" visibility="implementation" type="uQ6yOihUTNO99"/>
         <ownedOperation xmi:type="uml:Operation" xmi:id="u4n1iuVPJV9Yd" name="get_figi">
           <ownedParameter xmi:type="uml:Parameter" xmi:id="ugdKrPbwqwIQM" type="uQ6yOihUTNO99" direction="return"/>
         </ownedOperation>
@@ -76,7 +76,7 @@
       </packagedElement>
       <xmi:Extension extender="umbrello">
         <diagrams resolution="96">
-          <diagram xmi.id="uTADheRHAvGBr" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="123.755" canvasheight="800" canvaswidth="1100" isopen="1">
+          <diagram xmi.id="uTADheRHAvGBr" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="93.5762" canvasheight="800" canvaswidth="1100" isopen="1">
             <widgets>
               <classwidget xmi.id="u8HzyUDSif6LQ" localid="uPxqSrhqEGd0M" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="29.0909" y="377.644" width="187" height="161" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
               <classwidget xmi.id="uoO9Xqal09D6P" localid="uHIbEVXVSQPH5" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="750.535" y="82.6105" width="252" height="253" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
@@ -88,7 +88,7 @@
               <assocwidget xmi.id="u4lsaM95F38bo" localid="u34y5JsVAV0dj" textcolor="none" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="1" usesdiagramusefillcolor="1" fillcolor="none" font="Cantarell,14,-1,5,50,0,0,0,0,0" autoresize="1" seqnum="" type="500" widgetaid="uRYg8iR4Q4clM" widgetbid="uXlEb16rIJhhA" indexa="0" totalcounta="0" indexb="0" totalcountb="0">
                 <linepath layout="Direct">
                   <startpoint startx="476.526" starty="704.4"/>
-                  <endpoint endx="476.841" endy="515.999"/>
+                  <endpoint endx="476.842" endy="515.999"/>
                 </linepath>
               </assocwidget>
               <assocwidget xmi.id="u7BIOjVtj7mzz" localid="uQ8APFecHWSlH" textcolor="none" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="1" usesdiagramusefillcolor="1" fillcolor="none" font="Cantarell,14,-1,5,50,0,0,0,0,0" autoresize="1" seqnum="" type="500" widgetaid="uoO9Xqal09D6P" widgetbid="uXlEb16rIJhhA" indexa="0" totalcounta="0" indexb="0" totalcountb="0">
@@ -115,7 +115,7 @@
     <packagedElement xmi:type="uml:Model" xmi:id="Entity_Relationship_Model" name="Entity Relationship Model"/>
   </uml:Model>
   <xmi:Extension extender="umbrello">
-    <docsettings viewid="uTADheRHAvGBr" documentation="" uniqueid="uQ9oNBqfJV6EE"/>
+    <docsettings viewid="uTADheRHAvGBr" documentation="" uniqueid="u5SUgIUhZPZja"/>
     <listview>
       <listitem id="Views" type="800" open="1">
         <listitem id="Use_Case_View" type="802" open="1"/>
@@ -127,6 +127,7 @@
             <listitem id="uGmyOoXmIAamr" type="829" open="0"/>
             <listitem id="uWkb1q25FevaC" type="829" open="0"/>
             <listitem id="ut4FFpiMuR3eb" type="829" open="0"/>
+            <listitem id="uw4CSbKkh72qS" type="829" open="0"/>
             <listitem id="uS92SRPscY0FL" type="829" open="0"/>
             <listitem id="uetHEvBv1wzQt" type="829" open="0"/>
             <listitem id="uSVjFOlA8unhG" type="829" open="0"/>
