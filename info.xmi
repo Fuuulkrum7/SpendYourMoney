@@ -49,6 +49,7 @@
           <ownedParameter xmi:type="uml:Parameter" xmi:id="u8TZnLrYJUuoX" name="file_name" visibility="private" type="uTyqgY4f5xPVI" value=""/>
         </ownedOperation>
         <ownedOperation xmi:type="uml:Operation" xmi:id="uY6qKUWUGM6TP" name="save_file" ownerScope="classifier">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="" type="uZsDqKiPHkXAJ" direction="return"/>
           <ownedParameter xmi:type="uml:Parameter" xmi:id="uc1FLZxP7PlOZ" name="file_name" visibility="private" type="uTyqgY4f5xPVI" value=""/>
           <ownedParameter xmi:type="uml:Parameter" xmi:id="u4BULrgP7nGVu" name="values" visibility="private" type="u6CUFK2J32QHn" value=""/>
         </ownedOperation>
@@ -80,7 +81,7 @@
               <classwidget xmi.id="u8B03PKR1IEh7" localid="uUPTxbss905WH" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="256" y="153" width="243" height="184" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
               <enumwidget xmi.id="uXbHlR8NHL5Zn" localid="umLShHUL5vefu" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="692" y="341" width="333" height="138" isinstance="0" showstereotype="2" showpackage="1"/>
               <classwidget xmi.id="uZAMhiFOM59wv" localid="uAcQiqiMRwfWy" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="293" y="447" width="164" height="69" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
-              <classwidget xmi.id="ukkl0aDh8wdbF" localid="uXqnzEE7sLELw" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="655" y="13" width="388" height="103" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
+              <classwidget xmi.id="ukkl0aDh8wdbF" localid="uXqnzEE7sLELw" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="655" y="13" width="440" height="103" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
             </widgets>
             <messages/>
             <associations>
@@ -116,7 +117,7 @@
     <packagedElement xmi:type="uml:Model" xmi:id="Entity_Relationship_Model" name="Entity Relationship Model"/>
   </uml:Model>
   <xmi:Extension extender="umbrello">
-    <docsettings viewid="uS2AjWkpgZRNm" documentation="" uniqueid="uv9qpa7HRUOiP"/>
+    <docsettings viewid="uS2AjWkpgZRNm" documentation="" uniqueid="uWLOqGCa8929W"/>
     <listview>
       <listitem id="Views" type="800" open="1">
         <listitem id="Use_Case_View" type="802" open="1"/>
@@ -125,7 +126,6 @@
           <listitem id="uS2AjWkpgZRNm" type="807" label="диаграмма классов" open="0"/>
           <listitem id="Datatypes" type="830" open="0">
             <listitem id="uZsDqKiPHkXAJ" type="829" open="0"/>
-            <listitem id="u4AilIjO9p4KJ" type="829" open="0"/>
             <listitem id="ud0NnmyD5EkLN" type="829" open="0"/>
             <listitem id="uBvPNo1P8PLlP" type="829" open="0"/>
             <listitem id="usrrE9Iz3ViPO" type="829" open="0"/>

@@ -1,6 +1,8 @@
 import asyncio
 from datetime import timedelta
 
+from database.database_interface import DatabaseInterface
+
 from tinkoff.invest import CandleInterval, AsyncClient, Client
 from tinkoff.invest.utils import now
 
@@ -11,12 +13,12 @@ async def main():
     async with AsyncClient(TOKEN) as client:
         async for candle in client.get_all_candles(
             figi="BBG0027F0Y27",
-            from_=now() - timedelta(hours=200),
-            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+            from_=now() - timedelta(hours=1),
+            interval=CandleInterval.CANDLE_INTERVAL_HOUR,
         ):
             print(candle)
 
-
+db = DatabaseInterface("any")
 """
 async def main():
     with Client(TOKEN) as client:

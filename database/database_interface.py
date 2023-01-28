@@ -1,5 +1,8 @@
 from enum import Enum
-import sqlalchemy
+from sqlalchemy import create_engine, Engine
+from info.file_loader import FileLoader
+from sqlalchemy_utils import database_exists, create_database
+import os
 
 
 class DatabaseValue:
@@ -24,12 +27,30 @@ class DatabaseValue:
 
 
 class DatabaseInterface:
-    db_name: str = ""
-    table_name: str = ""
+    table_name: str
+    __database: Engine = None
 
-    def __init__(self, db_name: str, table_name: str):
-        self.db_name = db_name
+    def __init__(self, table_name: str):
         self.table_name = table_name
+
+        folder = os.path.abspath("database_interface.py").split("/")
+        folder.pop()
+        folder = "/".join(folder)
+
+        info = FileLoader.get_json(folder + "/info/files/.database_info.json")
+        if info is None:
+            raise FileNotFoundError
+        name = info["name"]
+
+        try:
+            self.__database = create_engine("mysql+mysqldb://user:password@localhost/" + name)
+
+            if not database_exists(self.__database.url):
+                create_database(self.__database.url)
+        except Exception as e:
+            print(e)
+            raise e
+        # TODO change
 
     def add_data(self, values: list[DatabaseValue]):
         pass
