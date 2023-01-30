@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Engine
 from info.file_loader import FileLoader
 from sqlalchemy_utils import database_exists, create_database
 import os
+import asyncio
 
 
 class DatabaseValue:
@@ -33,6 +34,9 @@ class DatabaseInterface:
     def __init__(self, table_name: str):
         self.table_name = table_name
 
+        asyncio.run(self.__connect_to_db())
+
+    async def __connect_to_db(self):
         folder = os.path.abspath("database_interface.py").split("/")
         folder.pop()
         folder = "/".join(folder)
@@ -43,26 +47,26 @@ class DatabaseInterface:
         name = info["name"]
 
         try:
-            self.__database = create_engine("mysql+mysqldb://user:password@localhost/" + name)
+            self.__database = create_engine("mysql+pymysql://user:password@localhost/" + name)
 
             if not database_exists(self.__database.url):
                 create_database(self.__database.url)
         except Exception as e:
             print(e)
-            raise e
+            # raise e
         # TODO change
 
-    def add_data(self, values: list[DatabaseValue]):
+    async def add_data(self, values: list[DatabaseValue]):
         pass
 
-    def add_unique_data(self, rows: list[DatabaseValue]):
+    async def add_unique_data(self, rows: list[DatabaseValue]):
         pass
 
-    def get_data(self, rows: list[Enum]) -> list[DatabaseValue]:
+    async def get_data(self, rows: list[Enum]) -> list[DatabaseValue]:
         pass
 
-    def clear_db(self) -> int:
+    async def clear_db(self) -> int:
         pass
 
-    def drop_table(self) -> int:
+    async def drop_table(self) -> int:
         pass
