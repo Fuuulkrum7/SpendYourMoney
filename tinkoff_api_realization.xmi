@@ -27,7 +27,7 @@
       </uml:Package>
       <xmi:Extension extender="umbrello">
         <diagrams resolution="96">
-          <diagram xmi.id="u6CBemPqr7JBF" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="100" canvasheight="800" canvaswidth="1100" isopen="1">
+          <diagram xmi.id="u6CBemPqr7JBF" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="11" canvasheight="800" canvaswidth="1100" isopen="1">
             <widgets/>
             <messages/>
             <associations/>
@@ -54,10 +54,19 @@
             <listitem id="upS9CGVsIew8t" type="829" open="0"/>
             <listitem id="uqkceUZvRT7K3" type="829" open="0"/>
             <listitem id="u8rAzm1niCEJr" type="829" open="0"/>
+            <listitem id="uN1HqazYnNRZV" type="829" open="0"/>
+            <listitem id="uno4c5yusKQbI" type="829" open="0"/>
+            <listitem id="uMajWie7cWZ94" type="829" open="0"/>
+            <listitem id="u8rv3jFebWTEo" type="829" open="0"/>
             <listitem id="uDBnqb7nrdWpD" type="829" open="0"/>
+            <listitem id="uR9nowz3fZAvS" type="829" open="0"/>
             <listitem id="uPzto9TbYdCI4" type="829" open="0"/>
+            <listitem id="u6sXEcF3mwRlo" type="829" open="0"/>
+            <listitem id="uy5eObyAaJVpj" type="829" open="0"/>
             <listitem id="uGWNnbjVa7K5c" type="829" open="0"/>
+            <listitem id="uaagIFY6w3MKG" type="829" open="0"/>
             <listitem id="udnYbz2DRj56A" type="829" open="0"/>
+            <listitem id="ubOCMnAmRiFOP" type="829" open="0"/>
           </listitem>
         </listitem>
         <listitem id="Entity_Relationship_Model" type="836" open="1"/>

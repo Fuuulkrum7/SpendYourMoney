@@ -3,7 +3,6 @@ from sqlalchemy import create_engine, Engine
 from info.file_loader import FileLoader
 from sqlalchemy_utils import database_exists, create_database
 import os
-import asyncio
 
 
 class DatabaseValue:
@@ -29,14 +28,13 @@ class DatabaseValue:
 
 class DatabaseInterface:
     table_name: str
+    db_name: str
     __database: Engine = None
+    connected: int = 0
 
     def __init__(self, table_name: str):
         self.table_name = table_name
 
-        asyncio.run(self.__connect_to_db())
-
-    async def __connect_to_db(self):
         folder = os.path.abspath("database_interface.py").split("/")
         folder.pop()
         folder = "/".join(folder)
@@ -44,17 +42,20 @@ class DatabaseInterface:
         info = FileLoader.get_json(folder + "/info/files/.database_info.json")
         if info is None:
             raise FileNotFoundError
-        name = info["name"]
+        self.db_name = info["name"]
 
+        # asyncio.run(self.__connect_to_db())
+
+    async def __connect_to_db(self):
         try:
-            self.__database = create_engine("mysql+pymysql://user:password@localhost/" + name)
+            self.__database = create_engine("mysql+pymysql://user:password@localhost/" + self.db_name)
 
             if not database_exists(self.__database.url):
                 create_database(self.__database.url)
+                self.connected = 1
         except Exception as e:
             print(e)
-            # raise e
-        # TODO change
+            self.connected = -1
 
     async def add_data(self, values: list[DatabaseValue]):
         pass
@@ -70,3 +71,6 @@ class DatabaseInterface:
 
     async def drop_table(self) -> int:
         pass
+
+    def check_connection(self):
+        return self.connected
