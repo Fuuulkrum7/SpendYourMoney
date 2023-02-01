@@ -4,11 +4,14 @@ from typing import Sized
 
 class FileLoader:
     @staticmethod
-    def get_file(file_name: str) -> list[Sized] | None:
+    def get_file(file_name: str, datatype=list) -> list[Sized] | str | None:
         try:
             file = open(file_name)
-            res = file.read().splitlines()
-            res = list(filter(len, res))
+            res = file.read()
+            if datatype == list:
+                res = res.splitlines()
+                res = list(filter(len, res))
+
             file.flush()
         except FileNotFoundError:
             res = None

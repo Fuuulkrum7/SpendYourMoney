@@ -1,41 +1,16 @@
-from account_status import AccountStatus
-from access_level import AccessLevel
+from info.account_status import AccountStatus
+from info.access_level import AccessLevel
 
 
 class User:
-    """
-  :version:
-  :author:
-  """
-
-    """ ATTRIBUTES
-
-  username  (public)
-
-  token  (private)
-
-  user_id  (private)
-
-  status  (implementation)
-
-  access_level  (private)
-
-  """
+    username: str
+    __token: str
+    __user_id: int
+    status: AccountStatus
+    access_level: AccessLevel
 
     def get_token(self):
-        """
-     
-
-    @return string :
-    @author
-    """
-        pass
+        return self.__token
 
     def get_uid(self):
-        """
-     
-
-    @return int :
-    @author
-    """
-        pass
+        return self.__user_id

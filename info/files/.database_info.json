@@ -1,4 +1,15 @@
 {
   "version": 1,
-  "name": "SpendYourMoney"
+  "name": "SpendYourMoney",
+  "tables":
+          [
+            "user",
+            "securities_info",
+            "bonds_info",
+            "coupon_info",
+            "stocks_info",
+            "dividend_info",
+            "securities_history",
+            "history_of_predictions"
+          ]
 }

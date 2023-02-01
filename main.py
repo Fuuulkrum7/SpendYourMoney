@@ -6,6 +6,8 @@ from database.database_interface import DatabaseInterface
 from tinkoff.invest import CandleInterval, AsyncClient, Client
 from tinkoff.invest.utils import now
 
+from info.info import Info, User, Theme
+
 TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTOfiVKjd7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
 
 
@@ -18,7 +20,8 @@ async def main():
         ):
             print(candle)
 
-db = DatabaseInterface("any")
+db = DatabaseInterface()
+asyncio.run(db.connect_to_db())
 """
 async def main():
     with Client(TOKEN) as client:

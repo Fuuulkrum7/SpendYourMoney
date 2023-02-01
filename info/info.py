@@ -1,5 +1,5 @@
-from user import User
-from theme import Theme
+from info.user import User
+from info.theme import Theme
 
 
 class Info:
@@ -9,7 +9,9 @@ class Info:
     """
     user: User
     theme: Theme
+    path: str
 
-    def __init__(self, user: User, theme: Theme):
+    def __init__(self, user: User, theme: Theme, path: str):
         self.user = user
         self.theme = theme
+        self.path = path
