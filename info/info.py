@@ -10,3 +10,6 @@ class Info:
     user: User
     theme: Theme
 
+    def __init__(self, user: User, theme: Theme):
+        self.user = user
+        self.theme = theme
