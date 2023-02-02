@@ -48,8 +48,6 @@ class DatabaseInterface:
         try:
             self.__engine = create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost/" + self.info["name"])
 
-            self.clear_db()
-
             if not database_exists(self.__engine.url):
                 print("it's ok, we're just creating db")
                 self.create_database()

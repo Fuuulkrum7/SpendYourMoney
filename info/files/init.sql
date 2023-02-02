@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS securities_info (
     ID INT NOT NULL AUTO_INCREMENT,
     figi CHAR(14),
     ticker CHAR(15),
-    name CHAR(30),
+    security_name CHAR(30),
     class_code CHAR(10),
     lot INT,
     currency CHAR(5),

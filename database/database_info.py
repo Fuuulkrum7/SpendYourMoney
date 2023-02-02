@@ -47,7 +47,7 @@ class SecuritiesInfo(Enum):
     ID = "INT NOT NULL AUTO_INCREMENT"
     figi = "CHAR"
     ticker = "CHAR"
-    name = "CHAR"
+    security_name = "CHAR"
     class_code = "CHAR"
     lot = "INT"
     currency = "CHAR"

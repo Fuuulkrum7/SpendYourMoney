@@ -25,10 +25,26 @@
         <packagedElement xmi:type="uml:DataType" xmi:id="uN1HqazYnNRZV" name="long double" stereotype="dataType"/>
         <packagedElement xmi:type="uml:DataType" xmi:id="ubOCMnAmRiFOP" name="wchar_t" stereotype="dataType"/>
       </uml:Package>
+      <packagedElement xmi:type="uml:Class" xmi:id="u73M7AtxOndQj" name="GetSecurity">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="u3JtYmqYbD52d" name="security_info" type="uxdM2sqTZeezU"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="uPQ5zvefTs7Yc" name="security" type="uMTIsry9Q5sDG"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="uKejhev8k0LWx" name="getSecurityByApi"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="ubVVgp4Nl4MEd" name="parse_as_bond" visibility="implementation"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="uJK44LP6XXARa" name="parse_as_stock" visibility="implementation"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="uz1nSHyfzITVD" name="to_security" visibility="implementation"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="uR0Rs2KSEn8Gg" name="insert_to_database">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="uQHR4yFQLdHik" name="table" visibility="private" type="u6sXEcF3mwRlo" value=""/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="uonbB90747s52" name="parsable" visibility="private" type="uMTIsry9Q5sDG" value=""/>
+        </ownedOperation>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="uxdM2sqTZeezU" name="SecurityInfo"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="uMTIsry9Q5sDG" name="Security"/>
       <xmi:Extension extender="umbrello">
         <diagrams resolution="96">
-          <diagram xmi.id="u6CBemPqr7JBF" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="11" canvasheight="800" canvaswidth="1100" isopen="1">
-            <widgets/>
+          <diagram xmi.id="u6CBemPqr7JBF" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="93.5762" canvasheight="800" canvaswidth="1100" isopen="1">
+            <widgets>
+              <classwidget xmi.id="u73M7AtxOndQj" localid="uiilwWBcrWRnu" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="480.142" y="50" width="466" height="184" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
+            </widgets>
             <messages/>
             <associations/>
           </diagram>
@@ -41,7 +57,7 @@
     <packagedElement xmi:type="uml:Model" xmi:id="Entity_Relationship_Model" name="Entity Relationship Model"/>
   </uml:Model>
   <xmi:Extension extender="umbrello">
-    <docsettings viewid="u6CBemPqr7JBF" documentation="" uniqueid="ubOCMnAmRiFOP"/>
+    <docsettings viewid="u6CBemPqr7JBF" documentation="" uniqueid="uonbB90747s52"/>
     <listview>
       <listitem id="Views" type="800" open="1">
         <listitem id="Use_Case_View" type="802" open="1"/>
@@ -68,6 +84,17 @@
             <listitem id="udnYbz2DRj56A" type="829" open="0"/>
             <listitem id="ubOCMnAmRiFOP" type="829" open="0"/>
           </listitem>
+          <listitem id="u73M7AtxOndQj" type="813" open="1">
+            <listitem id="uKejhev8k0LWx" type="815" open="0"/>
+            <listitem id="uR0Rs2KSEn8Gg" type="815" open="0"/>
+            <listitem id="ubVVgp4Nl4MEd" type="815" open="0"/>
+            <listitem id="uJK44LP6XXARa" type="815" open="0"/>
+            <listitem id="uPQ5zvefTs7Yc" type="814" open="0"/>
+            <listitem id="u3JtYmqYbD52d" type="814" open="0"/>
+            <listitem id="uz1nSHyfzITVD" type="815" open="0"/>
+          </listitem>
+          <listitem id="uMTIsry9Q5sDG" type="813" open="1"/>
+          <listitem id="uxdM2sqTZeezU" type="813" open="1"/>
         </listitem>
         <listitem id="Entity_Relationship_Model" type="836" open="1"/>
         <listitem id="Deployment_View" type="827" open="1"/>
