@@ -1,27 +1,36 @@
 import asyncio
 from datetime import timedelta
+import threading
 
 from database.database_interface import DatabaseInterface
+from info.info import Info, User, Theme
 
 from tinkoff.invest import CandleInterval, AsyncClient, Client
 from tinkoff.invest.utils import now
 
-from info.info import Info, User, Theme
 
 TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTOfiVKjd7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
+
+
+def init_db():
+    db = DatabaseInterface()
+    db.connect_to_db()
 
 
 async def main():
     async with AsyncClient(TOKEN) as client:
         async for candle in client.get_all_candles(
             figi="BBG006L8G4H1",
-            from_=now() - timedelta(minutes=10),
+            from_=now() - timedelta(minutes=1),
             interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
         ):
             print(candle)
 
-db = DatabaseInterface()
-asyncio.run(db.connect_to_db())
+
+th = threading.Thread(target=init_db)
+th.start()
+
+print("hello")
 """
 async def main():
     with Client(TOKEN) as client:

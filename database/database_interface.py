@@ -44,7 +44,7 @@ class DatabaseInterface:
             raise FileNotFoundError
         self.info = info
 
-    async def connect_to_db(self):
+    def connect_to_db(self):
         try:
             self.__engine = create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost/" + self.info["name"])
 
@@ -52,20 +52,20 @@ class DatabaseInterface:
 
             if not database_exists(self.__engine.url):
                 print("it's ok, we're just creating db")
-                await self.create_database()
+                self.create_database()
 
                 self.connected = 1
         except Exception as e:
             print(e)
             self.connected = -1
 
-    async def add_data(self, values: list[DatabaseValue]):
+    def add_data(self, values: list[DatabaseValue]):
         pass
 
-    async def add_unique_data(self, rows: list[DatabaseValue]):
+    def add_unique_data(self, rows: list[DatabaseValue]):
         pass
 
-    async def get_data(self, rows: list[Enum]) -> list[DatabaseValue]:
+    def get_data(self, rows: list[Enum]) -> list[DatabaseValue]:
         pass
 
     def clear_db(self):
@@ -76,15 +76,18 @@ class DatabaseInterface:
             self.connected = -2
         self.connected = 0
 
-    async def drop_table(self) -> int:
+    def drop_table(self) -> int:
         pass
 
     def check_connection(self):
         return self.connected
 
-    async def create_database(self):
-        script = FileLoader.get_file(self.__path + "/info/files/init.sql", datatype=str)
+    def create_database(self):
+        scripts = FileLoader.get_file(self.__path + "/info/files/init.sql", datatype=str)
 
         self.__engine.execute("CREATE DATABASE " + self.info["name"])
         self.__engine.execute("USE " + self.info["name"])
-        self.__engine.execute(script)
+
+        scripts = list(filter(len, scripts.replace("\n", "").split(";")))
+        for script in scripts:
+            self.__engine.execute(script)
