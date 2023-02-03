@@ -21,8 +21,8 @@ async def main():
     async with AsyncClient(TOKEN) as client:
         async for candle in client.get_all_candles(
             figi="BBG006L8G4H1",
-            from_=now() - timedelta(minutes=1),
-            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+            from_=now() - timedelta(days=365),
+            interval=CandleInterval.CANDLE_INTERVAL_DAY,
         ):
             print(candle)
 

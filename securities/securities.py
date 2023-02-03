@@ -31,7 +31,7 @@ class SecurityInfo:
         elif isinstance(args[0], SecurityInfo):
             s: SecurityInfo = args[0]
             self.__init__(s.id, s.figi, s.ticker, s.name)
-        # 
+        #
         elif isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
             d: list[DatabaseValue] = args[0]
             for value in d:
