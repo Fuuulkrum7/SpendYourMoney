@@ -17,6 +17,7 @@ def init_db():
     db.connect_to_db()
 
 
+"""
 async def main():
     async with AsyncClient(TOKEN) as client:
         async for candle in client.get_all_candles(
@@ -38,7 +39,6 @@ async def main():
         for i in r.instruments:
             print(i)
         print(len(list(filter(lambda x: x.instrument_type in ["bond"], r.instruments))))
-"""
 
 
 if __name__ == "__main__":

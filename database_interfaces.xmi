@@ -52,6 +52,7 @@
         <ownedAttribute xmi:type="uml:Property" xmi:id="u2epkS0orhiKo" name="table_name" visibility="implementation" type="ulIGe7TrvOG9G"/>
         <ownedOperation xmi:type="uml:Operation" xmi:id="u7RKIB3oJkYTU" name="add_data">
           <ownedParameter xmi:type="uml:Parameter" xmi:id="ugXiTWvAsTWB5" name="values" visibility="private" type="uGZ7RAMFpQFW6" value=""/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="utWdj9NbdlcmN" name="table" visibility="private" type="ulIGe7TrvOG9G" value=""/>
         </ownedOperation>
         <ownedOperation xmi:type="uml:Operation" xmi:id="uyo4MztceLflc" name="get_data" comment="Вообще возвращаться будет массив, но приложение, где создана диаграмма,не понимает, что такое массив">
           <ownedParameter xmi:type="uml:Parameter" xmi:id="" type="uGZ7RAMFpQFW6" direction="return"/>
@@ -160,7 +161,7 @@
               <enumwidget xmi.id="u0iyf3av1R6P4" localid="uvCcxwtZjvM6y" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="362.117" y="522.559" width="198" height="230" isinstance="0" showstereotype="2" showpackage="1"/>
               <enumwidget xmi.id="u2jXgVaTOitAN" localid="uKpRHdj1qovBE" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="52.7128" y="50.835" width="164" height="184" isinstance="0" showstereotype="2" showpackage="1"/>
               <enumwidget xmi.id="ulDXG3vlYgb4f" localid="ukjGoCdeD9aJ7" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="53.2074" y="312.651" width="170" height="253" isinstance="0" showstereotype="2" showpackage="1"/>
-              <classwidget xmi.id="uyIB2WaE0CD90" localid="u2BfHzMUXkAjW" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="555.927" y="304.362" width="385" height="184" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
+              <classwidget xmi.id="uyIB2WaE0CD90" localid="u2BfHzMUXkAjW" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="555.927" y="304.362" width="422" height="184" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
             </widgets>
             <messages/>
             <associations/>
@@ -174,7 +175,7 @@
     <packagedElement xmi:type="uml:Model" xmi:id="Entity_Relationship_Model" name="Entity Relationship Model"/>
   </uml:Model>
   <xmi:Extension extender="umbrello">
-    <docsettings viewid="urGq8Mk1oaqVW" documentation="" uniqueid="uIluh7TPygKfL"/>
+    <docsettings viewid="urGq8Mk1oaqVW" documentation="" uniqueid="utWdj9NbdlcmN"/>
     <listview>
       <listitem id="Views" type="800" open="1">
         <listitem id="Use_Case_View" type="802" open="1"/>
@@ -183,8 +184,10 @@
           <listitem id="urGq8Mk1oaqVW" type="807" label="диаграмма классов" open="0"/>
           <listitem id="Datatypes" type="830" open="0">
             <listitem id="uGH2CCX2AbeVC" type="829" open="0"/>
+            <listitem id="uqyplOV2Le1kH" type="829" open="0"/>
             <listitem id="uYWvljJgZj31r" type="829" open="0"/>
             <listitem id="uBwE5YXw9BH7b" type="829" open="0"/>
+            <listitem id="u5l2lJ81p14of" type="829" open="0"/>
             <listitem id="uJRhthBFNAZWS" type="829" open="0"/>
             <listitem id="uGfr5RdhVXbcW" type="829" open="0"/>
             <listitem id="uCLDCAeAbBcyM" type="829" open="0"/>
