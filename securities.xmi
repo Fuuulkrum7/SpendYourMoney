@@ -234,13 +234,13 @@
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="uJCJz7sne8iDZ" name="SecurityHistory">
         <ownedAttribute xmi:type="uml:Property" xmi:id="uQrJ5Z7Hdvj2b" name="security_id" type="uw4CSbKkh72qS"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="uK0JLNuKlSXKk" name="time" type="uLS63zxTPiorl"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="u86Hjk8u57kXI" name="price" type="uWkb1q25FevaC"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="uXOjYYyPk4eqT" name="volume" type="uw4CSbKkh72qS"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="uXOjYYyPk4eqT" name="volume" type="uw4CSbKkh72qS" initialValue="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="uswydkG73SVsI" name="price" type="uWkb1q25FevaC"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="uQSj6cZNdBq0W" name="datetime" type="uQ6yOihUTNO99"/>
         <ownedOperation xmi:type="uml:Operation" xmi:id="uHQxjDePAPORa" name="get_trading_volume">
           <ownedParameter xmi:type="uml:Parameter" xmi:id="usU1jGXbg8Lg9" type="uWkb1q25FevaC" direction="return"/>
         </ownedOperation>
-        <ownedOperation xmi:type="uml:Operation" xmi:id="ugJQUpLQmwIkZ" name="def get_as_database_value"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="ugJQUpLQmwIkZ" name="get_as_database_value"/>
       </packagedElement>
       <packagedElement xmi:type="uml:Enumeration" xmi:id="uDCGkatvZfgEG" name="SecurityType" stereotype="enum">
         <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="u3rhlm6lhXptx" name="stock" value="0"/>
@@ -248,7 +248,7 @@
       </packagedElement>
       <xmi:Extension extender="umbrello">
         <diagrams resolution="96">
-          <diagram xmi.id="uTADheRHAvGBr" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="1" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="53.5025" canvasheight="1112.48" canvaswidth="1559.36" isopen="1">
+          <diagram xmi.id="uTADheRHAvGBr" name="диаграмма классов" type="1" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0" griddotcolor="#d3d3d3" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="1" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="75" canvasheight="1112.48" canvaswidth="1559.36" isopen="1">
             <widgets>
               <classwidget xmi.id="uj5i0pezagDbr" localid="uuUuu82GmYFNF" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="1254.74" y="287.004" width="303" height="345" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
               <classwidget xmi.id="uRYg8iR4Q4clM" localid="ui3jGKAlILWl5" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="0" usesdiagramusefillcolor="0" fillcolor="#ffffc0" font="Cantarell,14,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="459.879" y="744.481" width="266" height="368" isinstance="0" showstereotype="2" showoperations="1" showpubliconly="0" showopsigs="601" showpackage="1" showscope="1" showattributes="1" showattsigs="601"/>
@@ -328,7 +328,7 @@
     <packagedElement xmi:type="uml:Model" xmi:id="Entity_Relationship_Model" name="Entity Relationship Model"/>
   </uml:Model>
   <xmi:Extension extender="umbrello">
-    <docsettings viewid="uTADheRHAvGBr" documentation="" uniqueid="utLBcaySoXAOI"/>
+    <docsettings viewid="uTADheRHAvGBr" documentation="" uniqueid="uQSj6cZNdBq0W"/>
     <listview>
       <listitem id="Views" type="800" open="1">
         <listitem id="Use_Case_View" type="802" open="1"/>
@@ -337,6 +337,7 @@
           <listitem id="uTADheRHAvGBr" type="807" label="диаграмма классов" open="0"/>
           <listitem id="Datatypes" type="830" open="0">
             <listitem id="umJkwuI9COghK" type="829" open="0"/>
+            <listitem id="uGmyOoXmIAamr" type="829" open="0"/>
             <listitem id="uWkb1q25FevaC" type="829" open="0"/>
             <listitem id="ut4FFpiMuR3eb" type="829" open="0"/>
             <listitem id="uw4CSbKkh72qS" type="829" open="0"/>
@@ -441,11 +442,11 @@
             <listitem id="uaqa1091HWIPI" type="814" open="0"/>
           </listitem>
           <listitem id="uJCJz7sne8iDZ" type="813" open="1">
+            <listitem id="uQSj6cZNdBq0W" type="814" open="0"/>
             <listitem id="ugJQUpLQmwIkZ" type="815" open="0"/>
             <listitem id="uHQxjDePAPORa" type="815" open="0"/>
-            <listitem id="u86Hjk8u57kXI" type="814" open="0"/>
+            <listitem id="uswydkG73SVsI" type="814" open="0"/>
             <listitem id="uQrJ5Z7Hdvj2b" type="814" open="0"/>
-            <listitem id="uK0JLNuKlSXKk" type="814" open="0"/>
             <listitem id="uXOjYYyPk4eqT" type="814" open="0"/>
           </listitem>
           <listitem id="u8HzyUDSif6LQ" type="813" open="1">
