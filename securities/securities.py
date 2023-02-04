@@ -63,7 +63,7 @@ class SecurityInfo:
 class Coupon:
     # Сколько аргументов передано должно быть передано
     __requires = 7
-    coupon_id: int
+    coupon_id: int = 0
     coupon_date: date
     coupon_number: int
     fix_date: date
@@ -72,26 +72,34 @@ class Coupon:
     security_id: int
 
     def __init__(
-            self,
-            coupon_id: int,
-            coupon_date: date | str,
-            coupon_number: int,
-            fix_date: date | str,
-            pay_one_bond: float,
-            coupon_type: int):
-        if isinstance(coupon_date, str):
-            self.coupon_date = datetime.strptime(coupon_date, "%Y-%m-%d").date()
-        else:
-            self.coupon_date = coupon_date
-        if isinstance(fix_date, str):
-            self.fix_date = datetime.strptime(fix_date, "%Y-%m-%d").date()
-        else:
-            self.fix_date = fix_date
+            self, *args):
+        if len(args) == 1 and isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
+            d: list[DatabaseValue] = args[0]
+            for value in d:
+                if value.get_row_name() == CouponInfo.coupon_date:
+                    if isinstance(value.get_value(), str):
+                        self.coupon_date = datetime.strptime(str(value.get_value()), "%Y-%m-%d").date()
+                    else:
+                        self.coupon_date = value.get_value()
+                elif value.get_row_name() == CouponInfo.fix_date:
+                    if isinstance(value.get_value(), str):
+                        self.fix_date = datetime.strptime(value.get_value(), "%Y-%m-%d").date()
+                    else:
+                        self.fix_date = value.get_value()
 
-        self.coupon_id = coupon_id
-        self.coupon_number = coupon_number
-        self.pay_one_bound = pay_one_bond
-        self.coupon_type = CouponType(coupon_type)
+                elif value.get_row_name() == CouponInfo.ID:
+                    self.coupon_id = value.get_value()
+                elif value.get_row_name() == CouponInfo.coupon_number:
+                    self.coupon_number = value.get_value()
+                elif value.get_row_name() == CouponInfo.pay_one_bond:
+                    self.pay_one_bound = value.get_value()
+                elif value.get_row_name() == CouponInfo.coupon_type:
+                    self.coupon_type = CouponType(value.get_value())
+                elif value.get_row_name() == CouponInfo.security_id:
+                    self.security_id = value.get_value()
+                else:
+                    self.coupon_id = -1
+                    return
 
     def get_as_database_value(self) -> list[DatabaseValue]:
         values: list[DatabaseValue] = [
@@ -183,7 +191,7 @@ class Security:
 
 class Bond(Security):
     rate: float
-    payments_per_year: int
+    coupon_quantity_per_year: int
     nominal: float = 1000
     amortization: bool
     maturity_date: date
@@ -195,28 +203,56 @@ class Bond(Security):
     perpetual: bool
     coupon: Coupon
 
-    def __init__(self, payments_per_year: int, nominal: float, amortization: bool, maturity_date: date | str,
-                 bound_id: int, aci_value: float, coupon: Coupon, issue_size: int, issue_plan: int,
-                 floating_coupon: bool, perpetual: bool,
-                 *args):
-        if len(args) == 1:
+    def __init__(self, *args):
+        """
+        :param args: list[DatabaseValue] for Security or Security, list[DatabaseValue] for Bond,
+        list[DatabaseValue] for Coupon
+        """
+        if len(args) == 3 and ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue))
+                               or (isinstance(args[0], Security))) \
+                and isinstance(args[1], list) and isinstance(args[1][0], DatabaseValue) and \
+                isinstance(args[2], list) and isinstance(args[2][0], DatabaseValue):
             super.__init__(args[0])
-        else:
-            super().__init__(*args)
-        self.payments_per_year = payments_per_year
-        self.nominal = nominal
-        self.rate = round(coupon.pay_one_bound * payments_per_year / nominal * 100, 2)
 
-        if isinstance(maturity_date, str):
-            self.maturity_date = datetime.strptime(maturity_date, "%Y-%m-%d").date()
-        else:
-            self.maturity_date = maturity_date
+            d: list[DatabaseValue] = args[1]
+            for value in d:
+                if value.get_row_name() == BondsInfo.coupon_quantity_per_year:
+                    self.coupon_quantity_per_year = value.get_value()
+                elif value.get_row_name() == BondsInfo.nominal:
+                    self.nominal = value.get_value()
+                elif value.get_row_name() == BondsInfo.maturity_date:
+                    if isinstance(value.get_value(), str):
+                        self.maturity_date = datetime.strptime(value.get_value(), "%Y-%m-%d").date()
+                    else:
+                        self.maturity_date = value.get_value()
+                elif value.get_row_name() == BondsInfo.amortization_flag:
+                    self.amortization = value.get_value()
+                elif value.get_row_name() == BondsInfo.ID:
+                    self.bond_id = value.get_value()
+                elif value.get_row_name() == BondsInfo.aci_value:
+                    self.aci_value = value.get_value()
+                elif value.get_row_name() == BondsInfo.issue_size:
+                    self.issue_size = value.get_value()
+                elif value.get_row_name() == BondsInfo.issue_size_plan:
+                    self.issue_size_plan = value.get_value()
+                elif value.get_row_name() == BondsInfo.floating_coupon_flag:
+                    self.floating_coupon = value.get_value()
+                elif value.get_row_name() == BondsInfo.perpetual_flag:
+                    self.perpetual = value.get_value()
+                else:
+                    self.bond_id = -1
+                    try:
+                        self.info.id = -1
+                    except Exception as e:
+                        print(e)
+                    return
 
-        self.amortization = amortization
-        self.bond_id = bound_id
-        self.aci_value = aci_value
-        self.issue_size = issue_size
-        self.issue_size_plan = issue_plan
-        self.floating_coupon = floating_coupon
-        self.perpetual = perpetual
-        self.coupon = coupon
+            self.coupon = Coupon(args[2])
+            if self.coupon.coupon_id >= 0:
+                self.rate = round(self.coupon.pay_one_bound * self.coupon_quantity_per_year / self.nominal * 100, 2)
+            else:
+                self.bond_id = -1
+                self.info.id = -1
+        else:
+            super().__init__()
+            self.bond_id = -1

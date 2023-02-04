@@ -24,7 +24,7 @@ class DatabaseValue:
     def get_type(self) -> str:
         return str(self.__row.value)
 
-    def get_value(self) -> object:
+    def get_value(self):
         return self.__value
 
 
