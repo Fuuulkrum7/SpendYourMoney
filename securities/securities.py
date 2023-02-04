@@ -1,7 +1,7 @@
 from database.database_interface import DatabaseValue
 from database.database_info import SecuritiesInfo, \
     CouponInfo, DividendInfo, BondsInfo, StocksInfo
-from securiries_types import StockType, CouponType
+from securiries_types import StockType, CouponType, SecurityType
 from datetime import datetime, date
 
 
@@ -69,7 +69,7 @@ class Coupon:
     fix_date: date
     pay_one_bound: float
     coupon_type: CouponType
-    security_id: int
+    security_id: SecurityType
 
     def __init__(
             self, *args):
@@ -116,18 +116,19 @@ class Coupon:
 
 
 class Security:
-    __required_args = 5
+    __required_args = 6
     class_code: str
     lot: int
     currency: str
     country: str
     sector: str
     info: SecurityInfo
+    security_type: SecurityType
 
     def __init__(self, *args):
         """
-        :param args: class_code, lot, currency, country, sector, other - like for SecurityInfo;
-        :type args: str, int, str, str, str, other like in SecurityInfo.
+        :param args: class_code, lot, currency, country, sector, security_type, SecurityInfo or others
+                                                                                        - like for SecurityInfo;
         """
         if not len(args):
             self.info.id = SecurityInfo()
@@ -137,18 +138,20 @@ class Security:
             self.currency = args[2]
             self.country = args[3]
             self.sector = args[4]
-            self.info = args[5]
+            self.security_type = args[5]
+            self.info = args[6]
         elif len(args) == self.__required_args + SecurityInfo.required_args:
             self.class_code = args[0]
             self.lot = args[1]
             self.currency = args[2]
             self.country = args[3]
             self.sector = args[4]
-            self.info = SecurityInfo(args[5:len(args)])
+            self.security_type = args[5]
+            self.info = SecurityInfo(args[6:len(args)])
         elif isinstance(args[0], Security):
             s: Security = args[0]
             self.__init__(s.class_code, s.lot, s.currency, s.country,
-                          s.info, s.sector)
+                          s.sector, s.security_type, s.info)
         elif isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
             d: list[DatabaseValue] = args[0]
             for_info: list[DatabaseValue] = []
@@ -165,6 +168,8 @@ class Security:
                     self.sector = str(value.get_value())
                 elif value.get_row_name() in [i.name for i in SecuritiesInfo]:
                     for_info.append(value)
+                elif value.get_row_name() == SecuritiesInfo.security_type:
+                    self.security_type = SecurityType(value.get_value())
                 else:
                     self.info.id = SecurityInfo()
                     return

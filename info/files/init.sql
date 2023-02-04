@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS securities_info (
     currency CHAR(5),
     country VARCHAR(35),
     sector VARCHAR(30),
+    security_type TINYINT,
     PRIMARY KEY(ID)
 );
 

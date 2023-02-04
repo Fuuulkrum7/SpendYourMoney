@@ -53,6 +53,7 @@ class SecuritiesInfo(Enum):
     currency = "CHAR"
     country = "CHAR"
     sector = "CHAR"
+    security_type = "TINYINT"
 
 
 class StocksInfo(Enum):

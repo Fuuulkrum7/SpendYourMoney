@@ -21,3 +21,8 @@ class CouponType(Enum):
     COUPON_TYPE_MORTGAGE = 4
     COUPON_TYPE_FIX = 5
     COUPON_TYPE_VARIABLE = 6
+
+
+class SecurityType(Enum):
+    STOCK = 0
+    BOND = 1
