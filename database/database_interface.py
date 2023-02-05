@@ -18,6 +18,13 @@ class DatabaseValue:
     def __str__(self):
         return str(self.__value)
 
+    def __eq__(self, other):
+        if not isinstance(other, DatabaseValue):
+            return False
+        if self.get_row_name() == other.get_row_name() and self.get_value() == other.get_value():
+            return True
+        return False
+
     def get_row_name(self) -> str:
         return self.__row.name
 
@@ -63,8 +70,54 @@ class DatabaseInterface:
     def add_unique_data(self, rows: list[DatabaseValue]):
         pass
 
-    def get_data(self, rows: list[Enum]) -> list[DatabaseValue]:
-        pass
+    # Альтернативный вариант получения данных путем создания запроса sql
+    def get_data_by_sql(self, rows: list[Enum], table: str,
+                        where: dict = None, sort_query: list[list[Enum, str]] = None) -> list[list[DatabaseValue]]:
+        query = f"SELECT "
+
+        if rows:
+            for row in rows:
+                query += f"{row.name} "
+        else:
+            query += "*"
+
+        query += f" FROM {table}"
+
+        if where is not None:
+            query += " WHERE "
+            d = " AND " if len(where) > 1 else ""
+            i = 0
+            for key, value in where:
+                query += f"{key} = {value}"
+                query += d if i < len(where) - 1 else ""
+                i += 1
+
+        if sort_query is not None:
+            query += " ORDER BY "
+            i = 0
+            for row in sort_query:
+                query += f"{row[0].name} {row[1]}"
+                query += ", " if i < len(where) - 1 else ""
+                i += 1
+
+        result = self.__engine.execute(query)
+        values: list[list[DatabaseValue]] = []
+
+        for r in result:
+            value: list[DatabaseValue] = []
+            for row in rows:
+                val = r[row.name]
+                if row.value == "INT":
+                    val = int(val)
+                elif row.value == "BOOL":
+                    val = val.lower() == "true"
+                elif row.value == "DOUBLE":
+                    val = float(val)
+
+                value.append(DatabaseValue(row, val))
+            values.append(value)
+
+        return values
 
     def clear_db(self):
         try:

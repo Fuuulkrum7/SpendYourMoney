@@ -69,7 +69,7 @@ class Coupon:
     fix_date: date
     pay_one_bound: float
     coupon_type: CouponType
-    security_id: SecurityType
+    security_id: int
 
     def __init__(
             self, *args):
@@ -113,6 +113,18 @@ class Coupon:
         ]
 
         return values
+
+
+class Dividend:
+    div_value: float
+    payment_date: date
+    declared_date: date
+    record_date: date
+    last_buy_date: date
+    # Величина доходности
+    yield_value: float
+    security_id: int
+    div_id: int
 
 
 class Security:
@@ -211,12 +223,13 @@ class Bond(Security):
     def __init__(self, *args):
         """
         :param args: list[DatabaseValue] for Security or Security, list[DatabaseValue] for Bond,
-        list[DatabaseValue] for Coupon
+        list[DatabaseValue]m\ or Coupon for Coupon
         """
         if len(args) == 3 and ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue))
                                or (isinstance(args[0], Security))) \
                 and isinstance(args[1], list) and isinstance(args[1][0], DatabaseValue) and \
-                isinstance(args[2], list) and isinstance(args[2][0], DatabaseValue):
+                ((isinstance(args[2], list) and isinstance(args[2][0], DatabaseValue)) or
+                 isinstance(args[2], Coupon)):
             super.__init__(args[0])
 
             d: list[DatabaseValue] = args[1]
@@ -251,7 +264,8 @@ class Bond(Security):
                     except Exception as e:
                         print(e)
                     return
-
+            if isinstance(args[2], list) and not (DatabaseValue(CouponInfo.security_id, self.info.id) in args[2]):
+                args[2].append(DatabaseValue(CouponInfo.security_id, self.info.id))
             self.coupon = Coupon(args[2])
             if self.coupon.coupon_id >= 0:
                 self.rate = round(self.coupon.pay_one_bound * self.coupon_quantity_per_year / self.nominal * 100, 2)
@@ -261,3 +275,14 @@ class Bond(Security):
         else:
             super().__init__()
             self.bond_id = -1
+
+
+class Stock(Security):
+    stock_id: int
+    ipo_date: date
+    issue_size: int
+    stock_type: StockType
+    otc_flag: bool
+    div_yield_flag: bool
+    dividend: Dividend = None
+
