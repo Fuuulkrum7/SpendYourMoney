@@ -1,10 +1,11 @@
 from database.database_interface import DatabaseValue
 from database.database_info import SecuritiesInfo, \
     CouponInfo, DividendInfo, BondsInfo, StocksInfo
-from securiries_types import StockType, CouponType, SecurityType
+from securities.securiries_types import StockType, CouponType, SecurityType
 from datetime import datetime, date
 
 
+# Парсит данные из значения в дату
 def get_data_from_value(value: DatabaseValue) -> date:
     if isinstance(value.get_value(), str):
         return datetime.strptime(str(value.get_value()), "%Y-%m-%d").date()
@@ -12,6 +13,9 @@ def get_data_from_value(value: DatabaseValue) -> date:
 
 
 class SecurityInfo:
+    """
+    Общая информация о цб. Содержит id, название, фиги и тикер
+    """
     # Сколько аргументов надо для инициализации
     required_args = 4
     figi: str
@@ -37,9 +41,10 @@ class SecurityInfo:
         elif isinstance(args[0], SecurityInfo):
             s: SecurityInfo = args[0]
             self.__init__(s.id, s.figi, s.ticker, s.name)
-        #
+        # Если получили список DatabaseValue, т.е. только что спарсили из бд
         elif isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
             d: list[DatabaseValue] = args[0]
+            # перебор списка, чтобы
             for value in d:
                 if value.get_row_name() == SecuritiesInfo.security_name.name:
                     self.name = str(d[0].get_value())
