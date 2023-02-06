@@ -5,6 +5,12 @@ from securiries_types import StockType, CouponType, SecurityType
 from datetime import datetime, date
 
 
+def get_data_from_value(value: DatabaseValue) -> date:
+    if isinstance(value.get_value(), str):
+        return datetime.strptime(str(value.get_value()), "%Y-%m-%d").date()
+    return value.get_value()
+
+
 class SecurityInfo:
     # Сколько аргументов надо для инициализации
     required_args = 4
@@ -77,16 +83,9 @@ class Coupon:
             d: list[DatabaseValue] = args[0]
             for value in d:
                 if value.get_row_name() == CouponInfo.coupon_date:
-                    if isinstance(value.get_value(), str):
-                        self.coupon_date = datetime.strptime(str(value.get_value()), "%Y-%m-%d").date()
-                    else:
-                        self.coupon_date = value.get_value()
+                    self.coupon_date = get_data_from_value(value)
                 elif value.get_row_name() == CouponInfo.fix_date:
-                    if isinstance(value.get_value(), str):
-                        self.fix_date = datetime.strptime(value.get_value(), "%Y-%m-%d").date()
-                    else:
-                        self.fix_date = value.get_value()
-
+                    self.fix_date = get_data_from_value(value)
                 elif value.get_row_name() == CouponInfo.ID:
                     self.coupon_id = value.get_value()
                 elif value.get_row_name() == CouponInfo.coupon_number:
@@ -100,6 +99,8 @@ class Coupon:
                 else:
                     self.coupon_id = -1
                     return
+        else:
+            self.coupon_id = -1
 
     def get_as_database_value(self) -> list[DatabaseValue]:
         values: list[DatabaseValue] = [
@@ -116,6 +117,7 @@ class Coupon:
 
 
 class Dividend:
+    __required_args = 8
     div_value: float
     payment_date: date
     declared_date: date
@@ -126,6 +128,40 @@ class Dividend:
     security_id: int
     div_id: int
 
+    def __init__(self, *args):
+        """
+        :param args: can work only with DatabaseValue!
+        """
+        if len(*args) != 1:
+            self.div_id = -1
+            return
+        if isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue) and len(args[0]) == self.__required_args:
+            d: list[DatabaseValue] = args[0]
+            for value in d:
+                if value.get_row_name() == DividendInfo.payment_date:
+                    self.payment_date = get_data_from_value(value)
+                elif value.get_row_name() == DividendInfo.declared_date:
+                    self.declared_date = get_data_from_value(value)
+                if value.get_row_name() == DividendInfo.record_date:
+                    self.record_date = get_data_from_value(value)
+                elif value.get_row_name() == DividendInfo.last_buy_date:
+                    self.last_buy_date = get_data_from_value(value)
+                elif value.get_row_name() == DividendInfo.ID:
+                    self.div_id = value.get_value()
+                elif value.get_row_name() == DividendInfo.div_value:
+                    self.div_value = value.get_value()
+                elif value.get_row_name() == CouponInfo.pay_one_bond:
+                    self.pay_one_bound = value.get_value()
+                elif value.get_row_name() == DividendInfo.yield_value:
+                    self.yield_value = value.get_value()
+                elif value.get_row_name() == CouponInfo.security_id:
+                    self.security_id = value.get_value()
+                else:
+                    self.div_id = -1
+                    return
+        else:
+            self.div_id = -1
+
 
 class Security:
     __required_args = 6
@@ -134,8 +170,8 @@ class Security:
     currency: str
     country: str
     sector: str
-    info: SecurityInfo
     security_type: SecurityType
+    info: SecurityInfo
 
     def __init__(self, *args):
         """
@@ -198,7 +234,8 @@ class Security:
             DatabaseValue(SecuritiesInfo.lot, self.lot),
             DatabaseValue(SecuritiesInfo.currency, self.currency),
             DatabaseValue(SecuritiesInfo.country, self.country),
-            DatabaseValue(SecuritiesInfo.sector, self.sector)
+            DatabaseValue(SecuritiesInfo.sector, self.sector),
+            DatabaseValue(SecuritiesInfo.security_type, self.security_type.value)
         ]
 
         values.extend(self.info.get_as_database_value())
@@ -223,7 +260,7 @@ class Bond(Security):
     def __init__(self, *args):
         """
         :param args: list[DatabaseValue] for Security or Security, list[DatabaseValue] for Bond,
-        list[DatabaseValue]m\ or Coupon for Coupon
+        list[DatabaseValue] or Coupon for Coupon
         """
         if len(args) == 3 and ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue))
                                or (isinstance(args[0], Security))) \
@@ -239,10 +276,7 @@ class Bond(Security):
                 elif value.get_row_name() == BondsInfo.nominal:
                     self.nominal = value.get_value()
                 elif value.get_row_name() == BondsInfo.maturity_date:
-                    if isinstance(value.get_value(), str):
-                        self.maturity_date = datetime.strptime(value.get_value(), "%Y-%m-%d").date()
-                    else:
-                        self.maturity_date = value.get_value()
+                    self.maturity_date = get_data_from_value(value)
                 elif value.get_row_name() == BondsInfo.amortization_flag:
                     self.amortization = value.get_value()
                 elif value.get_row_name() == BondsInfo.ID:
@@ -264,9 +298,12 @@ class Bond(Security):
                     except Exception as e:
                         print(e)
                     return
-            if isinstance(args[2], list) and not (DatabaseValue(CouponInfo.security_id, self.info.id) in args[2]):
-                args[2].append(DatabaseValue(CouponInfo.security_id, self.info.id))
-            self.coupon = Coupon(args[2])
+            if isinstance(args[2], list):
+                if not (DatabaseValue(CouponInfo.security_id, self.info.id) in args[2]):
+                    args[2].append(DatabaseValue(CouponInfo.security_id, self.info.id))
+                self.coupon = Coupon(args[2])
+            else:
+                self.coupon = args[2]
             if self.coupon.coupon_id >= 0:
                 self.rate = round(self.coupon.pay_one_bound * self.coupon_quantity_per_year / self.nominal * 100, 2)
             else:
@@ -275,6 +312,25 @@ class Bond(Security):
         else:
             super().__init__()
             self.bond_id = -1
+
+    def get_as_database_value(self) -> list[DatabaseValue]:
+        values = [
+            DatabaseValue(BondsInfo.ID, self.bond_id),
+            DatabaseValue(BondsInfo.coupon_quantity_per_year, self.coupon_quantity_per_year),
+            DatabaseValue(BondsInfo.aci_value, self.aci_value),
+            DatabaseValue(BondsInfo.nominal, self.nominal),
+            DatabaseValue(BondsInfo.security_id, self.info.id),
+            DatabaseValue(BondsInfo.maturity_date, self.maturity_date),
+            DatabaseValue(BondsInfo.amortization_flag, self.amortization),
+            DatabaseValue(BondsInfo.issue_size, self.issue_size),
+            DatabaseValue(BondsInfo.issue_size_plan, self.issue_size_plan),
+            DatabaseValue(BondsInfo.floating_coupon_flag, self.floating_coupon),
+            DatabaseValue(BondsInfo.perpetual_flag, self.perpetual)
+        ]
+
+        values.extend(super().get_as_database_value())
+
+        return values
 
 
 class Stock(Security):
@@ -286,3 +342,65 @@ class Stock(Security):
     div_yield_flag: bool
     dividend: Dividend = None
 
+    def __init__(self, *args):
+        """
+        :param args: requires data for Security, 7 args for stock, dividend or list of args for coupon
+        """
+        if len(args) == 3:
+            # Если первый аргумент список данных для Security или же сам экземпляр класса,
+            # второй - список данных для акции,
+            # а третий - None, уже готовый дивидент или же набор аргументов для его создания, то
+            # начинаем все расставлять по полочкам
+            if ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue)) or isinstance(args[0], Security))\
+                    and isinstance(args[1], list) and isinstance(args[1][0], DatabaseValue) and \
+                    (args[2] is None or isinstance(args[2], Dividend) or
+                     (isinstance(args[2], list) and isinstance(args[2][0], DatabaseValue))):
+                super().__init__(args[0])
+
+                if args[2] is not None:
+                    if isinstance(args[2], Dividend):
+                        self.dividend = args[2]
+                    else:
+                        self.dividend = Dividend(args[2])
+
+                    if self.dividend.div_id == -1:
+                        self.stock_id = -1
+                        self.info = SecurityInfo()
+                        return
+
+                d: list[DatabaseValue] = args[1]
+
+                for value in d:
+                    if value.get_row_name() == StocksInfo.ID:
+                        self.stock_id = value.get_value()
+                    elif value.get_row_name() == StocksInfo.stock_type:
+                        self.stock_type = StockType(value.get_value())
+                    elif value.get_row_name() == StocksInfo.issue_size:
+                        self.issue_size = value.get_value()
+                    elif value.get_row_name() == StocksInfo.otc_flag:
+                        self.otc_flag = value.get_value()
+                    elif value.get_row_name() == StocksInfo.div_yield_flag:
+                        self.div_yield_flag = value.get_value()
+                    elif value.get_row_name() == StocksInfo.ipo_date:
+                        self.ipo_date = get_data_from_value(value)
+                    else:
+                        self.stock_id = -1
+                        self.info = SecurityInfo()
+                        return
+        else:
+            self.stock_id = -1
+            self.info = SecurityInfo()
+
+    def get_as_database_value(self) -> list[DatabaseValue]:
+        values = [
+            DatabaseValue(StocksInfo.ID, self.stock_id),
+            DatabaseValue(StocksInfo.stock_type, self.stock_type.value),
+            DatabaseValue(StocksInfo.issue_size, self.issue_size),
+            DatabaseValue(StocksInfo.otc_flag, self.otc_flag),
+            DatabaseValue(StocksInfo.div_yield_flag, self.div_yield_flag),
+            DatabaseValue(StocksInfo.ipo_date, self.ipo_date)
+        ]
+
+        values.extend(super().get_as_database_value())
+
+        return values

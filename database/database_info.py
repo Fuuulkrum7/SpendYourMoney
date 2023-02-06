@@ -73,4 +73,3 @@ class UserTable(Enum):
     password = "CHAR"
     status = "INT"
     access_level = "INT"
-

@@ -16,7 +16,10 @@ class DatabaseValue:
         self.__row = row
 
     def __str__(self):
-        return str(self.__value)
+        a = str(self.__value)
+        if isinstance(self.__value, bool):
+            a.lower()
+        return a
 
     def __eq__(self, other):
         if not isinstance(other, DatabaseValue):
