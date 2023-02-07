@@ -26,6 +26,7 @@ class StandardQuery:
 class SecurityGetter(ABC):
     table: str
     query: StandardQuery
+    check_locally: bool
     on_finish: function = None
 
     @abstractmethod

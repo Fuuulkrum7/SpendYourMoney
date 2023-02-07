@@ -37,7 +37,7 @@ print("hello")
 """
 async def main():
     with Client(TOKEN) as client:
-        r = client.instruments.find_instrument(query=" ")
+        r = client.instruments.find_instrument(query="Газпром")
         for i in r.instruments:
             print(i)
         print(len(list(filter(lambda x: x.instrument_type in ["bond"], r.instruments))))
@@ -48,11 +48,11 @@ s = GetSecurity(
     StandardQuery(
         SecurityInfo(
             0,
-            "BBG006L8G4H1",
+            "RU000A105FS4",
             "",
             ""
         ),
-        ""
+        "RU000A0JTJL3"
     ),
     lambda: print("done"),
     TOKEN
