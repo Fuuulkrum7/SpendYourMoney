@@ -2,12 +2,12 @@ from enum import Enum
 
 
 class BondsInfo(Enum):
-    ID = "INT NOT NULL AUTO_INCREMENT"
+    ID = "INT"
     security_id = "INT"
     coupon_quantity_per_year = "INT"
     maturity_date = "DATE"
     nominal = "DOUBLE"
-    aci_value = "FLOAT"
+    aci_value = "DOUBLE"
     issue_size = "INT"
     issue_size_plan = "INT"
     floating_coupon_flag = "BOOL"
@@ -16,7 +16,7 @@ class BondsInfo(Enum):
 
 
 class CouponInfo(Enum):
-    ID = "INT NOT NULL AUTO_INCREMENT"
+    ID = "INT"
     security_id = "INT"
     coupon_date = "DATE"
     coupon_number = "INT"
@@ -26,7 +26,7 @@ class CouponInfo(Enum):
 
 
 class DividendInfo(Enum):
-    ID = "INT NOT NULL AUTO_INCREMENT"
+    ID = "INT"
     security_id = "INT"
     div_value = "DOUBLE"
     payment_date = "DATE"
@@ -37,14 +37,14 @@ class DividendInfo(Enum):
 
 
 class SecuritiesHistory(Enum):
-    security_id = "INT NOT NULL AUTO_INCREMENT"
+    security_id = "INT"
     price = "DOUBLE"
     time = "DATETIME"
     volume = "INT"
 
 
 class SecuritiesInfo(Enum):
-    ID = "INT NOT NULL AUTO_INCREMENT"
+    ID = "INT"
     figi = "CHAR"
     ticker = "CHAR"
     security_name = "CHAR"
@@ -53,11 +53,11 @@ class SecuritiesInfo(Enum):
     currency = "CHAR"
     country = "CHAR"
     sector = "CHAR"
-    security_type = "TINYINT"
+    security_type = "INT"
 
 
 class StocksInfo(Enum):
-    ID = "INT NOT NULL AUTO_INCREMENT"
+    ID = "INT"
     security_id = "INT"
     ipo_date = "DATE"
     issue_size = "INT"
@@ -73,4 +73,3 @@ class UserTable(Enum):
     password = "CHAR"
     status = "INT"
     access_level = "INT"
-

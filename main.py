@@ -3,6 +3,8 @@ from datetime import timedelta
 import threading
 
 from database.database_interface import DatabaseInterface
+from api_requests.securities_api import GetSecurity, SecurityInfo
+from api_requests.security_getter import StandardQuery
 from info.info import Info, User, Theme
 
 from tinkoff.invest import CandleInterval, AsyncClient, Client
@@ -35,11 +37,28 @@ print("hello")
 """
 async def main():
     with Client(TOKEN) as client:
-        r = client.instruments.find_instrument(query=" ")
+        r = client.instruments.find_instrument(query="Газпром")
         for i in r.instruments:
             print(i)
         print(len(list(filter(lambda x: x.instrument_type in ["bond"], r.instruments))))
 
 
+print("start")
+s = GetSecurity(
+    StandardQuery(
+        SecurityInfo(
+            0,
+            "RU000A105FS4",
+            "",
+            ""
+        ),
+        "RU000A0JTJL3"
+    ),
+    lambda: print("done"),
+    TOKEN
+)
+s.start()
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
+    pass
