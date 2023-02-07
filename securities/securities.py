@@ -112,7 +112,7 @@ class Coupon:
                 else:
                     self.coupon_id = -1
                     return
-        elif len(args) == 3 and isinstance(args[0][0], tinkoffCoupon):
+        elif len(args) == 3 and isinstance(args[0], tinkoffCoupon):
             coupon: tinkoffCoupon = args[0]
             self.coupon_date = coupon.coupon_date.date()
             self.fix_date = coupon.fix_date.date()
@@ -291,12 +291,12 @@ class Bond(Security):
         """
         if len(args) == 3 and ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue))
                                or (isinstance(args[0], Security))) and isinstance(args[1], list) and \
-                (isinstance(args[2], list) and (isinstance(args[2][0], list) and
-                                                isinstance(args[2][0][0], DatabaseValue) or
-                                                isinstance(args[2][0][0], tinkoffCoupon) or
+                (isinstance(args[2], list) and ((isinstance(args[2][0], list) and
+                                                 (isinstance(args[2][0][0], DatabaseValue) or
+                                                isinstance(args[2][0][0], tinkoffCoupon))) or
                                                 isinstance(args[2][0], Coupon)) or
                     args[2][0] is None):
-            super.__init__(args[0])
+            super().__init__(args[0])
 
             if isinstance(args[1][0], DatabaseValue):
                 d: list[DatabaseValue] = args[1]
@@ -339,12 +339,14 @@ class Bond(Security):
                 self.issue_size_plan = args[1][7]
                 self.floating_coupon = args[1][8]
                 self.perpetual = args[1][9]
-            if isinstance(args[2][0][0], DatabaseValue):
-                self.coupon = [Coupon(i) for i in args[2]]
-            elif isinstance(args[2][0][0], tinkoffCoupon):
-                self.coupon = [Coupon(i, args[2][1], args[2][2]) for i in args[2]]
-            else:
-                self.coupon = args[2]
+
+            if args[2][0] is not None:
+                if isinstance(args[2][0], list) and isinstance(args[2][0][0], DatabaseValue):
+                    self.coupon = [Coupon(i) for i in args[2]]
+                elif isinstance(args[2][0][0], tinkoffCoupon):
+                    self.coupon = [Coupon(i, args[2][1], args[2][2]) for i in args[2][0]]
+                else:
+                    self.coupon = args[2]
         else:
             super().__init__()
             self.bond_id = -1
@@ -402,7 +404,7 @@ class Stock(Security):
                     elif isinstance(args[2][0], list) and isinstance(args[2][0][0], DatabaseValue):
                         self.dividend = [Dividend(i) for i in args[2]]
                     elif isinstance(args[2][0][0], tinkoffDiv):
-                        self.coupon = [Dividend(i, args[2][1], args[2][2]) for i in args[2]]
+                        self.coupon = [Dividend(i, args[2][1], args[2][2]) for i in args[2][0]]
                     else:
                         self.stock_id = -1
                         self.info = SecurityInfo()

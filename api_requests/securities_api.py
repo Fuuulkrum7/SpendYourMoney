@@ -82,14 +82,12 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
 
                     sub_data = client.instruments.get_bond_coupons(
                         figi=loaded_instrument.figi,
-                        from_=datetime(year=1990, month=1, day=1),
-                        to=datetime.now()
+                        from_=datetime(year=1970, month=1, day=1),
+                        to=datetime(year=2100, month=1, day=1)
                     ).events
 
                     if not len(sub_data):
                         sub_data = None
-
-                    print(sub_data)
 
                 elif result[0].instrument_type == "share":
                     loaded_instrument: tinkoff.invest.Share = client.instruments.share_by(
@@ -102,8 +100,8 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
                     if loaded_instrument.div_yield_flag:
                         sub_data = client.instruments.get_dividends(
                             figi=loaded_instrument.figi,
-                            from_=datetime(year=1990, month=1, day=1),
-                            to=datetime.now()
+                            from_=datetime(year=1970, month=1, day=1),
+                            to=datetime(year=2100, month=1, day=1)
                         ).dividends
                 else:
                     return
@@ -136,6 +134,7 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
                                 loaded_instrument.amortization_flag,
                                 loaded_instrument.maturity_date.date(),
                                 -2,
+                                loaded_instrument.aci_value,
                                 loaded_instrument.issue_size,
                                 loaded_instrument.issue_size_plan,
                                 loaded_instrument.floating_coupon_flag,
