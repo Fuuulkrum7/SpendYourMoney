@@ -9,15 +9,16 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import sys
 
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+class UiMainWindow(object):
+    def setup_ui(self, main_window):
+        main_window.setObjectName("MainWindow")
+        main_window.resize(800, 600)
+        self.central_widget = QtWidgets.QWidget(main_window)
+        self.central_widget.setObjectName("centralwidget")
+        self.tabWidget = QtWidgets.QTabWidget(self.central_widget)
         self.tabWidget.setGeometry(QtCore.QRect(30, 10, 341, 481))
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
@@ -29,24 +30,24 @@ class Ui_MainWindow(object):
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
         self.tabWidget.addTab(self.tab_2, "")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        main_window.setCentralWidget(self.central_widget)
+        self.statusbar = QtWidgets.QStatusBar(main_window)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-        self.menuBar = QtWidgets.QMenuBar(MainWindow)
+        main_window.setStatusBar(self.statusbar)
+        self.menuBar = QtWidgets.QMenuBar(main_window)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 21))
         self.menuBar.setObjectName("menuBar")
         self.menujlkkl = QtWidgets.QMenu(self.menuBar)
         self.menujlkkl.setObjectName("menujlkkl")
-        MainWindow.setMenuBar(self.menuBar)
-        self.actionyjdfz_rd = QtWidgets.QAction(MainWindow)
+        main_window.setMenuBar(self.menuBar)
+        self.actionyjdfz_rd = QtWidgets.QAction(main_window)
         self.actionyjdfz_rd.setObjectName("actionyjdfz_rd")
         self.menujlkkl.addAction(self.actionyjdfz_rd)
         self.menuBar.addAction(self.menujlkkl.menuAction())
 
-        self.retranslateUi(MainWindow)
+        self.retranslateUi(main_window)
         self.tabWidget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -56,3 +57,12 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
         self.menujlkkl.setTitle(_translate("MainWindow", "jlkkl"))
         self.actionyjdfz_rd.setText(_translate("MainWindow", "yjdfz rd"))
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    main_window = QtWidgets.QMainWindow()
+    ui = UiMainWindow()
+    ui.setup_ui(main_window)
+    main_window.show()
+    sys.exit(app.exec_())
