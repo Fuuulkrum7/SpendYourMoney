@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS user_table (
     UID INT NOT NULL AUTO_INCREMENT,
     username VARCHAR(25),
-    token CHAR(200),
-    password CHAR(129),
+    token VARCHAR(200),
+    password VARCHAR(129),
     status INT,
     access_level INT,
     PRIMARY KEY(UID)
@@ -10,12 +10,12 @@ CREATE TABLE IF NOT EXISTS user_table (
 
 CREATE TABLE IF NOT EXISTS securities_info (
     ID INT NOT NULL AUTO_INCREMENT,
-    figi CHAR(14),
-    ticker CHAR(15),
-    security_name CHAR(30),
-    class_code CHAR(10),
+    figi VARCHAR(14),
+    ticker VARCHAR(15),
+    security_name VARCHAR(50),
+    class_code VARCHAR(15),
     lot INT,
-    currency CHAR(5),
+    currency VARCHAR(5),
     country VARCHAR(35),
     sector VARCHAR(30),
     security_type TINYINT,
@@ -52,8 +52,8 @@ CREATE TABLE IF NOT EXISTS stocks_info (
     ID INT NOT NULL AUTO_INCREMENT,
     security_id INT,
     ipo_date DATE,
-    issue_size INT,
-    stock_type INT,
+    issue_size BIGINT,
+    stock_type SMALLINT,
     otc_flag BOOLEAN,
     div_yield_flag BOOLEAN,
     PRIMARY KEY(ID)
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS stocks_info (
 CREATE TABLE IF NOT EXISTS dividend_info (
     ID INT NOT NULL AUTO_INCREMENT,
     security_id INT,
-    div_value DATE,
+    div_value DOUBLE,
     payment_date DATE,
     declared_date DATE,
     record_date DATE,
@@ -72,14 +72,18 @@ CREATE TABLE IF NOT EXISTS dividend_info (
 );
 
 CREATE TABLE IF NOT EXISTS securities_history (
+    ID INT NOT NULL AUTO_INCREMENT,
     security_id INT,
     price DOUBLE,
     `time` DATETIME,
-    volume INT
+    volume INT,
+    PRIMARY KEY(ID)
 );
 
 CREATE TABLE IF NOT EXISTS history_of_predictions (
+    ID INT NOT NULL AUTO_INCREMENT,
     security_id INT,
     price DOUBLE,
-    `time` DATETIME
+    `time` DATETIME,
+    PRIMARY KEY(ID)
 );

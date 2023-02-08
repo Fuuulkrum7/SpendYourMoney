@@ -1,24 +1,33 @@
 from abc import ABC
 from datetime import datetime
+from math import ceil, log10
 
 import function
 import threading
 
+import sqlalchemy
 import tinkoff.invest
 
+from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
+    StocksInfoTable, CouponInfoTable, DividendInfoTable
 from api_requests.security_getter import StandardQuery, SecurityGetter
 from securities.securiries_types import SecurityType, StockType
 from securities.securities import Security, Stock, Bond, SecurityInfo
 from database.database_interface import DatabaseInterface
 
 from tinkoff.invest.services import InstrumentIdType
-from tinkoff.invest import Client
+from tinkoff.invest import Client, MoneyValue
 from tinkoff.invest.exceptions import RequestError
 
 
+def convert_money_value(data: MoneyValue):
+    return data.units + data.nano / 10 ** ceil(log10(data.nano if data.nano > 0 else 1))
+
+
 class GetSecurity(SecurityGetter, ABC, threading.Thread):
-    security: Security = None
+    security: Security | Bond | Stock | None = None
     add_to_other: bool
+    status_code: int = 200
 
     def __init__(self, query: StandardQuery, on_finish: function, token: str, add_to_other=True, check_locally=True):
         super().__init__()
@@ -33,23 +42,84 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
         self.load_data()
 
         if self.security is not None:
-            self.insert_to_database()
+            try:
+                self.insert_to_database()
+            except Exception as e:
+                print(e)
+                self.status_code = 301
 
-        self.on_finish()
+        self.on_finish(self.status_code)
 
     def load_data(self):
-        if self.check_locally:
-            self.get_from_bd()
+        try:
+            if self.check_locally:
+                self.get_from_bd()
+        except Exception as e:
+            print(e)
 
         if self.security is None:
             self.get_from_api()
 
     def insert_to_database(self):
+        table = SecuritiesInfoTable()
         db = DatabaseInterface()
         db.connect_to_db()
+
+        if self.add_to_other:
+            db.add_data(
+                table.get_table(),
+                values=self.security.get_as_database_value_security()
+            )
+            cursor: sqlalchemy.engine.cursor = db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
+
+            for i in cursor:
+                self.security.set_security_id(i[0])
+                break
+
+            if self.security.security_type == SecurityType.BOND or self.security.div_yield_flag:
+                query = []
+
+                if self.security.security_type == SecurityType.BOND:
+                    sub_table = CouponInfoTable().get_table()
+                    for values in self.security.coupon:
+                        sub = {}
+                        n = values.get_as_database_value()
+                        for value in n:
+                            if not (value.get_row_name() in ["ID", "UID"]):
+                                sub[value.get_row_name()] = value.to_db_value()
+
+                        query.append(sub)
+
+                else:
+                    sub_table = DividendInfoTable().get_table()
+                    for values in self.security.dividend:
+                        sub = {}
+                        n = values.get_as_database_value()
+                        for value in n:
+                            if not (value.get_row_name() in ["ID", "UID"]):
+                                sub[value.get_row_name()] = value.to_db_value()
+
+                        query.append(sub)
+
+                db.add_data(
+                    sub_table,
+                    query=query
+                )
+
+        if self.security.security_type == SecurityType.BOND:
+            table = BondsInfoTable()
+        elif self.security.security_type == SecurityType.STOCK:
+            table = StocksInfoTable()
+
         db.add_data(
-            self.security.get_as_database_value()
+            table.get_table(),
+            values=self.security.get_as_database_value()
         )
+
+        cursor: sqlalchemy.engine.cursor = db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
+        for i in cursor:
+            self.security.set_id(i[0])
+            break
 
     def get_from_bd(self):
         pass
@@ -62,7 +132,7 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
             result = r.instruments
 
             result.sort(key=lambda x: x.instrument_type != "share")
-            # print(*result, sep='\n')
+
             if len(result) == 0:
                 return
 
@@ -86,9 +156,6 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
                         to=datetime(year=2100, month=1, day=1)
                     ).events
 
-                    if not len(sub_data):
-                        sub_data = None
-
                 elif result[0].instrument_type == "share":
                     loaded_instrument: tinkoff.invest.Share = client.instruments.share_by(
                         id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
@@ -100,11 +167,14 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
                     if loaded_instrument.div_yield_flag:
                         sub_data = client.instruments.get_dividends(
                             figi=loaded_instrument.figi,
-                            from_=datetime(year=1970, month=1, day=1),
+                            from_=datetime(year=1990, month=1, day=1),
                             to=datetime(year=2100, month=1, day=1)
                         ).dividends
                 else:
                     return
+
+                if not len(sub_data):
+                    sub_data = None
 
                 c = 0
 
@@ -166,6 +236,7 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
 
             except RequestError as e:
                 print(e)
+                self.status_code = 400
 
             print(loaded_instrument)
             print(sub_data)

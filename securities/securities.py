@@ -18,7 +18,8 @@ def get_data_from_value(value: DatabaseValue) -> date:
 
 
 def convert_money_value(data: MoneyValue):
-    return data.units + data.nano / 10 ** ceil(log10(data.nano))
+    return data.units + data.nano / 10 ** ceil(log10(data.nano if data.nano > 0 else 1))
+
 
 class SecurityInfo:
     """
@@ -53,15 +54,16 @@ class SecurityInfo:
         elif isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
             d: list[DatabaseValue] = args[0]
             # перебор списка, чтобы
+
             for value in d:
-                if value.get_row_name() == SecuritiesInfo.security_name.name:
-                    self.name = str(d[0].get_value())
-                elif value.get_row_name() == SecuritiesInfo.figi.name:
-                    self.figi = str(d[1].get_value())
-                elif value.get_row_name() == SecuritiesInfo.ticker.name:
-                    self.ticker = str(d[2].get_value())
-                elif value.get_row_name() == SecuritiesInfo.ID.name:
-                    self.id = int(str(d[3].get_value()))
+                if value.get_row() == SecuritiesInfo.security_name:
+                    self.name = str(value.get_value())
+                elif value.get_row() == SecuritiesInfo.figi:
+                    self.figi = str(value.get_value())
+                elif value.get_row() == SecuritiesInfo.ticker:
+                    self.ticker = str(value.get_value())
+                elif value.get_row() == SecuritiesInfo.ID:
+                    self.id = int(str(value.get_value()))
                 else:
                     self.id = -1
                     return
@@ -95,19 +97,19 @@ class Coupon:
         if len(args) == 1 and isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
             d: list[DatabaseValue] = args[0]
             for value in d:
-                if value.get_row_name() == CouponInfo.coupon_date:
+                if value.get_row() == CouponInfo.coupon_date:
                     self.coupon_date = get_data_from_value(value)
-                elif value.get_row_name() == CouponInfo.fix_date:
+                elif value.get_row() == CouponInfo.fix_date:
                     self.fix_date = get_data_from_value(value)
-                elif value.get_row_name() == CouponInfo.ID:
+                elif value.get_row() == CouponInfo.ID:
                     self.coupon_id = value.get_value()
-                elif value.get_row_name() == CouponInfo.coupon_number:
+                elif value.get_row() == CouponInfo.coupon_number:
                     self.coupon_number = value.get_value()
-                elif value.get_row_name() == CouponInfo.pay_one_bond:
+                elif value.get_row() == CouponInfo.pay_one_bond:
                     self.pay_one_bound = value.get_value()
-                elif value.get_row_name() == CouponInfo.coupon_type:
+                elif value.get_row() == CouponInfo.coupon_type:
                     self.coupon_type = CouponType(value.get_value())
-                elif value.get_row_name() == CouponInfo.security_id:
+                elif value.get_row() == CouponInfo.security_id:
                     self.security_id = value.get_value()
                 else:
                     self.coupon_id = -1
@@ -158,21 +160,21 @@ class Dividend:
                 and isinstance(args[0][0], DatabaseValue) and len(args[0]) == self.__required_args:
             d: list[DatabaseValue] = args[0]
             for value in d:
-                if value.get_row_name() == DividendInfo.payment_date:
+                if value.get_row() == DividendInfo.payment_date:
                     self.payment_date = get_data_from_value(value)
-                elif value.get_row_name() == DividendInfo.declared_date:
+                elif value.get_row() == DividendInfo.declared_date:
                     self.declared_date = get_data_from_value(value)
-                if value.get_row_name() == DividendInfo.record_date:
+                if value.get_row() == DividendInfo.record_date:
                     self.record_date = get_data_from_value(value)
-                elif value.get_row_name() == DividendInfo.last_buy_date:
+                elif value.get_row() == DividendInfo.last_buy_date:
                     self.last_buy_date = get_data_from_value(value)
-                elif value.get_row_name() == DividendInfo.ID:
+                elif value.get_row() == DividendInfo.ID:
                     self.div_id = value.get_value()
-                elif value.get_row_name() == DividendInfo.div_value:
+                elif value.get_row() == DividendInfo.div_value:
                     self.div_value = value.get_value()
-                elif value.get_row_name() == DividendInfo.yield_value:
+                elif value.get_row() == DividendInfo.yield_value:
                     self.yield_value = value.get_value()
-                elif value.get_row_name() == CouponInfo.security_id:
+                elif value.get_row() == DividendInfo.security_id:
                     self.security_id = value.get_value()
                 else:
                     self.div_id = -1
@@ -189,6 +191,20 @@ class Dividend:
             self.security_id = args[2]
         else:
             self.div_id = -1
+
+    def get_as_database_value(self) -> list[DatabaseValue]:
+        values: list[DatabaseValue] = [
+            DatabaseValue(DividendInfo.ID, self.div_id),
+            DatabaseValue(DividendInfo.security_id, self.security_id),
+            DatabaseValue(DividendInfo.payment_date, self.payment_date),
+            DatabaseValue(DividendInfo.declared_date, self.declared_date),
+            DatabaseValue(DividendInfo.record_date, self.record_date),
+            DatabaseValue(DividendInfo.last_buy_date, self.last_buy_date),
+            DatabaseValue(DividendInfo.div_value, self.div_value),
+            DatabaseValue(DividendInfo.yield_value, self.yield_value)
+        ]
+
+        return values
 
 
 class Security:
@@ -223,7 +239,7 @@ class Security:
             self.country = args[3]
             self.sector = args[4]
             self.security_type = args[5]
-            self.info = SecurityInfo(args[6:len(args)])
+            self.info = SecurityInfo(*args[6:len(args)])
         elif isinstance(args[0], Security):
             s: Security = args[0]
             self.__init__(s.class_code, s.lot, s.currency, s.country,
@@ -231,28 +247,30 @@ class Security:
         elif isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue):
             d: list[DatabaseValue] = args[0]
             for_info: list[DatabaseValue] = []
+
             for value in d:
-                if value.get_row_name() == SecuritiesInfo.class_code:
+                if value.get_row() == SecuritiesInfo.class_code:
                     self.class_code = str(value.get_value())
-                elif value.get_row_name() == SecuritiesInfo.class_code:
+                elif value.get_row() == SecuritiesInfo.lot:
                     self.lot = int(str(value.get_value()))
-                elif value.get_row_name() == SecuritiesInfo.class_code:
+                elif value.get_row() == SecuritiesInfo.currency:
                     self.currency = str(value.get_value())
-                elif value.get_row_name() == SecuritiesInfo.class_code:
+                elif value.get_row() == SecuritiesInfo.country:
                     self.country = str(value.get_value())
-                elif value.get_row_name() == SecuritiesInfo.class_code:
+                elif value.get_row() == SecuritiesInfo.sector:
                     self.sector = str(value.get_value())
-                elif value.get_row_name() in [i.name for i in SecuritiesInfo]:
-                    for_info.append(value)
-                elif value.get_row_name() == SecuritiesInfo.security_type:
+                elif value.get_row() == SecuritiesInfo.security_type:
                     self.security_type = SecurityType(value.get_value())
+                elif value.get_row() in [SecuritiesInfo.ID, SecuritiesInfo.figi,
+                                         SecuritiesInfo.ticker, SecuritiesInfo.security_name]:
+                    for_info.append(value)
                 else:
-                    self.info.id = SecurityInfo()
+                    self.info = SecurityInfo()
                     return
             if len(for_info) == 4:
                 self.info = SecurityInfo(for_info)
             else:
-                self.info.id = SecurityInfo()
+                self.info = SecurityInfo()
         else:
             self.info.id = SecurityInfo()
 
@@ -270,6 +288,9 @@ class Security:
 
         return values
 
+    def set_id(self, id: int):
+        self.info.id = id
+
 
 class Bond(Security):
     coupon_quantity_per_year: int
@@ -282,7 +303,7 @@ class Bond(Security):
     issue_size_plan: int
     floating_coupon: bool
     perpetual: bool
-    coupon: list[Coupon]
+    coupon: list[Coupon] = []
 
     def __init__(self, *args):
         """
@@ -296,30 +317,31 @@ class Bond(Security):
                                                 isinstance(args[2][0][0], tinkoffCoupon))) or
                                                 isinstance(args[2][0], Coupon)) or
                     args[2][0] is None):
-            super().__init__(args[0])
+
+            super(Bond, self).__init__(args[0].get_as_database_value())
 
             if isinstance(args[1][0], DatabaseValue):
                 d: list[DatabaseValue] = args[1]
                 for value in d:
-                    if value.get_row_name() == BondsInfo.coupon_quantity_per_year:
+                    if value.get_row() == BondsInfo.coupon_quantity_per_year:
                         self.coupon_quantity_per_year = value.get_value()
-                    elif value.get_row_name() == BondsInfo.nominal:
+                    elif value.get_row() == BondsInfo.nominal:
                         self.nominal = value.get_value()
-                    elif value.get_row_name() == BondsInfo.maturity_date:
+                    elif value.get_row() == BondsInfo.maturity_date:
                         self.maturity_date = get_data_from_value(value)
-                    elif value.get_row_name() == BondsInfo.amortization_flag:
+                    elif value.get_row() == BondsInfo.amortization_flag:
                         self.amortization = value.get_value()
-                    elif value.get_row_name() == BondsInfo.ID:
+                    elif value.get_row() == BondsInfo.ID:
                         self.bond_id = value.get_value()
-                    elif value.get_row_name() == BondsInfo.aci_value:
+                    elif value.get_row() == BondsInfo.aci_value:
                         self.aci_value = value.get_value()
-                    elif value.get_row_name() == BondsInfo.issue_size:
+                    elif value.get_row() == BondsInfo.issue_size:
                         self.issue_size = value.get_value()
-                    elif value.get_row_name() == BondsInfo.issue_size_plan:
+                    elif value.get_row() == BondsInfo.issue_size_plan:
                         self.issue_size_plan = value.get_value()
-                    elif value.get_row_name() == BondsInfo.floating_coupon_flag:
+                    elif value.get_row() == BondsInfo.floating_coupon_flag:
                         self.floating_coupon = value.get_value()
-                    elif value.get_row_name() == BondsInfo.perpetual_flag:
+                    elif value.get_row() == BondsInfo.perpetual_flag:
                         self.perpetual = value.get_value()
                     else:
                         self.bond_id = -1
@@ -330,11 +352,11 @@ class Bond(Security):
                         return
             else:
                 self.coupon_quantity_per_year = args[1][0]
-                self.nominal = args[1][1]
+                self.nominal = convert_money_value(args[1][1])
                 self.amortization = args[1][2]
                 self.maturity_date = args[1][3]
                 self.bond_id = args[1][4]
-                self.aci_value = args[1][5]
+                self.aci_value = convert_money_value(args[1][5])
                 self.issue_size = args[1][6]
                 self.issue_size_plan = args[1][7]
                 self.floating_coupon = args[1][8]
@@ -363,7 +385,8 @@ class Bond(Security):
             DatabaseValue(BondsInfo.issue_size, self.issue_size),
             DatabaseValue(BondsInfo.issue_size_plan, self.issue_size_plan),
             DatabaseValue(BondsInfo.floating_coupon_flag, self.floating_coupon),
-            DatabaseValue(BondsInfo.perpetual_flag, self.perpetual)
+            DatabaseValue(BondsInfo.perpetual_flag, self.perpetual),
+            DatabaseValue(BondsInfo.security_id, self.info.id)
         ]
 
         return values
@@ -374,6 +397,14 @@ class Bond(Security):
     def count_rate(self) -> float:
         return round(self.coupon[0].pay_one_bound * self.coupon_quantity_per_year / self.nominal * 100, 2)
 
+    def set_id(self, id: int):
+        self.bond_id = id
+
+    def set_security_id(self, id: int):
+        super().set_id(id)
+        for i in self.coupon:
+            i.security_id = id
+
 
 class Stock(Security):
     stock_id: int
@@ -382,11 +413,11 @@ class Stock(Security):
     stock_type: StockType
     otc_flag: bool
     div_yield_flag: bool
-    dividend: list[Dividend] | None = None
+    dividend: list[Dividend] = []
 
     def __init__(self, *args):
         """
-        :param args: requires data for Security, 7 args for stock, dividend or list of args for coupon
+        :param args: requires data for Security, 7 args for stock, dividend or list of args for div
         """
         if len(args) == 3:
             # Если первый аргумент список данных для Security или же сам экземпляр класса,
@@ -396,15 +427,16 @@ class Stock(Security):
             if ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue)) or isinstance(args[0], Security))\
                     and isinstance(args[1], list) and \
                     (args[2][0] is None or isinstance(args[2][0], list)):
-                super().__init__(args[0])
-                print(args)
-                if args[2] is not None:
+
+                super().__init__(args[0].get_as_database_value())
+
+                if args[2][0] is not None:
                     if isinstance(args[2][0], Dividend):
                         self.dividend = args[2]
                     elif isinstance(args[2][0], list) and isinstance(args[2][0][0], DatabaseValue):
                         self.dividend = [Dividend(i) for i in args[2]]
                     elif isinstance(args[2][0][0], tinkoffDiv):
-                        self.coupon = [Dividend(i, args[2][1], args[2][2]) for i in args[2][0]]
+                        self.dividend = [Dividend(i, args[2][1], args[2][2]) for i in args[2][0]]
                     else:
                         self.stock_id = -1
                         self.info = SecurityInfo()
@@ -414,17 +446,17 @@ class Stock(Security):
                     d: list[DatabaseValue] = args[1]
 
                     for value in d:
-                        if value.get_row_name() == StocksInfo.ID:
+                        if value.get_row() == StocksInfo.ID:
                             self.stock_id = value.get_value()
-                        elif value.get_row_name() == StocksInfo.stock_type:
+                        elif value.get_row() == StocksInfo.stock_type:
                             self.stock_type = StockType(value.get_value())
-                        elif value.get_row_name() == StocksInfo.issue_size:
+                        elif value.get_row() == StocksInfo.issue_size:
                             self.issue_size = value.get_value()
-                        elif value.get_row_name() == StocksInfo.otc_flag:
+                        elif value.get_row() == StocksInfo.otc_flag:
                             self.otc_flag = value.get_value()
-                        elif value.get_row_name() == StocksInfo.div_yield_flag:
+                        elif value.get_row() == StocksInfo.div_yield_flag:
                             self.div_yield_flag = value.get_value()
-                        elif value.get_row_name() == StocksInfo.ipo_date:
+                        elif value.get_row() == StocksInfo.ipo_date:
                             self.ipo_date = get_data_from_value(value)
                         else:
                             self.stock_id = -1
@@ -448,10 +480,19 @@ class Stock(Security):
             DatabaseValue(StocksInfo.issue_size, self.issue_size),
             DatabaseValue(StocksInfo.otc_flag, self.otc_flag),
             DatabaseValue(StocksInfo.div_yield_flag, self.div_yield_flag),
-            DatabaseValue(StocksInfo.ipo_date, self.ipo_date)
+            DatabaseValue(StocksInfo.ipo_date, self.ipo_date),
+            DatabaseValue(StocksInfo.security_id, self.info.id)
         ]
 
         return values
 
     def get_as_database_value_security(self):
         return super().get_as_database_value()
+
+    def set_id(self, id: int):
+        self.stock_id = id
+
+    def set_security_id(self, id: int):
+        super().set_id(id)
+        for i in self.dividend:
+            i.security_id = id

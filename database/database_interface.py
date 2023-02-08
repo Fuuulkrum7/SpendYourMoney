@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+import sqlalchemy
 from sqlalchemy.engine.base import Engine
 from sqlalchemy_utils import database_exists
 from info.file_loader import FileLoader
@@ -18,8 +18,13 @@ class DatabaseValue:
     def __str__(self):
         a = str(self.__value)
         if isinstance(self.__value, bool):
-            a.lower()
+            return a.lower()
         return a
+
+    def to_db_value(self):
+        if isinstance(self.__value, bool):
+            return self.get_value()
+        return str(self.__value)
 
     def __eq__(self, other):
         if not isinstance(other, DatabaseValue):
@@ -36,6 +41,9 @@ class DatabaseValue:
 
     def get_value(self):
         return self.__value
+
+    def get_row(self):
+        return self.__row
 
 
 class DatabaseInterface:
@@ -56,7 +64,7 @@ class DatabaseInterface:
 
     def connect_to_db(self):
         try:
-            self.__engine = create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost/" + self.info["name"])
+            self.__engine = sqlalchemy.create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost/" + self.info["name"])
 
             if not database_exists(self.__engine.url):
                 print("it's ok, we're just creating db")
@@ -67,8 +75,21 @@ class DatabaseInterface:
             print(e)
             self.connected = -1
 
-    def add_data(self, values: list[DatabaseValue]):
-        pass
+    def add_data(self, table: Base, query: list[dict] = None, values: list[DatabaseValue] = None):
+        if query is None and values is None:
+            return
+
+        if query is None:
+            query = {}
+            for value in values:
+                if not (value.get_row_name() in ["ID", "UID"]):
+                    query[value.get_row_name()] = value.to_db_value()
+
+        with self.__engine.connect() as conn:
+            conn.execute(
+                sqlalchemy.insert(table),
+                query
+            )
 
     def add_unique_data(self, rows: list[DatabaseValue]):
         pass
@@ -103,24 +124,25 @@ class DatabaseInterface:
                 query += ", " if i < len(where) - 1 else ""
                 i += 1
 
-        result = self.__engine.execute(query)
-        values: list[list[DatabaseValue]] = []
+        with self.__engine.connect() as conn:
+            result = conn.execute(query)
+            values: list[list[DatabaseValue]] = []
 
-        for r in result:
-            value: list[DatabaseValue] = []
-            for row in rows:
-                val = r[row.name]
-                if row.value == "INT":
-                    val = int(val)
-                elif row.value == "BOOL":
-                    val = val.lower() == "true"
-                elif row.value == "DOUBLE":
-                    val = float(val)
+            for r in result:
+                value: list[DatabaseValue] = []
+                for row in rows:
+                    val = r[row.name]
+                    if row.value == "INT":
+                        val = int(val)
+                    elif row.value == "BOOL":
+                        val = val.lower() == "true"
+                    elif row.value == "DOUBLE":
+                        val = float(val)
 
-                value.append(DatabaseValue(row, val))
-            values.append(value)
+                    value.append(DatabaseValue(row, val))
+                values.append(value)
 
-        return values
+            return values
 
     def clear_db(self):
         try:
@@ -143,5 +165,10 @@ class DatabaseInterface:
         self.__engine.execute("USE " + self.info["name"])
 
         scripts = list(filter(len, scripts.replace("\n", "").split(";")))
-        for script in scripts:
-            self.__engine.execute(script)
+        with self.__engine.connect() as conn:
+            for script in scripts:
+                conn.execute(script)
+
+    def execute_sql(self, sql: str):
+        with self.__engine.connect() as conn:
+            return conn.execute(sql)

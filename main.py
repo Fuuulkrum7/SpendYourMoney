@@ -48,13 +48,13 @@ s = GetSecurity(
     StandardQuery(
         SecurityInfo(
             0,
-            "RU000A105FS4",
+            "",
             "",
             ""
         ),
-        "RU000A0JTJL3"
+        "RU000A105FS4"
     ),
-    lambda: print("done"),
+    lambda x: print("done, status: ", x),
     TOKEN
 )
 s.start()
