@@ -15,7 +15,7 @@ from securities.securiries_types import SecurityType, StockType
 from securities.securities import Security, Stock, Bond, SecurityInfo, Coupon, Dividend
 from database.database_interface import DatabaseInterface
 
-from tinkoff.invest.services import InstrumentIdType
+from tinkoff.invest import InstrumentIdType
 from tinkoff.invest import Client, MoneyValue
 from tinkoff.invest.exceptions import RequestError
 
@@ -62,6 +62,7 @@ class GetCoupons(SecurityGetter, ABC, threading.Thread):
     def insert_to_database(self):
         if not len(self.coupon):
             self.status_code = 201
+            return
 
         table = CouponInfoTable().get_table()
         db = DatabaseInterface()
@@ -151,6 +152,7 @@ class GetDividends(SecurityGetter, ABC, threading.Thread):
     def insert_to_database(self):
         if not len(self.dividend):
             self.status_code = 201
+            return
 
         table = DividendInfoTable().get_table()
         db = DatabaseInterface()
