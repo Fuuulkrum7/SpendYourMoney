@@ -27,6 +27,7 @@ class SecurityGetter(ABC):
     table: str
     query: StandardQuery
     check_locally: bool
+    insert_to_db: bool
     on_finish: function = None
 
     @abstractmethod

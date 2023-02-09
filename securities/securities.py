@@ -365,7 +365,7 @@ class Bond(Security):
             if args[2][0] is not None:
                 if isinstance(args[2][0], list) and isinstance(args[2][0][0], DatabaseValue):
                     self.coupon = [Coupon(i) for i in args[2]]
-                elif isinstance(args[2][0][0], tinkoffCoupon):
+                elif isinstance(args[2][0], list) and len(args[2][0]) and isinstance(args[2][0][0], tinkoffCoupon):
                     self.coupon = [Coupon(i, args[2][1], args[2][2]) for i in args[2][0]]
                 else:
                     self.coupon = args[2]
@@ -426,12 +426,12 @@ class Stock(Security):
             # начинаем все расставлять по полочкам
             if ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue)) or isinstance(args[0], Security))\
                     and isinstance(args[1], list) and \
-                    (args[2][0] is None or isinstance(args[2][0], list)):
+                    (args[2][0] is None or isinstance(args[2], list)):
 
                 super().__init__(args[0].get_as_database_value())
 
                 if args[2][0] is not None:
-                    if isinstance(args[2][0], Dividend):
+                    if isinstance(args[2], list) and len(args[2]) and isinstance(args[2][0], Dividend):
                         self.dividend = args[2]
                     elif isinstance(args[2][0], list) and isinstance(args[2][0][0], DatabaseValue):
                         self.dividend = [Dividend(i) for i in args[2]]

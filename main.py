@@ -52,7 +52,7 @@ s = GetSecurity(
             "",
             ""
         ),
-        "RU000A105FS4"
+        "BBG000BBJQV0"
     ),
     lambda x: print("done, status: ", x),
     TOKEN
