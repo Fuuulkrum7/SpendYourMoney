@@ -1,12 +1,8 @@
 from abc import ABC
 from datetime import datetime
-from math import ceil, log10
 
 import function
-import threading
-
 import sqlalchemy
-import tinkoff.invest
 
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
     StocksInfoTable, CouponInfoTable, DividendInfoTable
@@ -15,20 +11,44 @@ from securities.securiries_types import SecurityType, StockType
 from securities.securities import Security, Stock, Bond, SecurityInfo, Coupon, Dividend
 from database.database_interface import DatabaseInterface
 
-from tinkoff.invest import InstrumentIdType
-from tinkoff.invest import Client, MoneyValue
+
+from tinkoff.invest import InstrumentIdType, Share as tinkoffShare, Bond as tinkoffBond
+from tinkoff.invest import Client
 from tinkoff.invest.exceptions import RequestError
 
 
-def convert_money_value(data: MoneyValue):
-    return data.units + data.nano / 10 ** ceil(log10(data.nano if data.nano > 0 else 1))
+"""
+Информация о статус-кодах
+2** - все успешно загружено
+200 все операции прошли успешно
+201 - при добавлении доп. данных
+
+3** - что-то пошло не так с бд
+300 - ошибка в получении данных из бд, конкретно тут -
+не критичная.
+301 - критическая ошибка при добавлении в бд
+310 и 311 аналогично, но для доп. данных,
+то есть для купонов и дивидендов
+
+4** - ошибка при загрузке данных из интернета. Критические все
+400 - ошибка при загрузке данных основных
+410 - дополнительных
+"""
 
 
-class GetCoupons(SecurityGetter, ABC, threading.Thread):
+class GetCoupons(SecurityGetter, ABC):
+    """
+    Класс, отвечающий за загрузку купонов по облигациям.
+    Является потоком, запуск различных действий только в виде потока,
+    иначе тормозится основной, где работает интерфейс
+    """
+    # Заготовка под купоны
     coupon: list[Coupon] = None
+    # Статус-код, все банально
     status_code: int = 200
 
     def __init__(self, query: StandardQuery, on_finish: function, token: str, check_locally=True, insert_to_db=True):
+        # Просто сохраняем данные по переменным
         super().__init__()
         self.query = query
         self.on_finish = on_finish
@@ -37,18 +57,24 @@ class GetCoupons(SecurityGetter, ABC, threading.Thread):
         self.insert_to_db = insert_to_db
 
     def run(self) -> None:
+        # запускаем загрузку данных
         self.load_data()
 
+        # Если они загружены и их надо добавить
         if self.coupon is not None and self.insert_to_db:
+            # Пробуем их добавить
             try:
                 self.insert_to_database()
             except Exception as e:
                 print(e)
+                # В случае ошибки добавления, обозначаем
                 self.status_code = 311
 
+        # Вызов функции
         self.on_finish(self.status_code)
 
     def load_data(self):
+        # Если надо проверять локально, делам это
         try:
             if self.check_locally:
                 self.get_from_bd()
@@ -56,65 +82,91 @@ class GetCoupons(SecurityGetter, ABC, threading.Thread):
             print(e)
             self.status_code = 310
 
+        # Если мы данные все ещё не загрузили,
+        # лезем в апи
         if self.coupon is None:
             self.get_from_api()
 
     def insert_to_database(self):
-        if not len(self.coupon):
+        # Защита от вызова из вне. Так-то ранее уже проверка есть
+        # Ну и от пустого добавления данных тоже есть.
+        if self.coupon is None or not len(self.coupon):
             self.status_code = 201
             return
 
+        # Таблица, куда добавляем
         table = CouponInfoTable().get_table()
+        # Создаем интерфейс для работы с бд
+        # и подключаемся к ней
         db = DatabaseInterface()
         db.connect_to_db()
 
+        # Массив данных под запрос
         query = []
 
+        # Перебираем купоны
         for values in self.coupon:
             sub = {}
+            # Перебираем каждое из полей купона
             n = values.get_as_database_value()
             for value in n:
+                # Если поле не автоматически добавляемое
                 if not (value.get_row_name() in ["ID", "UID"]):
+                    # Ставим в соответствие имени столбца значение
                     sub[value.get_row_name()] = value.to_db_value()
 
+            # Добавляем данные по акции
             query.append(sub)
 
+        # Добавляем данные в бд
         db.add_data(
             table,
             query=query
         )
 
+    # Поиск данных в бд
     def get_from_bd(self):
         pass
 
     def get_from_api(self):
+        # Получаем фиги из запроса,
+        # так как этот метод в апи работает только с фиги
         figi = self.query.security_info.figi
 
-        with Client(self.__token) as client:
-            if not len(figi):
-                data = self.query.get_query()
+        try:
+            # создаем соединение
+            with Client(self.__token) as client:
+                # Если фиги пуст
+                if not len(figi):
+                    # получаем данные для запроса
+                    data = self.query.get_query()
 
-                r = client.instruments.find_instrument(query=data)
-                result = r.instruments
+                    # делаем запрос
+                    r = client.instruments.find_instrument(query=data)
+                    result = r.instruments
 
-                result = list(filter(lambda x: x.instrument_type == "bond", result))
+                    # оставляем только те данные, которые подходят по запросу
+                    result = list(filter(lambda x: x.instrument_type == "bond", result))
 
-                if not len(result):
-                    self.status_code = 510
-                    return
+                    if not len(result) or self.query.security_info.id <= 0 and self.insert_to_db:
+                        self.status_code = 510
+                        return
 
-                figi = result[0].figi
+                    figi = result[0].figi
 
-            sub_data = client.instruments.get_bond_coupons(
-                figi=figi,
-                from_=datetime(year=1970, month=1, day=1),
-                to=datetime(year=2100, month=1, day=1)
-            ).events
+                sub_data = client.instruments.get_bond_coupons(
+                    figi=figi,
+                    from_=datetime(year=1970, month=1, day=1),
+                    to=datetime(year=2100, month=1, day=1)
+                ).events
 
-        self.coupon = [Coupon(i, -2, -2) for i in sub_data]
+            self.coupon = [Coupon(i, -2, self.query.security_info.id) for i in sub_data]
+        except Exception as e:
+            print(e)
+            self.status_code = 410
 
 
-class GetDividends(SecurityGetter, ABC, threading.Thread):
+class GetDividends(SecurityGetter, ABC):
     dividend: list[Dividend] = None
     status_code: int = 200
 
@@ -209,7 +261,7 @@ class GetDividends(SecurityGetter, ABC, threading.Thread):
             self.status_code = 410
 
 
-class GetSecurity(SecurityGetter, ABC, threading.Thread):
+class GetSecurity(SecurityGetter, ABC):
     security: Security | Bond | Stock | None = None
     add_to_other: bool
     status_code: int = 200
@@ -221,7 +273,6 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
         self.query = query
         self.add_to_other = add_to_other
         self.on_finish = on_finish
-        self.table = "securities_info"
         self.__token = token
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
@@ -300,7 +351,7 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
 
             self.query.security_info = SecurityInfo(-2, result[0].figi, result[0].ticker, result[0].name)
 
-            loaded_instrument: tinkoff.invest.Share | tinkoff.invest.Bond
+            loaded_instrument: tinkoffShare | tinkoffBond
 
             try:
                 if result[0].instrument_type == "bond":
@@ -309,16 +360,11 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
                         id=result[0].figi
                     ).instrument
 
-                    if self.add_to_other:
-                        self.table = "bonds_info"
                 elif result[0].instrument_type == "share":
-                    loaded_instrument: tinkoff.invest.Share = client.instruments.share_by(
+                    loaded_instrument: tinkoffShare = client.instruments.share_by(
                         id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
                         id=result[0].figi
                     ).instrument
-
-                    if self.add_to_other:
-                        self.table = "stocks_info"
 
                 else:
                     return

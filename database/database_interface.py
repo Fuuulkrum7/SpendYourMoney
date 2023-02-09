@@ -1,10 +1,10 @@
-import sqlalchemy
-from sqlalchemy.engine.base import Engine
-from sqlalchemy_utils import database_exists
-from info.file_loader import FileLoader
 import os
 
+from sqlalchemy.engine.base import Engine
+from sqlalchemy_utils import database_exists
+
 from database.database_info import *
+from info.file_loader import FileLoader
 
 
 class DatabaseValue:
