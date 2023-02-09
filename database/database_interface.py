@@ -1,7 +1,9 @@
 import os
+import datetime
 
+import sqlalchemy
 from sqlalchemy.engine.base import Engine
-from sqlalchemy_utils import database_exists
+from sqlalchemy_utils import database_exists, create_database
 
 from database.database_info import *
 from info.file_loader import FileLoader
@@ -24,6 +26,9 @@ class DatabaseValue:
     def to_db_value(self):
         if isinstance(self.__value, bool):
             return self.get_value()
+        if isinstance(self.__value, datetime.datetime) and self.__value.timestamp() <= 0:
+            return str(datetime.datetime(year=1970, day=2, month=1))
+
         return str(self.__value)
 
     def __eq__(self, other):
@@ -95,26 +100,19 @@ class DatabaseInterface:
         pass
 
     # Альтернативный вариант получения данных путем создания запроса sql
-    def get_data_by_sql(self, rows: list[Enum], table: str,
-                        where: dict = None, sort_query: list[list[Enum, str]] = None) -> list[list[DatabaseValue]]:
+    def get_data_by_sql(self, table: str, rows: list[Enum], where: str = None,
+                        sort_query: list[list[Enum, str]] = None) -> list[list[DatabaseValue]]:
         query = f"SELECT "
 
         if rows:
-            for row in rows:
-                query += f"{row.name} "
+            for i in range(len(rows)):
+                query += f"`{rows[i].name}`"
+                if i < len(rows) - 1:
+                    query += ", "
         else:
             query += "*"
 
         query += f" FROM {table}"
-
-        if where is not None:
-            query += " WHERE "
-            d = " AND " if len(where) > 1 else ""
-            i = 0
-            for key, value in where:
-                query += f"{key} = {value}"
-                query += d if i < len(where) - 1 else ""
-                i += 1
 
         if sort_query is not None:
             query += " ORDER BY "
@@ -131,15 +129,7 @@ class DatabaseInterface:
             for r in result:
                 value: list[DatabaseValue] = []
                 for row in rows:
-                    val = r[row.name]
-                    if row.value == "INT":
-                        val = int(val)
-                    elif row.value == "BOOL":
-                        val = val.lower() == "true"
-                    elif row.value == "DOUBLE":
-                        val = float(val)
-
-                    value.append(DatabaseValue(row, val))
+                    value.append(DatabaseValue(row, r[row.name]))
                 values.append(value)
 
             return values
@@ -160,12 +150,15 @@ class DatabaseInterface:
 
     def create_database(self):
         scripts = FileLoader.get_file(self.__path + "/info/files/init.sql", datatype=str)
-
-        self.__engine.execute("CREATE DATABASE " + self.info["name"])
-        self.__engine.execute("USE " + self.info["name"])
-
         scripts = list(filter(len, scripts.replace("\n", "").split(";")))
+
+        self.__engine = sqlalchemy.create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost")
+
         with self.__engine.connect() as conn:
+            conn.execute("commit")
+            conn.execute("CREATE DATABASE " + self.info["name"])
+            conn.execute("USE " + self.info["name"])
+
             for script in scripts:
                 conn.execute(script)
 

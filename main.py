@@ -30,7 +30,7 @@ s = GetSecurity(
             "",
             ""
         ),
-        "TCSS07661625"
+        "Газпром"
     ),
     lambda x: print("done, status: ", x),
     TOKEN

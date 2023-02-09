@@ -291,6 +291,12 @@ class Security:
     def set_id(self, id: int):
         self.info.id = id
 
+    def set_security_id(self, id: int):
+        self.set_id(id)
+
+    def get_as_database_value_security(self):
+        return self.get_as_database_value()
+
 
 class Bond(Security):
     coupon_quantity_per_year: int
@@ -312,11 +318,10 @@ class Bond(Security):
         """
         if len(args) == 3 and ((isinstance(args[0], list) and isinstance(args[0][0], DatabaseValue))
                                or (isinstance(args[0], Security))) and isinstance(args[1], list) and \
-                (isinstance(args[2], list) and ((isinstance(args[2][0], list) and
-                                                 (isinstance(args[2][0][0], DatabaseValue) or
+                (isinstance(args[2], list) and (len(args[2]) == 0 or ((isinstance(args[2][0], list) and
+                                                (isinstance(args[2][0][0], DatabaseValue) or
                                                 isinstance(args[2][0][0], tinkoffCoupon))) or
-                                                isinstance(args[2][0], Coupon)) or
-                    args[2][0] is None):
+                                                isinstance(args[2][0], Coupon)) or args[2][0] is None)):
 
             super(Bond, self).__init__(args[0].get_as_database_value())
 
@@ -362,7 +367,7 @@ class Bond(Security):
                 self.floating_coupon = args[1][8]
                 self.perpetual = args[1][9]
 
-            if args[2][0] is not None:
+            if args[2] is not None and len(args[2]):
                 if isinstance(args[2][0], list) and isinstance(args[2][0][0], DatabaseValue):
                     self.coupon = [Coupon(i) for i in args[2]]
                 elif isinstance(args[2][0], list) and len(args[2][0]) and isinstance(args[2][0][0], tinkoffCoupon):

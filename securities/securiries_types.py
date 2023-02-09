@@ -28,6 +28,7 @@ class CouponType(Enum):
     COUPON_TYPE_MORTGAGE = 4
     COUPON_TYPE_FIX = 5
     COUPON_TYPE_VARIABLE = 6
+    COUPON_TYPE_OTHER = 7
 
 
 class SecurityType(Enum):
