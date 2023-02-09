@@ -3,7 +3,7 @@ import datetime
 
 import sqlalchemy
 from sqlalchemy.engine.base import Engine
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy_utils import database_exists
 
 from database.database_info import *
 from info.file_loader import FileLoader
@@ -80,15 +80,12 @@ class DatabaseInterface:
             print(e)
             self.connected = -1
 
-    def add_data(self, table: Base, query: list[dict] = None, values: list[DatabaseValue] = None):
+    def add_data(self, table: Base, query: list[dict] = None, values: dict = None):
         if query is None and values is None:
             return
 
         if query is None:
-            query = {}
-            for value in values:
-                if not (value.get_row_name() in ["ID", "UID"]):
-                    query[value.get_row_name()] = value.to_db_value()
+            query = [dict(filter(lambda x: not (x[0] in "UID"), values.items()))]
 
         with self.__engine.connect() as conn:
             conn.execute(
@@ -96,12 +93,12 @@ class DatabaseInterface:
                 query
             )
 
-    def add_unique_data(self, rows: list[DatabaseValue]):
+    def add_unique_data(self, table: Base, query: list[dict] = None, values: dict = None):
         pass
 
     # Альтернативный вариант получения данных путем создания запроса sql
     def get_data_by_sql(self, table: str, rows: list[Enum], where: str = None,
-                        sort_query: list[list[Enum, str]] = None) -> list[list[DatabaseValue]]:
+                        sort_query: list[list[Enum, str]] = None) -> list[dict]:
         query = f"SELECT "
 
         if rows:
@@ -124,12 +121,12 @@ class DatabaseInterface:
 
         with self.__engine.connect() as conn:
             result = conn.execute(query)
-            values: list[list[DatabaseValue]] = []
+            values: list[dict] = []
 
             for r in result:
-                value: list[DatabaseValue] = []
+                value: dict = {}
                 for row in rows:
-                    value.append(DatabaseValue(row, r[row.name]))
+                    value[row.name] = r[row.name]
                 values.append(value)
 
             return values

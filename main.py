@@ -25,12 +25,13 @@ print("start")
 s = GetSecurity(
     StandardQuery(
         SecurityInfo(
-            0,
-            "",
-            "",
-            ""
+            id=0,
+            figi="",
+            security_name="",
+            ticker="",
+            class_code=""
         ),
-        "Газпром"
+        "TCS00A105RZ4"
     ),
     lambda x: print("done, status: ", x),
     TOKEN

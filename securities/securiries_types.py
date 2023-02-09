@@ -37,3 +37,4 @@ class SecurityType(Enum):
     """
     STOCK = 0
     BOND = 1
+    DEFAULT = 2

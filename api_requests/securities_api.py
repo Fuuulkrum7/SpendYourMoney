@@ -1,5 +1,6 @@
 from abc import ABC
 from datetime import datetime
+from time import time
 
 import function
 import sqlalchemy
@@ -109,14 +110,7 @@ class GetCoupons(SecurityGetter, ABC):
 
         # Перебираем купоны
         for values in self.coupon:
-            sub = {}
-            # Перебираем каждое из полей купона
-            n = values.get_as_database_value()
-            for value in n:
-                # Если поле не автоматически добавляемое
-                if not (value.get_row_name() in ["ID", "UID"]):
-                    # Ставим в соответствие имени столбца значение
-                    sub[value.get_row_name()] = value.to_db_value()
+            sub = dict(filter(lambda x: not (x[0] in "UID"), values.get_as_dict().items()))
 
             # Добавляем данные по акции
             query.append(sub)
@@ -163,7 +157,17 @@ class GetCoupons(SecurityGetter, ABC):
                     to=datetime(year=2100, month=1, day=1)
                 ).events
 
-            self.coupon = [Coupon(i, -2, self.query.security_info.id) for i in sub_data]
+            self.coupon = [
+                Coupon(
+                    coupon_id=-2,
+                    security_id=self.query.security_info.id,
+                    coupon_date=coupon.coupon_date,
+                    fix_date=coupon.fix_date,
+                    coupon_type=coupon.coupon_type,
+                    pay_one_bound=coupon.pay_one_bond,
+                    coupon_number=coupon.coupon_number
+                ) for coupon in sub_data
+            ]
         except Exception as e:
             print(e)
             self.status_code = 410
@@ -216,11 +220,7 @@ class GetDividends(SecurityGetter, ABC):
         query = []
 
         for values in self.dividend:
-            sub = {}
-            n = values.get_as_database_value()
-            for value in n:
-                if not (value.get_row_name() in ["ID", "UID"]):
-                    sub[value.get_row_name()] = value.to_db_value()
+            sub = dict(filter(lambda x: not (x[0] in "UID"), values.get_as_dict().items()))
 
             query.append(sub)
 
@@ -257,7 +257,17 @@ class GetDividends(SecurityGetter, ABC):
                     to=datetime(year=2100, month=1, day=1)
                 ).dividends
 
-            self.dividend = [Dividend(i, -2, -2) for i in sub_data]
+            self.dividend = [
+                Dividend(
+                    div_value=div.dividend_net,
+                    payment_date=div.payment_date,
+                    declared_date=div.declared_date,
+                    record_date=div.record_date,
+                    last_buy_date=div.last_buy_date,
+                    yield_value=div.yield_value,
+                    div_id=-2,
+                    security_id=self.query.security_info.id) for div in sub_data
+            ]
 
         except Exception as e:
             print(e)
@@ -293,11 +303,10 @@ class GetSecurity(SecurityGetter, ABC):
         self.on_finish(self.status_code)
 
     def load_data(self):
-        from time import time
         t = time()
         try:
             if self.check_locally:
-                self.get_from_bd()
+                pass
         except Exception as e:
             print(e)
             self.status_code = 300
@@ -317,7 +326,7 @@ class GetSecurity(SecurityGetter, ABC):
             if self.add_to_other:
                 db.add_data(
                     table.get_table(),
-                    values=security.get_as_database_value_security()
+                    values=security.get_as_dict_security()
                 )
                 cursor: sqlalchemy.engine.cursor = db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
 
@@ -335,7 +344,7 @@ class GetSecurity(SecurityGetter, ABC):
 
             db.add_data(
                 table.get_table(),
-                values=security.get_as_database_value()
+                values=security.get_as_dict()
             )
 
             cursor: sqlalchemy.engine.cursor = db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
@@ -387,7 +396,13 @@ class GetSecurity(SecurityGetter, ABC):
 
             try:
                 for result in results:
-                    self.query.security_info = SecurityInfo(-2, result.figi, result.ticker, result.name)
+                    self.query.security_info = SecurityInfo(
+                        id=-2,
+                        figi=result.figi,
+                        ticker=result.ticker,
+                        security_name=result.name,
+                        class_code=result.class_code
+                    )
 
                     loaded_instrument: tinkoffShare | tinkoffBond
 
@@ -411,74 +426,72 @@ class GetSecurity(SecurityGetter, ABC):
                         c = 1
 
                     security = Security(
-                        loaded_instrument.class_code,
-                        loaded_instrument.lot,
-                        loaded_instrument.currency,
-                        loaded_instrument.country_of_risk_name,
-                        loaded_instrument.sector,
-                        SecurityType(c),
-                        -2,
-                        loaded_instrument.figi,
-                        loaded_instrument.ticker,
-                        loaded_instrument.name
+                        class_code=loaded_instrument.class_code,
+                        lot=loaded_instrument.lot,
+                        currency=loaded_instrument.currency,
+                        country=loaded_instrument.country_of_risk_name,
+                        sector=loaded_instrument.sector,
+                        security_type=SecurityType(c),
+                        id=0,
+                        ID=0,
+                        figi=loaded_instrument.figi,
+                        ticker=loaded_instrument.ticker,
+                        security_name=loaded_instrument.name
                     )
 
                     if self.add_to_other:
                         if security.security_type == SecurityType.BOND:
-                            sub_data = GetCoupons(
-                                StandardQuery(security.info, self.query.query_text),
+                            sub = GetCoupons(
+                                StandardQuery(self.query.security_info, self.query.query_text),
                                 lambda x: x,
                                 self.__token,
                                 insert_to_db=False
                             )
-                            sub_data.start()
-                            sub_data.join()
 
-                            self.status_code = sub_data.status_code
+                            sub.start()
+                            sub.join()
+
+                            self.status_code = sub.status_code
 
                             security = Bond(
-                                security,
-                                [
-                                    loaded_instrument.coupon_quantity_per_year,
-                                    loaded_instrument.nominal,
-                                    loaded_instrument.amortization_flag,
-                                    loaded_instrument.maturity_date.date(),
-                                    -2,
-                                    loaded_instrument.aci_value,
-                                    loaded_instrument.issue_size,
-                                    loaded_instrument.issue_size_plan,
-                                    loaded_instrument.floating_coupon_flag,
-                                    loaded_instrument.perpetual_flag
-                                ],
-                                sub_data.coupon
+                                security=security,
+                                coupon_quantity_per_year=loaded_instrument.coupon_quantity_per_year,
+                                nominal=loaded_instrument.nominal,
+                                amortization=loaded_instrument.amortization_flag,
+                                maturity_date=loaded_instrument.maturity_date.date(),
+                                bond_id=-2,
+                                aci_value=loaded_instrument.aci_value,
+                                issue_size=loaded_instrument.issue_size,
+                                issue_size_plan=loaded_instrument.issue_size_plan,
+                                floating_coupon=loaded_instrument.floating_coupon_flag,
+                                perpetual=loaded_instrument.perpetual_flag,
+                                coupon=sub.coupon
                             )
 
-                            self.sub_data.append(sub_data)
+                            self.sub_data.append(sub)
                         elif security.security_type == SecurityType.STOCK:
-                            sub_data = GetDividends(
-                                StandardQuery(security.info, self.query.query_text),
+                            sub = GetDividends(
+                                StandardQuery(self.query.security_info, self.query.query_text),
                                 lambda x: x,
                                 self.__token,
                                 insert_to_db=False
                             )
-                            sub_data.start()
-                            sub_data.join()
+                            sub.start()
+                            sub.join()
 
-                            self.status_code = sub_data.status_code
+                            self.status_code = sub.status_code
 
                             security = Stock(
-                                security,
-                                [
-                                    -2,
-                                    loaded_instrument.ipo_date.date(),
-                                    loaded_instrument.issue_size,
-                                    StockType(loaded_instrument.share_type),
-                                    loaded_instrument.otc_flag,
-                                    loaded_instrument.div_yield_flag
-                                ],
-                                sub_data.dividend
+                                security=security,
+                                stock_id=-2,
+                                ipo_date=loaded_instrument.ipo_date.date(),
+                                issue_size=loaded_instrument.issue_size,
+                                stock_type=StockType(loaded_instrument.share_type),
+                                otc_flag=loaded_instrument.otc_flag,
+                                div_yield_flag=loaded_instrument.div_yield_flag,
+                                dividend=sub.dividend
                             )
-                            self.sub_data.append(sub_data)
+                            self.sub_data.append(sub)
 
                         if security.info.id != -1:
                             self.securities.append(security)

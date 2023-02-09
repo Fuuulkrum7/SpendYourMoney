@@ -1,4 +1,4 @@
-from aenum import Enum, NoAlias
+from aenum import Enum
 
 import sqlalchemy
 from sqlalchemy.dialects.mysql import DOUBLE
@@ -14,91 +14,77 @@ class BondsInfo(Enum):
     в соответствующих базах данных. А значения переменных - типам данных.
     Удобно для конвертации данных обратно, из бд
     """
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    coupon_quantity_per_year = "INT"
-    maturity_date = "DATE"
-    nominal = "DOUBLE"
-    aci_value = "DOUBLE"
-    issue_size = "INT"
-    issue_size_plan = "INT"
-    floating_coupon_flag = "BOOL"
-    perpetual_flag = "BOOL"
-    amortization_flag = "BOOL"
+    ID = "ID"
+    security_id = "security_id"
+    coupon_quantity_per_year = "coupon_quantity_per_year"
+    maturity_date = "maturity_date"
+    nominal = "nominal"
+    aci_value = "aci_value"
+    issue_size = "issue_size"
+    issue_size_plan = "issue_size_plan"
+    floating_coupon_flag = "floating_coupon_flag"
+    perpetual_flag = "perpetual_flag"
+    amortization_flag = "amortization_flag"
 
 
 class CouponInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    coupon_date = "DATE"
-    coupon_number = "INT"
-    fix_date = "DATE"
-    pay_one_bond = "DOUBLE"
-    coupon_type = "INT"
+    ID = "ID"
+    security_id = "security_id"
+    coupon_date = "coupon_date"
+    coupon_number = "coupon_number"
+    fix_date = "fix_date"
+    pay_one_bond = "pay_one_bond"
+    coupon_type = "coupon_type"
 
 
 class DividendInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    div_value = "DOUBLE"
-    payment_date = "DATE"
-    declared_date = "DATE"
-    record_date = "DATE"
-    last_buy_date = "DATE"
-    yield_value = "DOUBLE"
+    ID = "ID"
+    security_id = "security_id"
+    div_value = "div_value"
+    payment_date = "payment_date"
+    declared_date = "declared_date"
+    record_date = "record_date"
+    last_buy_date = "last_buy_date"
+    yield_value = "yield_value"
 
 
 class SecuritiesHistory(Enum):
-    _settings_ = NoAlias
-
-    security_id = "INT"
-    price = "DOUBLE"
-    time = "DATETIME"
-    volume = "INT"
+    security_id = "security_id"
+    price = "price"
+    time = "time"
+    volume = "volume"
 
 
 class SecuritiesInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    figi = "CHAR"
-    ticker = "CHAR"
-    security_name = "CHAR"
-    class_code = "CHAR"
-    lot = "INT"
-    currency = "CHAR"
-    country = "CHAR"
-    sector = "CHAR"
-    security_type = "INT"
+    ID = "ID"
+    figi = "figi"
+    ticker = "ticker"
+    security_name = "security_name"
+    class_code = "class_code"
+    lot = "lot"
+    currency = "currency"
+    country = "country"
+    sector = "sector"
+    security_type = "security_type"
 
 
 class StocksInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    ipo_date = "DATE"
-    issue_size = "INT"
-    stock_type = "INT"
-    otc_flag = "BOOL"
-    div_yield_flag = "BOOL"
+    ID = "ID"
+    security_id = "security_id"
+    ipo_date = "ipo_date"
+    issue_size = "issue_size"
+    stock_type = "stock_type"
+    otc_flag = "otc_flag"
+    div_yield_flag = "div_yield_flag"
 
 
 class UserTable(Enum):
-    _settings_ = NoAlias
-
-    UID = "INT"
-    username = "CHAR"
-    token = "CHAR"
-    password = "CHAR"
-    status = "INT"
-    access_level = "INT"
+    UID = "UID"
+    username = "username"
+    token = "token"
+    password = "password"
+    status = "status"
+    access_level = "access_level"
 
 
 # Таблицы для SQLAlchemy
