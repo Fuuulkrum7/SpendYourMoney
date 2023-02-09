@@ -1,54 +1,10 @@
 import os
-import datetime
 
-import sqlalchemy
 from sqlalchemy.engine.base import Engine
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *
 from info.file_loader import FileLoader
-
-
-class DatabaseValue:
-    __row: Enum = None
-    __value: object = None
-
-    def __init__(self, row: Enum, value):
-        self.__value = value
-        self.__row = row
-
-    def __str__(self):
-        a = str(self.__value)
-        if isinstance(self.__value, bool):
-            return a.lower()
-        return a
-
-    def to_db_value(self):
-        if isinstance(self.__value, bool):
-            return self.get_value()
-        if isinstance(self.__value, datetime.datetime) and self.__value.timestamp() <= 0:
-            return str(datetime.datetime(year=1970, day=2, month=1))
-
-        return str(self.__value)
-
-    def __eq__(self, other):
-        if not isinstance(other, DatabaseValue):
-            return False
-        if self.get_row_name() == other.get_row_name() and self.get_value() == other.get_value():
-            return True
-        return False
-
-    def get_row_name(self) -> str:
-        return self.__row.name
-
-    def get_type(self) -> str:
-        return str(self.__row.value)
-
-    def get_value(self):
-        return self.__value
-
-    def get_row(self):
-        return self.__row
 
 
 class DatabaseInterface:
