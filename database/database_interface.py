@@ -53,7 +53,7 @@ class DatabaseInterface:
         pass
 
     # Альтернативный вариант получения данных путем создания запроса sql
-    def get_data_by_sql(self, table: str, rows: list[Enum], where: str = None,
+    def get_data_by_sql(self, table: str, rows: list[Enum], where: str = "",
                         sort_query: list[list[Enum, str]] = None) -> list[dict]:
         query = f"SELECT "
 
@@ -65,7 +65,7 @@ class DatabaseInterface:
         else:
             query += "*"
 
-        query += f" FROM {table}"
+        query += f" FROM {table} " + where
 
         if sort_query is not None:
             query += " ORDER BY "
@@ -84,7 +84,6 @@ class DatabaseInterface:
                 for row in rows:
                     value[row.name] = r[row.name]
                 values.append(value)
-
             return values
 
     def clear_db(self):

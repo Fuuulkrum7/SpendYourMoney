@@ -306,7 +306,7 @@ class GetSecurity(SecurityGetter, ABC):
         t = time()
         try:
             if self.check_locally:
-                pass
+                self.get_from_bd()
         except Exception as e:
             print(e)
             self.status_code = 300
@@ -356,11 +356,12 @@ class GetSecurity(SecurityGetter, ABC):
         db = DatabaseInterface()
         db.connect_to_db()
 
+        query_text = self.query.get_query()
+
         query = "WHERE "
-        query += f"{SecuritiesInfo.figi} = {self.query.get_query()} OR "
-        query += f"{SecuritiesInfo.security_name} LIKE %{self.query.get_query()}% OR "
-        query += f"{SecuritiesInfo.ticker} = {self.query.get_query()} OR "
-        query += f"{SecuritiesInfo.class_code} = {self.query.get_query()}"
+        query += f"`{SecuritiesInfo.figi.name}` = '{query_text}' OR "
+        query += f"`{SecuritiesInfo.ticker.name}` = '{query_text}' OR "
+        query += f"`{SecuritiesInfo.class_code.name}` = '{query_text}'"
 
         a = db.get_data_by_sql(
             SecuritiesInfoTable().get_name(),
@@ -368,17 +369,24 @@ class GetSecurity(SecurityGetter, ABC):
             where=query
         )
 
-        self.securities = [Security(i) for i in a]
+        self.securities = [Security(**i) for i in a]
+        print(self.securities[0].security_type)
 
         if self.add_to_other:
+            query = "WHERE security_id IN ("
+            d = []
             for security in self.securities:
-                query = f"WHERE security_id = {security.info.id}"
-                a = db.get_data_by_sql(
-                    f"{BondsInfoTable().get_name()} "
-                    f"{StocksInfoTable().get_table()}",
-                    [],
-                    where=query
-                )
+                d.append(str(security.info.id))
+
+            query += ", ".join(d)
+            query += ")"
+
+            a = db.get_data_by_sql(
+                f"{BondsInfoTable().get_name()} "
+                f"{StocksInfoTable().get_table()}",
+                [],
+                where=query
+            )
         print(len(self.securities))
 
     def get_from_api(self):
@@ -453,6 +461,7 @@ class GetSecurity(SecurityGetter, ABC):
 
                             self.status_code = sub.status_code
 
+                            t = time()
                             security = Bond(
                                 security=security,
                                 coupon_quantity_per_year=loaded_instrument.coupon_quantity_per_year,
@@ -467,6 +476,7 @@ class GetSecurity(SecurityGetter, ABC):
                                 perpetual=loaded_instrument.perpetual_flag,
                                 coupon=sub.coupon
                             )
+                            print(time() - t)
 
                             self.sub_data.append(sub)
                         elif security.security_type == SecurityType.STOCK:
@@ -481,6 +491,7 @@ class GetSecurity(SecurityGetter, ABC):
 
                             self.status_code = sub.status_code
 
+                            t = time()
                             security = Stock(
                                 security=security,
                                 stock_id=-2,
@@ -491,8 +502,9 @@ class GetSecurity(SecurityGetter, ABC):
                                 div_yield_flag=loaded_instrument.div_yield_flag,
                                 dividend=sub.dividend
                             )
-                            self.sub_data.append(sub)
+                            print(time() - t)
 
+                            self.sub_data.append(sub)
                         if security.info.id != -1:
                             self.securities.append(security)
 

@@ -258,7 +258,6 @@ class Bond(Security):
             name: str = None
     ):
 
-        print(security.get_as_dict())
         if security is not None:
             super().__init__(**security.get_as_dict())
         else:
