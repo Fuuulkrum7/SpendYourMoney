@@ -53,26 +53,35 @@ class DatabaseInterface:
         pass
 
     # Альтернативный вариант получения данных путем создания запроса sql
-    def get_data_by_sql(self, table: str, rows: list[Enum], where: str = "",
-                        sort_query: list[list[Enum, str]] = None) -> list[dict]:
+    def get_data_by_sql(self, rows: dict[str, list[Enum]], table: str, where: str = "",
+                        sort_query: list[str] = None, join: str = "") -> list[dict]:
         query = f"SELECT "
 
-        if rows:
-            for i in range(len(rows)):
-                query += f"`{rows[i].name}`"
-                if i < len(rows) - 1:
-                    query += ", "
-        else:
-            query += "*"
+        i = 0
+        for key, row in rows.items():
+            tbl = ""
+            if len(rows) > 1:
+                tbl = key + "."
+            query += ", ".join(map(lambda x: f"{tbl}{x.name}", row))
 
-        query += f" FROM {table} " + where
+            i += 1
+            if i < len(rows):
+                query += ", "
+
+        query += f" FROM {table}"
+
+        if join:
+            query += f" INNER JOIN {join}"
+
+        if where:
+            query += f" {where}"
 
         if sort_query is not None:
             query += " ORDER BY "
             i = 0
             for row in sort_query:
-                query += f"{row[0].name} {row[1]}"
-                query += ", " if i < len(where) - 1 else ""
+                query += row
+                query += ", " if i < len(sort_query) - 1 else ""
                 i += 1
 
         with self.__engine.connect() as conn:
@@ -81,8 +90,9 @@ class DatabaseInterface:
 
             for r in result:
                 value: dict = {}
-                for row in rows:
-                    value[row.name] = r[row.name]
+                for sub_row in rows.values():
+                    for row in sub_row:
+                        value[row.name] = r[row.name]
                 values.append(value)
             return values
 

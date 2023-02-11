@@ -233,15 +233,15 @@ class Bond(Security):
             self,
             coupon_quantity_per_year: int = 0,
             nominal: float | MoneyValue = 1000,
-            amortization: bool = False,
-            maturity_date: date | str= None,
+            amortization_flag: bool = False,
+            maturity_date: date | str = None,
             bond_id: int = -1,
             ID: int = -1,
             aci_value: float | MoneyValue = 0,
             issue_size: int = 0,
             issue_size_plan: int = 0,
-            floating_coupon: bool = False,
-            perpetual: bool = False,
+            floating_coupon_flag: bool = False,
+            perpetual_flag: bool = False,
             coupon: list[Coupon] = [],
 
             security: Security = None,
@@ -251,11 +251,11 @@ class Bond(Security):
             sector: str = None,
             security_type: SecurityType = SecurityType.BOND,
             info: SecurityInfo = None,
-            id: int = -1,
+            security_id: int = -1,
             class_code: str = None,
             figi: str = None,
             ticker: str = None,
-            name: str = None
+            security_name: str = None
     ):
 
         if security is not None:
@@ -268,25 +268,24 @@ class Bond(Security):
                 sector=sector,
                 security_type=security_type,
                 info=info,
-                id=id,
-                ID=id,
+                id=security_id,
                 class_code=class_code,
                 figi=figi,
                 ticker=ticker,
-                security_name=name
+                security_name=security_name
             )
 
         self.coupon = coupon
         self.coupon_quantity_per_year = coupon_quantity_per_year
         self.nominal = convert_money_value(nominal)
-        self.amortization = amortization
+        self.amortization = amortization_flag
         self.maturity_date = get_data_from_value(maturity_date)
         self.bond_id = max(bond_id, ID)
         self.aci_value = convert_money_value(aci_value)
         self.issue_size = issue_size
         self.issue_size_plan = issue_size_plan
-        self.floating_coupon = floating_coupon
-        self.perpetual = perpetual
+        self.floating_coupon = floating_coupon_flag
+        self.perpetual = perpetual_flag
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
@@ -347,11 +346,11 @@ class Stock(Security):
             sector: str = None,
             security_type: SecurityType = SecurityType.STOCK,
             info: SecurityInfo = None,
-            id: int = -1,
+            security_id: int = -1,
             class_code: str = None,
             figi: str = None,
             ticker: str = None,
-            name: str = None
+            security_name: str = None
     ):
         if security is not None:
             super().__init__(**security.get_as_dict())
@@ -363,11 +362,11 @@ class Stock(Security):
                 sector=sector,
                 security_type=security_type,
                 info=info,
-                id=id,
+                id=security_id,
                 class_code=class_code,
                 figi=figi,
                 ticker=ticker,
-                name=name
+                security_name=security_name
             )
 
         self.dividend = dividend

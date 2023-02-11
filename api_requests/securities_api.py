@@ -6,7 +6,7 @@ import function
 import sqlalchemy
 
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
-    StocksInfoTable, CouponInfoTable, DividendInfoTable, SecuritiesInfo
+    StocksInfoTable, CouponInfoTable, DividendInfoTable, SecuritiesInfo, StocksInfo, BondsInfo
 from api_requests.security_getter import StandardQuery, SecurityGetter
 from securities.securiries_types import SecurityType, StockType
 from securities.securities import Security, Stock, Bond, SecurityInfo, Coupon, Dividend
@@ -310,6 +310,7 @@ class GetSecurity(SecurityGetter, ABC):
         except Exception as e:
             print(e)
             self.status_code = 300
+            raise e
 
         if not self.securities:
             self.get_from_api()
@@ -362,31 +363,54 @@ class GetSecurity(SecurityGetter, ABC):
         query += f"`{SecuritiesInfo.figi.name}` = '{query_text}' OR "
         query += f"`{SecuritiesInfo.ticker.name}` = '{query_text}' OR "
         query += f"`{SecuritiesInfo.class_code.name}` = '{query_text}'"
+        table = SecuritiesInfoTable().get_name()
 
-        a = db.get_data_by_sql(
-            SecuritiesInfoTable().get_name(),
-            [value for value in SecuritiesInfo],
-            where=query
-        )
+        if not self.add_to_other:
+            a = db.get_data_by_sql(
+                {table: list(SecuritiesInfo)},
+                table,
+                where=query,
+                sort_query=[f"`{SecuritiesInfo.ID.name}` ASC"]
+            )
 
-        self.securities = [Security(**i) for i in a]
-        print(self.securities[0].security_type)
+            self.securities = [Security(**i) for i in a]
 
-        if self.add_to_other:
-            query = "WHERE security_id IN ("
-            d = []
-            for security in self.securities:
-                d.append(str(security.info.id))
-
-            query += ", ".join(d)
-            query += ")"
+        else:
+            query = "ON "
+            query += f"({table}.{SecuritiesInfo.figi.name} = '{query_text}' OR "
+            query += f"{table}.{SecuritiesInfo.ticker.name} = '{query_text}' OR "
+            query += f"{table}.{SecuritiesInfo.class_code.name} = '{query_text}') AND {table}.{SecuritiesInfo.ID.name} = "
 
             a = db.get_data_by_sql(
-                f"{BondsInfoTable().get_name()} "
-                f"{StocksInfoTable().get_table()}",
-                [],
-                where=query
+                {
+                    table: list(SecuritiesInfo),
+                    StocksInfoTable().get_name(): list(StocksInfo)
+                },
+                f"{table}",
+                join=f"{StocksInfoTable().get_table()}",
+                where=query + f"{StocksInfoTable().get_table()}.{StocksInfo.security_id.name}",
+                sort_query=[f"{table}.ID ASC"]
             )
+            a.extend(
+                db.get_data_by_sql(
+                    {
+                        table: list(SecuritiesInfo),
+                        BondsInfoTable().get_name(): list(BondsInfo)
+                    },
+                    f"{table}",
+                    join=f"{BondsInfoTable().get_table()}",
+                    where=query + f"{BondsInfoTable().get_table()}.{BondsInfo.security_id.name}",
+                    sort_query=[f"{table}.ID ASC"]
+                )
+            )
+
+            for value in a:
+                print(value)
+                if value["security_type"] == SecurityType.BOND.value:
+                    self.securities.append(Bond(**value))
+                else:
+                    self.securities.append(Stock(**value))
+
         print(len(self.securities))
 
     def get_from_api(self):
@@ -466,14 +490,14 @@ class GetSecurity(SecurityGetter, ABC):
                                 security=security,
                                 coupon_quantity_per_year=loaded_instrument.coupon_quantity_per_year,
                                 nominal=loaded_instrument.nominal,
-                                amortization=loaded_instrument.amortization_flag,
+                                amortization_flag=loaded_instrument.amortization_flag,
                                 maturity_date=loaded_instrument.maturity_date.date(),
                                 bond_id=-2,
                                 aci_value=loaded_instrument.aci_value,
                                 issue_size=loaded_instrument.issue_size,
                                 issue_size_plan=loaded_instrument.issue_size_plan,
-                                floating_coupon=loaded_instrument.floating_coupon_flag,
-                                perpetual=loaded_instrument.perpetual_flag,
+                                floating_coupon_flag=loaded_instrument.floating_coupon_flag,
+                                perpetual_flag=loaded_instrument.perpetual_flag,
                                 coupon=sub.coupon
                             )
                             print(time() - t)

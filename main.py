@@ -31,7 +31,7 @@ s = GetSecurity(
             ticker="",
             class_code=""
         ),
-        "RU000A1010X1"
+        " "
     ),
     lambda x: print("done, status: ", x),
     TOKEN
@@ -39,5 +39,5 @@ s = GetSecurity(
 s.start()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
     pass
