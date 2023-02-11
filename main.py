@@ -31,7 +31,7 @@ s = GetSecurity(
             ticker="",
             class_code=""
         ),
-        " "
+        "US31620R3030"
     ),
     lambda x: print("done, status: ", x),
     TOKEN

@@ -71,7 +71,7 @@ class Coupon:
             coupon_date: date | str = None,
             coupon_number: int = None,
             fix_date: date | str = None,
-            pay_one_bound: float | MoneyValue = None,
+            pay_one_bond: float | MoneyValue = None,
             coupon_type: CouponType = None,
             security_id: int = -1):
 
@@ -79,7 +79,7 @@ class Coupon:
         self.coupon_date = get_data_from_value(coupon_date)
         self.coupon_number = coupon_number
         self.fix_date = get_data_from_value(fix_date)
-        self.pay_one_bound = convert_money_value(pay_one_bound)
+        self.pay_one_bound = convert_money_value(pay_one_bond)
         self.coupon_type = coupon_type if isinstance(coupon_type, CouponType) else CouponType(coupon_type)
         self.security_id = security_id
 
