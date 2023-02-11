@@ -6,7 +6,8 @@ import function
 import sqlalchemy
 
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
-    StocksInfoTable, CouponInfoTable, DividendInfoTable, SecuritiesInfo, StocksInfo, BondsInfo, CouponInfo, DividendInfo
+    StocksInfoTable, CouponInfoTable, DividendInfoTable, SecuritiesInfo, \
+    StocksInfo, BondsInfo, CouponInfo, DividendInfo
 from api_requests.security_getter import StandardQuery, SecurityGetter
 from securities.securiries_types import SecurityType, StockType
 from securities.securities import Security, Stock, Bond, SecurityInfo, Coupon, Dividend
@@ -399,55 +400,83 @@ class GetSecurity(SecurityGetter, ABC):
         db.connect_to_db()
 
         i = 0
-        # Перебираем массив ценных бумаг и потоков для получения данных
-        for security, sub_data in zip(self.securities, self.sub_data):
+        sub_data: GetDividends | GetSecurity | None = None
+        # Перебираем массив ценных бумаг для получения данных
+        for security in self.securities:
+            # Защита от вылезания за границы
             if i < len(self.sub_data):
                 sub_data = self.sub_data[i]
                 i += 1
-            
+
+            # Имя таблицы, куда по умолчанию данные сохранятся
             table = SecuritiesInfoTable()
 
+            # Если надо добавить данные в прочие таблицы
             if self.add_to_other:
+                # Запускаем скрипт добавления данных в бд
+                # Там передаем таблицу и данные, переведенные в словарь
                 db.add_data(
                     table.get_table(),
                     values=security.get_as_dict_security()
                 )
+                # Получаем курсор, из него мы вытянем id только что добавленной цб
                 cursor: sqlalchemy.engine.cursor = db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
 
+                # Собственно, тут мы их и получаем. И обновляем индекс security_id
+                # Чтобы потом можно было найти цб в таблице
                 for i in cursor:
                     security.set_security_id(i[0])
                     break
 
-                if security.security_type == SecurityType.BOND or security.div_yield_flag:
+                # Если тип цб облигация или же это акция и у нее есть дивиденды
+                # И мы не вылезли за рамки массива с потоками, где лежать потоки
+                # с купонами и дивидендами
+                if (security.security_type == SecurityType.BOND or security.div_yield_flag) \
+                        and i <= len(self.sub_data):
+                    # Добавляем данные
                     sub_data.insert_to_database()
 
-            if security.security_type == SecurityType.BOND:
+            # Если надо добавить облигации или акции, меняем таблицу на нужную
+            if self.add_to_other and security.security_type == SecurityType.BOND:
                 table = BondsInfoTable()
-            elif security.security_type == SecurityType.STOCK:
+            elif self.add_to_other and security.security_type == SecurityType.STOCK:
                 table = StocksInfoTable()
 
+            # Добавление данных в нужную таблицу
             db.add_data(
                 table.get_table(),
                 values=security.get_as_dict()
             )
 
+            # Аналогично с получением индекса.
+            # На этот раз будет использоваться собственный индекс
             cursor: sqlalchemy.engine.cursor = db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
             for i in cursor:
                 security.set_id(i[0])
                 break
 
     def get_from_bd(self):
+        # Подключаемся к бд
         db = DatabaseInterface()
         db.connect_to_db()
 
+        # Получаем текст запроса
         query_text = self.query.get_query()
 
+        # Формируем строку WHERE. Ищем по полям фиги, тикер, класс-код
+        # И потом будет ещё поиск по имени, но там надо использовать
+        # LIKE %query_text%, а питон ругается на наличие процентов в строке
         query = "WHERE "
         query += f"`{SecuritiesInfo.figi.name}` = '{query_text}' OR "
         query += f"`{SecuritiesInfo.ticker.name}` = '{query_text}' OR "
         query += f"`{SecuritiesInfo.class_code.name}` = '{query_text}'"
+
+        # Получаем имя таблицы
         table = SecuritiesInfoTable().get_name()
 
+        # Если не надо добавлять данные в прочие таблицы
+        # (или же, что то же самое, получать прочие данные),
+        # добавляем данные. Все в требуемом формате
         if not self.add_to_other:
             a = db.get_data_by_sql(
                 {table: list(SecuritiesInfo)},
@@ -455,15 +484,21 @@ class GetSecurity(SecurityGetter, ABC):
                 where=query
             )
 
+            # Перебираем массив полученных данных
             self.securities = [Security(**i) for i in a]
-
+        # Если же надо проверять прочие таблицы
         else:
+            # Тоже пишем WHERE, но, так как здесь используется JOIN,
+            # то пишем через ON.
+            # В остальном то же самое, разве что добавляется проверка на совпадение
+            # индекса таблицы всех цб и конкретной
             query = "ON "
             query += f"({table}.{SecuritiesInfo.figi.name} = '{query_text}' OR "
             query += f"{table}.{SecuritiesInfo.ticker.name} = '{query_text}' OR "
             query += f"{table}.{SecuritiesInfo.class_code.name} = '{query_text}') " \
                      f"AND {table}.{SecuritiesInfo.ID.name} = "
 
+            # Получаем все из таблицы с акциями
             a = db.get_data_by_sql(
                 {
                     table: list(SecuritiesInfo),
@@ -473,6 +508,7 @@ class GetSecurity(SecurityGetter, ABC):
                 join=f"{StocksInfoTable().get_table()}",
                 where=query + f"{StocksInfoTable().get_table()}.{StocksInfo.security_id.name}"
             )
+            # И облигациями
             a.extend(
                 db.get_data_by_sql(
                     {
@@ -485,57 +521,84 @@ class GetSecurity(SecurityGetter, ABC):
                 )
             )
 
+            # Перебираем данные
             for value in a:
-                print(value)
+                # Вывод найденных данных
                 if value["security_type"] == SecurityType.BOND.value:
+                    # Из ключевых аргументов собираем облигацию
                     bond = Bond(**value)
 
+                    # Обновляем данные по id, чтобы запрос был короче
                     self.query.security_info.id = bond.info.id
+                    self.query.security_info.figi = bond.info.figi
+
+                    # Загружаем купоны
                     coupons = GetCoupons(
                         self.query,
                         lambda x: x,
                         self.__token
                     )
                     coupons.start()
+                    # Ждем, пока поток закончит работу
                     coupons.join()
 
+                    # Обновляем данные по купонам
                     bond.coupon = coupons.coupon
-
+                    # И добавляем облигацию в список существующих
                     self.securities.append(bond)
                 else:
+                    # Все то же самое
                     stock = Stock(**value)
 
-                    self.query.security_info.id = stock.info.id
-                    dividends = GetDividends(
-                        self.query,
-                        lambda x: x,
-                        self.__token
-                    )
-                    dividends.start()
-                    dividends.join()
+                    # И дивиденты по облигации в принципе есть
+                    if stock.div_yield_flag:
+                        self.query.security_info.id = stock.info.id
+                        self.query.security_info.figi = stock.info.figi
 
-                    stock.dividend = dividends.dividend
+                        dividends = GetDividends(
+                            self.query,
+                            lambda x: x,
+                            self.__token
+                        )
+                        dividends.start()
+                        dividends.join()
 
+                        stock.dividend = dividends.dividend
+
+                    # Добавляем
                     self.securities.append(stock)
 
+                # Просто вывод данных
+                print(self.securities[-1].get_as_dict())
+                print(self.securities[-1].get_as_dict_security())
+
+        # Чтобы не лезть в апи, если все хорошо и данные найдены
         self.insert_to_db = not len(self.securities)
+        # Вывод количества найденных данных
         print(len(self.securities))
 
     def get_from_api(self):
+        # Получаем данные для запроса
         data = self.query.get_query()
 
+        # Создаем подключение
         with Client(self.__token) as client:
+            # Ищем данные
             r = client.instruments.find_instrument(query=data)
             results = r.instruments
 
+            # Фильтруем данные, чтобы были только акции и облигации
             results = list(filter(lambda x: x.instrument_type in ["share", "bond"], results))
 
+            # Защита от пустого запроса
             if len(results) == 0:
                 self.status_code = 100
                 return
 
             try:
+                # Перебираем все полученные данные
                 for result in results:
+                    # Обновляем данные, чтобы потом было проще потом делать запрос
                     self.query.security_info = SecurityInfo(
                         id=-2,
                         figi=result.figi,
@@ -544,8 +607,10 @@ class GetSecurity(SecurityGetter, ABC):
                         class_code=result.class_code
                     )
 
+                    # Создаем заранее переменную
                     loaded_instrument: tinkoffShare | tinkoffBond
 
+                    # В зависимости от типа данных, делаем запрос определенного типа
                     if result.instrument_type == "bond":
                         loaded_instrument = client.instruments.bond_by(
                             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
@@ -558,13 +623,12 @@ class GetSecurity(SecurityGetter, ABC):
                             id=result.figi
                         ).instrument
 
-                    else:
-                        return
-
+                    # Определяем тип данных числом
                     c = 0
                     if result.instrument_type == "bond":
                         c = 1
 
+                    # Создаем цб
                     security = Security(
                         class_code=loaded_instrument.class_code,
                         lot=loaded_instrument.lot,
@@ -573,14 +637,17 @@ class GetSecurity(SecurityGetter, ABC):
                         sector=loaded_instrument.sector,
                         security_type=SecurityType(c),
                         id=0,
-                        ID=0,
                         figi=loaded_instrument.figi,
                         ticker=loaded_instrument.ticker,
                         security_name=loaded_instrument.name
                     )
 
+                    # Если надо ещё данные
                     if self.add_to_other:
+                        sub = None
+                        # Если это облигация
                         if security.security_type == SecurityType.BOND:
+                            # Создаем поток для получения данных по купонам
                             sub = GetCoupons(
                                 StandardQuery(self.query.security_info, self.query.query_text),
                                 lambda x: x,
@@ -591,9 +658,10 @@ class GetSecurity(SecurityGetter, ABC):
                             sub.start()
                             sub.join()
 
+                            # Обновляем статус-код
                             self.status_code = sub.status_code
 
-                            t = time()
+                            # Создаем облигацию
                             security = Bond(
                                 security=security,
                                 coupon_quantity_per_year=loaded_instrument.coupon_quantity_per_year,
@@ -608,10 +676,8 @@ class GetSecurity(SecurityGetter, ABC):
                                 perpetual_flag=loaded_instrument.perpetual_flag,
                                 coupon=sub.coupon
                             )
-                            print(time() - t)
-
-                            self.sub_data.append(sub)
                         elif security.security_type == SecurityType.STOCK:
+                            # То же, но с дивидендами
                             sub = GetDividends(
                                 StandardQuery(self.query.security_info, self.query.query_text),
                                 lambda x: x,
@@ -621,9 +687,10 @@ class GetSecurity(SecurityGetter, ABC):
                             sub.start()
                             sub.join()
 
+                            # И статус-код тоже обновляем
                             self.status_code = sub.status_code
 
-                            t = time()
+                            # Создаем акцию
                             security = Stock(
                                 security=security,
                                 stock_id=-2,
@@ -634,15 +701,16 @@ class GetSecurity(SecurityGetter, ABC):
                                 div_yield_flag=loaded_instrument.div_yield_flag,
                                 dividend=sub.dividend
                             )
-                            print(time() - t)
 
-                            self.sub_data.append(sub)
+                        # И если данные были реально получены
                         if security.info.id != -1:
+                            # Добавляем поток и цб
+                            self.sub_data.append(sub)
                             self.securities.append(security)
-
+            # Защита от ошибок при запросе в инет
             except RequestError as e:
                 print(e)
                 self.status_code = 400
 
-            print(loaded_instrument)
+            # Пишем то, сколько инструментов мы нашли
             print(len(self.securities))
