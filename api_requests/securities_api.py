@@ -364,6 +364,7 @@ class GetSecurity(SecurityGetter, ABC):
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
 
+    # Тут все банально
     def run(self) -> None:
         self.load_data()
 
@@ -376,6 +377,7 @@ class GetSecurity(SecurityGetter, ABC):
 
         self.on_finish(self.status_code)
 
+    # Тоже банально
     def load_data(self):
         t = time()
         try:
@@ -392,10 +394,17 @@ class GetSecurity(SecurityGetter, ABC):
         print(time() - t)
 
     def insert_to_database(self):
+        # Подключаемся к базе данных
         db = DatabaseInterface()
         db.connect_to_db()
 
+        i = 0
+        # Перебираем массив ценных бумаг и потоков для получения данных
         for security, sub_data in zip(self.securities, self.sub_data):
+            if i < len(self.sub_data):
+                sub_data = self.sub_data[i]
+                i += 1
+            
             table = SecuritiesInfoTable()
 
             if self.add_to_other:
