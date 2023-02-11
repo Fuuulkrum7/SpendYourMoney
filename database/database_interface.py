@@ -8,41 +8,56 @@ from info.file_loader import FileLoader
 
 
 class DatabaseInterface:
+    """
+    Класс, отвечающий за прямую работу с бд. Запускать в отдельном потоке.
+    """
     __engine: Engine = None
     connected: int = 0
     __path: str
     info: dict
 
     def __init__(self):
+        # Получаем путь до папки, где лежит файл
         folder = os.path.abspath("database_interface.py").split("/")
+        # Удаляем папку, шде лежит файл, из пути
         folder.pop()
+        # Сохраняем его
         self.__path = "/".join(folder)
 
+        # загружаем данные по бд общие
         info = FileLoader.get_json(self.__path + "/info/files/.database_info.json")
+        # Если файла нет, значит, пользователь идиот и его удалил
         if info is None:
             raise FileNotFoundError
+        # Сохраняем инфу
         self.info = info
 
     def connect_to_db(self):
         try:
+            # Подключаемся к бд
             self.__engine = sqlalchemy.create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost/" + self.info["name"])
 
+            # Если бд не существует, создаем
             if not database_exists(self.__engine.url):
                 print("it's ok, we're just creating db")
                 self.create_database()
 
+                # Говорим, что все подключено
                 self.connected = 1
         except Exception as e:
             print(e)
             self.connected = -1
 
     def add_data(self, table: Base, query: list[dict] = None, values: dict = None):
+        # Если вообще данных для добавления нет
         if query is None and values is None:
             return
 
+        # Если тело запроса не пустое, фильтруем на всякий случай
         if query is None:
             query = [dict(filter(lambda x: not (x[0] in "UID"), values.items()))]
 
+        # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
             conn.execute(
                 sqlalchemy.insert(table),
@@ -52,7 +67,7 @@ class DatabaseInterface:
     def add_unique_data(self, table: Base, query: list[dict] = None, values: dict = None):
         pass
 
-    # Альтернативный вариант получения данных путем создания запроса sql
+    # вариант получения данных путем создания запроса sql
     def get_data_by_sql(self, rows: dict[str, list[Enum]], table: str, where: str = "",
                         sort_query: list[str] = None, join: str = "") -> list[dict]:
         query = f"SELECT "

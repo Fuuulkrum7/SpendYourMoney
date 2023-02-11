@@ -111,10 +111,8 @@ class GetCoupons(SecurityGetter, ABC):
 
         # Перебираем купоны
         for values in self.coupon:
-            sub = dict(filter(lambda x: not (x[0] in "UID"), values.get_as_dict().items()))
-
             # Добавляем данные по купону
-            query.append(sub)
+            query.append(values.get_as_dict())
 
         # Добавляем данные в бд
         db.add_data(
@@ -262,9 +260,7 @@ class GetDividends(SecurityGetter, ABC):
         query = []
 
         for values in self.dividend:
-            sub = dict(filter(lambda x: not (x[0] in "UID"), values.get_as_dict().items()))
-
-            query.append(sub)
+            query.append(values.get_as_dict())
 
         db.add_data(
             table,
