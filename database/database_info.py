@@ -1,4 +1,4 @@
-from aenum import Enum
+from enum import Enum
 
 import sqlalchemy
 from sqlalchemy.dialects.mysql import DOUBLE
