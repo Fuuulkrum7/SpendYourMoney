@@ -38,7 +38,7 @@ s = GetSecurity(
 ```
 
 As you can see, it is permitted not to fill each field, it is allowed to fill only that variables, that you 
-know. __WARNING__. If now only name of "security", program will always try to find it in internet, because at this moment
+know. __WARNING__. If name of "security" is specified only, program will always try to find it in internet, because at this moment
 we have some problems with python, which interprets some strings with `f"LIKE %{name}%"`. We'll fix this problem soon.
 
 If you want to find as much, as it is possible, pay attention for second variable in __StandardQuery__ constructor.
