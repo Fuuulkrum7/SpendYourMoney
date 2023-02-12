@@ -34,11 +34,11 @@ s = GetSecurity(
 ```
 
 As you can see, it is permitted not to fill each field, it is allowed to fill only that variables, that you 
-know. __WARNING__. If now only name of security, program will always try to find it in internet, because at this moment
+know. __WARNING__. If now only name of "security", program will always try to find it in internet, because at this moment
 we have some problems with python, which interprets some strings with `f"LIKE %{name}%"`. We'll fix this problem soon.
 
 If you want to find as much, as it is possible, pay attention for second variable in __StandardQuery__ constructor.
-In this line you can write all information about security, for which there's no filed in __SecurityInfo__ (for example, 
+In this line you can write all information about security, for which there's no field in __SecurityInfo__ (for example, 
 for _isin_). But be careful! It can take lots of time, if you would tru to find information about lots of papers, like 
 `security_name = " "` without writing other information about security, request would take lots of time, because this class 
-is created for looking not big number of papers (or for looking big number of them locally. But api-respons will take too much time)
+is created for looking not big number of papers (or for looking big number of them locally. But api-request will take too much time)
