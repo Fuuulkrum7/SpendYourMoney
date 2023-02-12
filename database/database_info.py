@@ -10,7 +10,8 @@ Base = declarative_base()
 class BondsInfo(Enum):
     """
     Текущий и дальнейшие классы до соответствующего комментария
-    имеют одинаковую структуру. Все имена переменный соответствуют именам столбцов
+    имеют одинаковую структуру.
+    Все имена переменный соответствуют именам столбцов
     в соответствующих базах данных. А значения переменных - типам данных.
     Удобно для конвертации данных обратно, из бд
     """
@@ -90,17 +91,25 @@ class UserTable(Enum):
 # Таблицы для SQLAlchemy
 class UserTableSQLAlchemy(Base):
     """
-    Собственно, тут принцип прост. Это базовый класс, который содержит поля таблиц, что нужно для обращения
-    к базе данных. В классе DatabaseValue мы храним одно из полей вышестоящих классов,
-    при добавлении в бд мы получаем с помощью цикла данные в формате ключ-значение.
-    Это позволяет сделать универсальный метод добавления любых данных в любую таблицу из представленных здесь.
-    Этот класс и ему подобные нужны для хранения таблицы в том виде, в котором они понятны для sqlalchemy.
-    Для этого в них есть поле __table__ и соответствующий метод. Переменные же нужны для работы с конкретными
-    столбцами, что теоретически может пригодиться при дальнейшем расширении базы данных.
+    Собственно, тут принцип прост. Это базовый класс, который содержит
+    поля таблиц, что нужно для обращения
+    к базе данных. В классе DatabaseValue мы храним
+    одно из полей вышестоящих классов,
+    при добавлении в бд мы получаем с помощью
+    цикла данные в формате ключ-значение.
+    Это позволяет сделать универсальный метод добавления
+    любых данных в любую таблицу из представленных здесь.
+    Этот класс и ему подобные нужны для хранения таблицы в том виде,
+     в котором они понятны для sqlalchemy.
+    Для этого в них есть поле __table__ и соответствующий метод.
+    Переменные же нужны для работы с конкретными
+    столбцами, что теоретически может пригодиться
+    при дальнейшем расширении базы данных.
     """
     __tablename__ = "user_table"
 
-    UID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    UID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+                            autoincrement=True)
     username = sqlalchemy.Column(sqlalchemy.VARCHAR)
     token = sqlalchemy.Column(sqlalchemy.VARCHAR)
     password = sqlalchemy.Column(sqlalchemy.VARCHAR)
@@ -118,7 +127,8 @@ class SecuritiesInfoTable(Base):
     __tablename__ = "securities_info"
     __table_args__ = {'extend_existing': True}
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
     figi = sqlalchemy.Column("figi", sqlalchemy.VARCHAR)
     ticker = sqlalchemy.Column("ticker", sqlalchemy.VARCHAR)
     security_name = sqlalchemy.Column("security_name", sqlalchemy.VARCHAR)
@@ -155,17 +165,22 @@ class BondsInfoTable(Base):
     __tablename__ = "bonds_info"
     __table_args__ = {'extend_existing': True}
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
-    coupon_quantity_per_year = sqlalchemy.Column("coupon_quantity_per_year", sqlalchemy.Integer)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
+    coupon_quantity_per_year = sqlalchemy.Column("coupon_quantity_per_year",
+                                                 sqlalchemy.Integer)
     maturity_date = sqlalchemy.Column("maturity_date", sqlalchemy.Date)
     nominal = sqlalchemy.Column("nominal", DOUBLE)
     aci_value = sqlalchemy.Column("aci_value", DOUBLE)
     issue_size = sqlalchemy.Column("issue_size", sqlalchemy.Integer)
     issue_size_plan = sqlalchemy.Column("issue_size_plan", sqlalchemy.Integer)
-    floating_coupon_flag = sqlalchemy.Column("floating_coupon_flag", sqlalchemy.Boolean)
+    floating_coupon_flag = sqlalchemy.Column("floating_coupon_flag",
+                                             sqlalchemy.Boolean)
     perpetual_flag = sqlalchemy.Column("perpetual_flag", sqlalchemy.Boolean)
-    amortization_flag = sqlalchemy.Column("amortization_flag", sqlalchemy.Boolean)
+    amortization_flag = sqlalchemy.Column("amortization_flag",
+                                          sqlalchemy.Boolean)
 
     __table__ = sqlalchemy.Table(
         __tablename__,
@@ -193,8 +208,10 @@ class BondsInfoTable(Base):
 class CouponInfoTable(Base):
     __tablename__ = "coupon_info"
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
     coupon_date = sqlalchemy.Column("coupon_date", sqlalchemy.Date)
     coupon_number = sqlalchemy.Column("coupon_number", sqlalchemy.Integer)
     fix_date = sqlalchemy.Column("fix_date", sqlalchemy.Date)
@@ -224,8 +241,10 @@ class StocksInfoTable(Base):
     __tablename__ = "stocks_info"
     __table_args__ = {'extend_existing': True}
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
     ipo_date = sqlalchemy.Column("ipo_date", sqlalchemy.Date)
     issue_size = sqlalchemy.Column("issue_size", sqlalchemy.Integer)
     stock_type = sqlalchemy.Column("stock_type", sqlalchemy.Integer)
@@ -254,8 +273,10 @@ class StocksInfoTable(Base):
 class DividendInfoTable(Base):
     __tablename__ = "dividend_info"
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
     div_value = sqlalchemy.Column("div_value", DOUBLE)
     payment_date = sqlalchemy.Column("payment_date", sqlalchemy.Date)
     declared_date = sqlalchemy.Column("declared_date", sqlalchemy.Date)
@@ -286,7 +307,8 @@ class DividendInfoTable(Base):
 class SecuritiesHistoryTable(Base):
     __tablename__ = "securities_history"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
     security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     price = sqlalchemy.Column(DOUBLE)
     time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -302,7 +324,8 @@ class SecuritiesHistoryTable(Base):
 class HistoryOfPredictionsTable(Base):
     __tablename__ = "history_of_predictions"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
     security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     price = sqlalchemy.Column(DOUBLE)
     time = sqlalchemy.Column(sqlalchemy.DateTime)

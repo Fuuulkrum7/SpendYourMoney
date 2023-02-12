@@ -35,7 +35,10 @@ class DatabaseInterface:
     def connect_to_db(self):
         try:
             # Подключаемся к бд
-            self.__engine = sqlalchemy.create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost/" + self.info["name"])
+            self.__engine = \
+                sqlalchemy.create_engine(
+                    f"mysql+pymysql://root:0urSh!TtyD8@localhost/"
+                    f"{self.info['name']}")
 
             # Если бд не существует, создаем
             if not database_exists(self.__engine.url):
@@ -48,14 +51,17 @@ class DatabaseInterface:
             print(e)
             self.connected = -1
 
-    def add_data(self, table: Base, query: list[dict] = None, values: dict = None):
+    def add_data(self, table: Base, query: list[dict] = None,
+                 values: dict = None):
         # Если вообще данных для добавления нет
         if query is None and values is None:
             return
 
         # Если тело запроса не пустое, фильтруем на всякий случай
         if query is None:
-            query = [dict(filter(lambda x: not (x[0] in "UID"), values.items()))]
+            query = [dict(filter(
+                lambda x: not (x[0] in "UID"), values.items()
+            ))]
 
         # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
@@ -63,13 +69,17 @@ class DatabaseInterface:
                 sqlalchemy.insert(table),
                 query
             )
+            conn.close()
 
-    def add_unique_data(self, table: Base, query: list[dict] = None, values: dict = None):
+    def add_unique_data(self, table: Base,
+                        query: list[dict] = None, values: dict = None):
         pass
 
     # вариант получения данных путем создания запроса sql
-    def get_data_by_sql(self, rows: dict[str, list[Enum]], table: str, where: str = "",
-                        sort_query: list[str] = None, join: str = "") -> list[dict]:
+    def get_data_by_sql(self, rows: dict[str, list[Enum]],
+                        table: str, where: str = "",
+                        sort_query: list[str] = None,
+                        join: str = "") -> list[dict]:
         query = f"SELECT "
 
         i = 0
@@ -93,11 +103,7 @@ class DatabaseInterface:
 
         if sort_query is not None:
             query += " ORDER BY "
-            i = 0
-            for row in sort_query:
-                query += row
-                query += ", " if i < len(sort_query) - 1 else ""
-                i += 1
+            query += ", ".join(sort_query)
 
         with self.__engine.connect() as conn:
             result = conn.execute(query)
@@ -109,6 +115,8 @@ class DatabaseInterface:
                     for row in sub_row:
                         value[row.name] = r[row.name]
                 values.append(value)
+
+            conn.close()
             return values
 
     def clear_db(self):
@@ -126,10 +134,12 @@ class DatabaseInterface:
         return self.connected
 
     def create_database(self):
-        scripts = FileLoader.get_file(self.__path + "/info/files/init.sql", datatype=str)
+        scripts = FileLoader.get_file(self.__path + "/info/files/init.sql",
+                                      datatype=str)
         scripts = list(filter(len, scripts.replace("\n", "").split(";")))
 
-        self.__engine = sqlalchemy.create_engine("mysql+pymysql://root:0urSh!TtyD8@localhost")
+        self.__engine = sqlalchemy.create_engine\
+            ("mysql+pymysql://root:0urSh!TtyD8@localhost")
 
         with self.__engine.connect() as conn:
             conn.execute("commit")
@@ -139,6 +149,11 @@ class DatabaseInterface:
             for script in scripts:
                 conn.execute(script)
 
+            conn.close()
+
     def execute_sql(self, sql: str):
         with self.__engine.connect() as conn:
             return conn.execute(sql)
+
+    def close_engine(self):
+        self.__engine.dispose()

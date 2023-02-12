@@ -17,7 +17,9 @@ def get_data_from_value(value: str | date) -> date:
 def convert_money_value(data: MoneyValue | Quotation | float):
     if isinstance(data, float):
         return data
-    return data.units + data.nano / 10 ** ceil(log10(data.nano if data.nano > 0 else 1))
+    return data.units + data.nano / 10 ** ceil(
+        log10(data.nano if data.nano > 0 else 1)
+    )
 
 
 class SecurityInfo:
@@ -33,9 +35,10 @@ class SecurityInfo:
     id: int = 0
 
     def __init__(self, id: int = -1, figi: str = None, ID: int = -1,
-                 ticker: str = None, security_name: str = None, class_code: str = None):
+                 ticker: str = None, security_name: str = None,
+                 class_code: str = None):
         """
-        :param args: int id, str figi, str ticker, str name
+        :param: int id, str figi, str ticker, str name, str class_code
         """
         self.id = max(id, ID)
         self.class_code = class_code
@@ -80,7 +83,8 @@ class Coupon:
         self.coupon_number = coupon_number
         self.fix_date = get_data_from_value(fix_date)
         self.pay_one_bound = convert_money_value(pay_one_bond)
-        self.coupon_type = coupon_type if isinstance(coupon_type, CouponType) else CouponType(coupon_type)
+        self.coupon_type = coupon_type if isinstance(coupon_type, CouponType) \
+            else CouponType(coupon_type)
         self.security_id = security_id
 
     def get_as_dict(self) -> dict[str, object]:
@@ -169,17 +173,17 @@ class Security:
             class_code: str = None,
             figi: str = None,
             ticker: str = None,
-            security_name: str = None
-        ):
+            security_name: str = None):
         """
-        :param: class_code, lot, currency, country, sector, security_type, SecurityInfo or others
-                                                                                        - like for SecurityInfo;
+        :param: class_code, lot, currency, country, sector, security_type,
+        SecurityInfo or others - like for SecurityInfo;
         """
         self.lot = lot
         self.currency = currency
         self.country = country
         self.sector = sector
-        self.security_type = security_type if isinstance(security_type, SecurityType) \
+        self.security_type = security_type if isinstance(security_type,
+                                                         SecurityType) \
             else SecurityType(security_type)
         if info is not None:
             self.info = info
@@ -290,7 +294,8 @@ class Bond(Security):
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
             BondsInfo.ID.name: self.bond_id,
-            BondsInfo.coupon_quantity_per_year.name: self.coupon_quantity_per_year,
+            BondsInfo.coupon_quantity_per_year.name:
+                self.coupon_quantity_per_year,
             BondsInfo.aci_value.name: self.aci_value,
             BondsInfo.nominal.name: self.nominal,
             BondsInfo.security_id.name: self.info.id,
@@ -308,7 +313,8 @@ class Bond(Security):
         return super().get_as_dict()
 
     def count_rate(self) -> float:
-        return round(self.coupon[0].pay_one_bound * self.coupon_quantity_per_year / self.nominal * 100, 2)
+        return round(self.coupon[0].pay_one_bound *
+                     self.coupon_quantity_per_year / self.nominal * 100, 2)
 
     def set_id(self, id: int):
         self.bond_id = id
@@ -373,7 +379,8 @@ class Stock(Security):
         self.stock_id = max(ID, stock_id)
         self.ipo_date = get_data_from_value(ipo_date)
         self.issue_size = issue_size
-        self.stock_type = stock_type if isinstance(stock_type, StockType) else StockType(stock_type)
+        self.stock_type = stock_type if isinstance(stock_type, StockType) \
+            else StockType(stock_type)
         self.otc_flag = otc_flag
         self.div_yield_flag = div_yield_flag
 
