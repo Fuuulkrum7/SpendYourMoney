@@ -3,6 +3,7 @@ from datetime import timedelta
 from preinstall import installation
 
 try:
+    import cryptography
     import sqlalchemy
     import pymysql
     from tinkoff.invest import CandleInterval, AsyncClient, Client
@@ -10,7 +11,8 @@ try:
 except ImportError:
     installation(["tinkoff-investments",
                   "SQLAlchemy<2.0.0", "SQLAlchemy-Utils",
-                  "function", "pymysql"])
+                  "function", "pymysql", "cryptography"])
+    import cryptography
     from tinkoff.invest import CandleInterval, AsyncClient, Client
     from tinkoff.invest.utils import now
 
