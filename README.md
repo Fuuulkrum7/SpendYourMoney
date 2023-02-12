@@ -14,7 +14,7 @@ using which we are creating request is located near 40-54 lines of code in __mai
 by _figi_, you need to write its name in field __figi=__. Other parts of your response should be written in such way. 
 __ticker__=_ticker_, etc. Field __id__ is not necessary to be changed.
 
-Here is an example of such response:
+Here is an example of such request:
 
 ```
 s = GetSecurity(
