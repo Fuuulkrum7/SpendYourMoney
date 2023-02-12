@@ -9,7 +9,7 @@ from api_requests.securities_api import GetDividends, GetCoupons
 from api_requests.security_getter import SecurityGetter, StandardQuery
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
     StocksInfoTable, SecuritiesInfo, StocksInfo, BondsInfo, DividendInfoTable, \
-    DividendInfo
+    DividendInfo, CouponInfoTable, CouponInfo
 from database.database_interface import DatabaseInterface
 from securities.securiries_types import SecurityType, StockType
 from securities.securities import Security, Bond, Stock, SecurityInfo, \
@@ -87,7 +87,9 @@ class GetSecurity(SecurityGetter):
         i = 0
         sub_data: GetDividends | GetSecurity | None = None
         # Перебираем массив ценных бумаг для получения данных
+        print("at insert")
         for security in self.securities:
+            print(security.get_as_dict_security())
             # Защита от вылезания за границы
             if i < len(self.sub_data):
                 sub_data = self.sub_data[i]
@@ -112,8 +114,8 @@ class GetSecurity(SecurityGetter):
                 # Собственно, тут мы их и получаем.
                 # И обновляем индекс security_id
                 # Чтобы потом можно было найти цб в таблице
-                for i in cursor:
-                    security.set_security_id(i[0])
+                for val in cursor:
+                    security.set_security_id(val[0])
                     break
 
                 # Если тип цб облигация или же это акция и у нее есть дивиденды
@@ -143,8 +145,8 @@ class GetSecurity(SecurityGetter):
             # На этот раз будет использоваться собственный индекс
             cursor: sqlalchemy.engine.cursor = \
                 db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
-            for i in cursor:
-                security.set_id(i[0])
+            for val in cursor:
+                security.set_id(val[0])
                 break
 
         db.close_engine()
@@ -267,6 +269,8 @@ class GetSecurity(SecurityGetter):
                 self.securities.append(stock)
 
                 # Просто вывод данных
+                if len(stock.dividend):
+                    print("div", stock.dividend[0].get_as_dict())
                 print(self.securities[-1].get_as_dict())
                 print(self.securities[-1].get_as_dict_security())
 
@@ -287,11 +291,11 @@ class GetSecurity(SecurityGetter):
             if len(indexes):
                 # Получаем купоны
                 sub_data = db.get_data_by_sql(
-                    {StocksInfoTable().get_name(): list(StocksInfo)},
-                    StocksInfoTable().get_name(),
-                    where=f"WHERE {StocksInfo.security_id.value} "
+                    {CouponInfoTable().get_name(): list(CouponInfo)},
+                    CouponInfoTable().get_name(),
+                    where=f"WHERE {CouponInfo.security_id.value} "
                           f"IN ({', '.join(map(str, indexes))})",
-                    sort_query=[f"{StocksInfo.security_id.value} ASC"]
+                    sort_query=[f"{CouponInfo.security_id.value} ASC"]
                 )
 
             # Создаем из них словарь, чтобы по индексу цб получать сразу все
@@ -314,21 +318,23 @@ class GetSecurity(SecurityGetter):
                     self.query.security_info.figi = bond.info.figi
 
                     # Загружаем купоны
-                    coupons = GetCoupons(
+                    coup = GetCoupons(
                         self.query,
                         lambda x: x,
                         self.__token,
                         check_locally=False
                     )
-                    coupons.start()
+                    coup.start()
                     # Ждем, пока поток закончит работу
-                    coupons.join()
+                    coup.join()
 
                     # Обновляем данные по купонам
-                    bond.coupon = coupons.coupon
+                    bond.coupon = coup.coupon
                 else:
                     # А если были, то сохраняем
                     bond.coupon = coupon
+                if len(bond.coupon):
+                    print("coup", bond.coupon[0].get_as_dict())
                 # И добавляем облигацию в список существующих
                 self.securities.append(bond)
 
@@ -340,6 +346,7 @@ class GetSecurity(SecurityGetter):
         # Чтобы не лезть в апи, если все хорошо и данные найдены
         self.insert_to_db = not len(self.securities)
         # Вывод количества найденных данных
+        print("at get from db")
         print(len(self.securities))
 
     def get_from_api(self):

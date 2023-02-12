@@ -60,8 +60,12 @@ class DatabaseInterface:
         # Если тело запроса не пустое, фильтруем на всякий случай
         if query is None:
             query = [dict(filter(
-                lambda x: not (x[0] in "UID"), values.items()
+                lambda x: not (x[0] in ["UID", "ID"]), values.items()
             ))]
+        else:
+            query = [dict(filter(
+                lambda x: not (x[0] in ["UID", "ID"]), val.items()
+            )) for val in query]
 
         # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
