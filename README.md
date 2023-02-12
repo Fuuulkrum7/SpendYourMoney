@@ -6,8 +6,8 @@ For making it, run mysql, enter your root password and then execute this command
 `GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';`
 
 Now, you need to run __main.py__ using command line. As it is a pre-version and there's no UI, all information you can
-get would be written in console. Also, venv is not created yet, so we added to __main.py__ a script, which would 
-download all modules, that are necessary for program stable work. 
+get would be written in console. Also, venv is not created yet, so we added to __main.py__ a script, which 
+downloads all modules, that are necessary for program stable work. 
 
 After this steps, you will see some information about loaded from internet or local database securities. Information, 
 using which we are creating response is located near 40-54 lines of code in __main.py__. So, if you want to find security 
