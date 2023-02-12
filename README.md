@@ -1,9 +1,9 @@
 ### First of all, you need to create a user in your database.
 For making it, run mysql, enter your root password and then execute this commands:
 
-`CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';`
+```CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';```
 
-`GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';`
+```GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';```
 
 Now, you need to run __main.py__ using command line. As it is a pre-version and there's no GUI, all information you can
 get would be written in console. Also, venv is not created yet, so we added to __main.py__ a script, which 
