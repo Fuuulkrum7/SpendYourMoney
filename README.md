@@ -10,7 +10,7 @@ get would be written in console. Also, venv is not created yet, so we added to _
 downloads all modules, that are necessary for program stable work. 
 
 After this steps, you will see some information about loaded from internet or local database securities. Information, 
-using which we are creating response is located near 40-54 lines of code in __main.py__. So, if you want to find security 
+using which we are creating request is located near 40-54 lines of code in __main.py__. So, if you want to find security 
 by _figi_, you need to write its name in field __figi=__. Other parts of your response should be written in such way. 
 __ticker__=_ticker_, etc. Field __id__ is not necessary to be changed.
 
