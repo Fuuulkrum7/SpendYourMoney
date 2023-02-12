@@ -12,7 +12,7 @@ class FileLoader:
                 res = res.splitlines()
                 res = list(filter(len, res))
 
-            file.flush()
+            file.close()
         except FileNotFoundError:
             res = None
 
@@ -23,7 +23,7 @@ class FileLoader:
         try:
             file = open(file_name)
             res = json.load(file)
-            file.flush()
+            file.close()
         except FileNotFoundError:
             res = None
         except ValueError:
@@ -38,7 +38,7 @@ class FileLoader:
             for i in data:
                 file.write(str(i) + "\n")
 
-            file.flush()
+            file.close()
             return True
         except Exception as e:
             print(e)
@@ -47,10 +47,12 @@ class FileLoader:
     @staticmethod
     def save_json(file_name: str, data: dict) -> bool:
         try:
+            f = open(file_name, "w")
             json.dump(
                 json.dumps(data),
-                open(file_name, "w")
+                f
             )
+            f.close()
 
             return True
         except Exception as e:

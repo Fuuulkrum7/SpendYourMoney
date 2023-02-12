@@ -1,4 +1,4 @@
-from aenum import Enum, NoAlias
+from aenum import Enum
 
 import sqlalchemy
 from sqlalchemy.dialects.mysql import DOUBLE
@@ -8,98 +8,108 @@ Base = declarative_base()
 
 
 class BondsInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    coupon_quantity_per_year = "INT"
-    maturity_date = "DATE"
-    nominal = "DOUBLE"
-    aci_value = "DOUBLE"
-    issue_size = "INT"
-    issue_size_plan = "INT"
-    floating_coupon_flag = "BOOL"
-    perpetual_flag = "BOOL"
-    amortization_flag = "BOOL"
+    """
+    Текущий и дальнейшие классы до соответствующего комментария
+    имеют одинаковую структуру.
+    Все имена переменный соответствуют именам столбцов
+    в соответствующих базах данных. А значения переменных - типам данных.
+    Удобно для конвертации данных обратно, из бд
+    """
+    ID = "ID"
+    security_id = "security_id"
+    coupon_quantity_per_year = "coupon_quantity_per_year"
+    maturity_date = "maturity_date"
+    nominal = "nominal"
+    aci_value = "aci_value"
+    issue_size = "issue_size"
+    issue_size_plan = "issue_size_plan"
+    floating_coupon_flag = "floating_coupon_flag"
+    perpetual_flag = "perpetual_flag"
+    amortization_flag = "amortization_flag"
 
 
 class CouponInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    coupon_date = "DATE"
-    coupon_number = "INT"
-    fix_date = "DATE"
-    pay_one_bond = "DOUBLE"
-    coupon_type = "INT"
+    ID = "ID"
+    security_id = "security_id"
+    coupon_date = "coupon_date"
+    coupon_number = "coupon_number"
+    fix_date = "fix_date"
+    pay_one_bond = "pay_one_bond"
+    coupon_type = "coupon_type"
 
 
 class DividendInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    div_value = "DOUBLE"
-    payment_date = "DATE"
-    declared_date = "DATE"
-    record_date = "DATE"
-    last_buy_date = "DATE"
-    yield_value = "DOUBLE"
+    ID = "ID"
+    security_id = "security_id"
+    div_value = "div_value"
+    payment_date = "payment_date"
+    declared_date = "declared_date"
+    record_date = "record_date"
+    last_buy_date = "last_buy_date"
+    yield_value = "yield_value"
 
 
 class SecuritiesHistory(Enum):
-    _settings_ = NoAlias
-
-    security_id = "INT"
-    price = "DOUBLE"
-    time = "DATETIME"
-    volume = "INT"
+    security_id = "security_id"
+    price = "price"
+    time = "time"
+    volume = "volume"
 
 
 class SecuritiesInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    figi = "CHAR"
-    ticker = "CHAR"
-    security_name = "CHAR"
-    class_code = "CHAR"
-    lot = "INT"
-    currency = "CHAR"
-    country = "CHAR"
-    sector = "CHAR"
-    security_type = "INT"
+    ID = "ID"
+    figi = "figi"
+    ticker = "ticker"
+    security_name = "security_name"
+    class_code = "class_code"
+    lot = "lot"
+    currency = "currency"
+    country = "country"
+    sector = "sector"
+    security_type = "security_type"
 
 
 class StocksInfo(Enum):
-    _settings_ = NoAlias
-
-    ID = "INT"
-    security_id = "INT"
-    ipo_date = "DATE"
-    issue_size = "INT"
-    stock_type = "INT"
-    otc_flag = "BOOL"
-    div_yield_flag = "BOOL"
+    ID = "ID"
+    security_id = "security_id"
+    ipo_date = "ipo_date"
+    issue_size = "issue_size"
+    stock_type = "stock_type"
+    otc_flag = "otc_flag"
+    div_yield_flag = "div_yield_flag"
 
 
 class UserTable(Enum):
-    _settings_ = NoAlias
-
-    UID = "INT"
-    username = "CHAR"
-    token = "CHAR"
-    password = "CHAR"
-    status = "INT"
-    access_level = "INT"
+    UID = "UID"
+    username = "username"
+    token = "token"
+    password = "password"
+    status = "status"
+    access_level = "access_level"
 
 
 # Таблицы для SQLAlchemy
 class UserTableSQLAlchemy(Base):
+    """
+    Собственно, тут принцип прост. Это базовый класс, который содержит
+    поля таблиц, что нужно для обращения
+    к базе данных. В классе DatabaseValue мы храним
+    одно из полей вышестоящих классов,
+    при добавлении в бд мы получаем с помощью
+    цикла данные в формате ключ-значение.
+    Это позволяет сделать универсальный метод добавления
+    любых данных в любую таблицу из представленных здесь.
+    Этот класс и ему подобные нужны для хранения таблицы в том виде,
+     в котором они понятны для sqlalchemy.
+    Для этого в них есть поле __table__ и соответствующий метод.
+    Переменные же нужны для работы с конкретными
+    столбцами, что теоретически может пригодиться
+    при дальнейшем расширении базы данных.
+    """
     __tablename__ = "user_table"
 
-    UID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    UID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+                            autoincrement=True)
     username = sqlalchemy.Column(sqlalchemy.VARCHAR)
     token = sqlalchemy.Column(sqlalchemy.VARCHAR)
     password = sqlalchemy.Column(sqlalchemy.VARCHAR)
@@ -117,7 +127,8 @@ class SecuritiesInfoTable(Base):
     __tablename__ = "securities_info"
     __table_args__ = {'extend_existing': True}
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
     figi = sqlalchemy.Column("figi", sqlalchemy.VARCHAR)
     ticker = sqlalchemy.Column("ticker", sqlalchemy.VARCHAR)
     security_name = sqlalchemy.Column("security_name", sqlalchemy.VARCHAR)
@@ -154,17 +165,22 @@ class BondsInfoTable(Base):
     __tablename__ = "bonds_info"
     __table_args__ = {'extend_existing': True}
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
-    coupon_quantity_per_year = sqlalchemy.Column("coupon_quantity_per_year", sqlalchemy.Integer)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
+    coupon_quantity_per_year = sqlalchemy.Column("coupon_quantity_per_year",
+                                                 sqlalchemy.Integer)
     maturity_date = sqlalchemy.Column("maturity_date", sqlalchemy.Date)
     nominal = sqlalchemy.Column("nominal", DOUBLE)
     aci_value = sqlalchemy.Column("aci_value", DOUBLE)
     issue_size = sqlalchemy.Column("issue_size", sqlalchemy.Integer)
     issue_size_plan = sqlalchemy.Column("issue_size_plan", sqlalchemy.Integer)
-    floating_coupon_flag = sqlalchemy.Column("floating_coupon_flag", sqlalchemy.Boolean)
+    floating_coupon_flag = sqlalchemy.Column("floating_coupon_flag",
+                                             sqlalchemy.Boolean)
     perpetual_flag = sqlalchemy.Column("perpetual_flag", sqlalchemy.Boolean)
-    amortization_flag = sqlalchemy.Column("amortization_flag", sqlalchemy.Boolean)
+    amortization_flag = sqlalchemy.Column("amortization_flag",
+                                          sqlalchemy.Boolean)
 
     __table__ = sqlalchemy.Table(
         __tablename__,
@@ -192,8 +208,10 @@ class BondsInfoTable(Base):
 class CouponInfoTable(Base):
     __tablename__ = "coupon_info"
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
     coupon_date = sqlalchemy.Column("coupon_date", sqlalchemy.Date)
     coupon_number = sqlalchemy.Column("coupon_number", sqlalchemy.Integer)
     fix_date = sqlalchemy.Column("fix_date", sqlalchemy.Date)
@@ -223,8 +241,10 @@ class StocksInfoTable(Base):
     __tablename__ = "stocks_info"
     __table_args__ = {'extend_existing': True}
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
     ipo_date = sqlalchemy.Column("ipo_date", sqlalchemy.Date)
     issue_size = sqlalchemy.Column("issue_size", sqlalchemy.Integer)
     stock_type = sqlalchemy.Column("stock_type", sqlalchemy.Integer)
@@ -253,8 +273,10 @@ class StocksInfoTable(Base):
 class DividendInfoTable(Base):
     __tablename__ = "dividend_info"
 
-    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer, nullable=False)
+    ID = sqlalchemy.Column("ID", sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False)
     div_value = sqlalchemy.Column("div_value", DOUBLE)
     payment_date = sqlalchemy.Column("payment_date", sqlalchemy.Date)
     declared_date = sqlalchemy.Column("declared_date", sqlalchemy.Date)
@@ -285,7 +307,8 @@ class DividendInfoTable(Base):
 class SecuritiesHistoryTable(Base):
     __tablename__ = "securities_history"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
     security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     price = sqlalchemy.Column(DOUBLE)
     time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -301,7 +324,8 @@ class SecuritiesHistoryTable(Base):
 class HistoryOfPredictionsTable(Base):
     __tablename__ = "history_of_predictions"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+                           autoincrement=True)
     security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     price = sqlalchemy.Column(DOUBLE)
     time = sqlalchemy.Column(sqlalchemy.DateTime)

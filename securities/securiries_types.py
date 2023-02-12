@@ -2,6 +2,10 @@ from enum import Enum
 
 
 class StockType(Enum):
+    """
+    Класс используется для определения типа акции -
+    привилегированная, обычная и тд
+    """
     STOCK_TYPE_UNSPECIFIED = 0
     STOCK_TYPE_COMMON = 1
     STOCK_TYPE_PREFERRED = 2
@@ -14,6 +18,11 @@ class StockType(Enum):
 
 
 class CouponType(Enum):
+    """
+    Класс используется для обозначения типов купонов, все аналогично
+    Так же для этих двух классов существует json,
+    представляющий коды в текстовом формате
+    """
     COUPON_TYPE_UNSPECIFIED = 0
     COUPON_TYPE_CONSTANT = 1
     COUPON_TYPE_FLOATING = 2
@@ -21,8 +30,13 @@ class CouponType(Enum):
     COUPON_TYPE_MORTGAGE = 4
     COUPON_TYPE_FIX = 5
     COUPON_TYPE_VARIABLE = 6
+    COUPON_TYPE_OTHER = 7
 
 
 class SecurityType(Enum):
+    """
+    Тип цб. Больше и не скажешь
+    """
     STOCK = 0
     BOND = 1
+    DEFAULT = 2
