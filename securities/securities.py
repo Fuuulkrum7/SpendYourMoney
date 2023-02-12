@@ -8,13 +8,13 @@ from math import log10, ceil
 
 
 # Парсит данные из значения в дату
-def get_data_from_value(value: str | date) -> date:
+def get_data_from_value(value: str or date) -> date:
     if isinstance(value, str):
         return datetime.strptime(value, "%Y-%m-%d").date()
     return value
 
 
-def convert_money_value(data: MoneyValue | Quotation | float):
+def convert_money_value(data: MoneyValue or Quotation or float):
     if isinstance(data, float):
         return data
     return data.units + data.nano / 10 ** ceil(
@@ -71,10 +71,10 @@ class Coupon:
             self,
             coupon_id: int = -1,
             ID: int = -1,
-            coupon_date: date | str = None,
+            coupon_date: date or str = None,
             coupon_number: int = None,
-            fix_date: date | str = None,
-            pay_one_bond: float | MoneyValue = None,
+            fix_date: date or str = None,
+            pay_one_bond: float or MoneyValue = None,
             coupon_type: CouponType = None,
             security_id: int = -1):
 
@@ -114,11 +114,11 @@ class Dividend:
 
     def __init__(
             self,
-            div_value: float | MoneyValue = None,
-            payment_date: date | str = None,
-            declared_date: date | str = None,
-            record_date: date | str = None,
-            last_buy_date: date | str = None,
+            div_value: float or MoneyValue = None,
+            payment_date: date or str = None,
+            declared_date: date or str = None,
+            record_date: date or str = None,
+            last_buy_date: date or str = None,
             yield_value: float = None,
             security_id: int = None,
             div_id: int = -1,
@@ -236,12 +236,12 @@ class Bond(Security):
     def __init__(
             self,
             coupon_quantity_per_year: int = 0,
-            nominal: float | MoneyValue = 1000,
+            nominal: float or MoneyValue = 1000,
             amortization_flag: bool = False,
-            maturity_date: date | str = None,
+            maturity_date: date or str = None,
             bond_id: int = -1,
             ID: int = -1,
-            aci_value: float | MoneyValue = 0,
+            aci_value: float or MoneyValue = 0,
             issue_size: int = 0,
             issue_size_plan: int = 0,
             floating_coupon_flag: bool = False,

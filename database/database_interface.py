@@ -19,12 +19,13 @@ class DatabaseInterface:
     def __init__(self):
         # Получаем путь до папки, где лежит файл
         folder = os.path.abspath("database_interface.py").split("/")
-        # Удаляем папку, шде лежит файл, из пути
+        # Удаляем папку, где лежит файл, из пути
         folder.pop()
         # Сохраняем его
         self.__path = "/".join(folder)
 
         # загружаем данные по бд общие
+        print(__path)
         info = FileLoader.get_json(self.__path +
                                    "/info/files/.database_info.json")
         # Если файла нет, значит, пользователь идиот и его удалил

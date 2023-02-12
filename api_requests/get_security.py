@@ -27,7 +27,7 @@ class GetSecurity(SecurityGetter):
     но находится в планах
     """
     # Список цб
-    securities: list[Security | Bond | Stock] = []
+    securities: list[Security or Bond or Stock] = []
     # Добавлять ли цб
     add_to_other: bool
     # Интересно, что же это такое... Даже не знаю
@@ -37,7 +37,7 @@ class GetSecurity(SecurityGetter):
     # Так как в момент загрузки купонов или
     # дивов мы ещё не знаем, какие будут id у цб
     # Которые мы только что скачали в базе данных
-    sub_data: list[GetDividends | GetCoupons] = []
+    sub_data: list[GetDividends or GetCoupons] = []
 
     # Инициализация, всё банально
     def __init__(self, query: StandardQuery, on_finish: function, token: str,
@@ -85,7 +85,7 @@ class GetSecurity(SecurityGetter):
         db.connect_to_db()
 
         i = 0
-        sub_data: GetDividends | GetSecurity | None = None
+        sub_data: GetDividends or GetSecurity or None = None
         # Перебираем массив ценных бумаг для получения данных
         print("at insert")
         for security in self.securities:
@@ -387,7 +387,7 @@ class GetSecurity(SecurityGetter):
                 )
 
                 # Создаем заранее переменную
-                loaded_instrument: tinkoffShare | tinkoffBond
+                loaded_instrument: tinkoffShare or tinkoffBond
 
                 # В зависимости от типа данных,
                 # делаем запрос определенного типа
