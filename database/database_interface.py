@@ -39,8 +39,10 @@ class DatabaseInterface:
             # Подключаемся к бд
             self.__engine = \
                 sqlalchemy.create_engine(
-                    f"mysql+pymysql://root:0urSh!TtyD8@localhost/"
-                    f"{self.info['name']}")
+                    f"mysql+pymysql://{self.info['username']}:"
+                    f"{self.info['password']}@localhost/"
+                    f"{self.info['name']}"
+                )
 
             # Если бд не существует, создаем
             if not database_exists(self.__engine.url):
@@ -144,8 +146,10 @@ class DatabaseInterface:
                                       datatype=str)
         scripts = list(filter(len, scripts.replace("\n", "").split(";")))
 
-        self.__engine = sqlalchemy.create_engine\
-            ("mysql+pymysql://root:0urSh!TtyD8@localhost")
+        self.__engine = sqlalchemy.create_engine(
+            f"mysql+pymysql://{self.info['username']}:"
+            f"{self.info['password']}@localhost"
+        )
 
         with self.__engine.connect() as conn:
             conn.execute("commit")
