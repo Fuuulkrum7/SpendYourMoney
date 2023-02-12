@@ -1,15 +1,26 @@
+from preinstall import installation
+
 import asyncio
 from datetime import timedelta
 import threading
 
-from database.database_interface import DatabaseInterface
-from api_requests.securities_api import GetSecurity, SecurityInfo
-from api_requests.security_getter import StandardQuery
-from info.info import Info, User, Theme
-
-from tinkoff.invest import CandleInterval, AsyncClient, Client
-from tinkoff.invest.utils import now
-
+try:
+    from database.database_interface import DatabaseInterface
+    from api_requests.securities_api import GetSecurity, SecurityInfo
+    from api_requests.security_getter import StandardQuery
+    from info.info import Info, User, Theme
+    from tinkoff.invest import CandleInterval, AsyncClient, Client
+    from tinkoff.invest.utils import now
+except ImportError:
+    installation(["tinkoff-investments", "tinkoff",
+                  "SQLAlchemy", "SQLAlchemy-Utils",
+                  "aenum", "function", "database"])
+    from database.database_interface import DatabaseInterface
+    from api_requests.securities_api import GetSecurity, SecurityInfo
+    from api_requests.security_getter import StandardQuery
+    from info.info import Info, User, Theme
+    from tinkoff.invest import CandleInterval, AsyncClient, Client
+    from tinkoff.invest.utils import now
 
 TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTOfiVKjd7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
 

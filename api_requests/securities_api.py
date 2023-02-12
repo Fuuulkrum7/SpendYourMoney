@@ -25,7 +25,7 @@ def convert_money_value(data: MoneyValue):
 
 
 class GetSecurity(SecurityGetter, ABC, threading.Thread):
-    security: Security | Bond | Stock | None = None
+    security: Security or Bond or Stock or None = None
     add_to_other: bool
     status_code: int = 200
 
@@ -138,8 +138,8 @@ class GetSecurity(SecurityGetter, ABC, threading.Thread):
 
             self.query.security_info = SecurityInfo(-2, result[0].figi, result[0].ticker, result[0].name)
 
-            loaded_instrument: tinkoff.invest.Share | tinkoff.invest.Bond
-            sub_data: list[tinkoff.invest.Dividend | tinkoff.invest.Coupon] | None = None
+            loaded_instrument: tinkoff.invest.Share or tinkoff.invest.Bond
+            sub_data: list[tinkoff.invest.Dividend or tinkoff.invest.Coupon] or None = None
 
             try:
                 if result[0].instrument_type == "bond":
