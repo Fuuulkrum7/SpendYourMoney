@@ -3,13 +3,17 @@ from datetime import timedelta
 from preinstall import installation
 
 try:
+    installation(["tinkoff-investments",
+                  "SQLAlchemy<2.0.0", "SQLAlchemy-Utils",
+                  "function", "pymysql"])
     import sqlalchemy
+    import pymysql
     from tinkoff.invest import CandleInterval, AsyncClient, Client
     from tinkoff.invest.utils import now
 except ImportError:
     installation(["tinkoff-investments",
-                  "SQLAlchemy", "SQLAlchemy-Utils",
-                  "function"])
+                  "SQLAlchemy<2.0.0", "SQLAlchemy-Utils",
+                  "function", "pymysql"])
     from tinkoff.invest import CandleInterval, AsyncClient, Client
     from tinkoff.invest.utils import now
 
