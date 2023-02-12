@@ -25,7 +25,8 @@ class DatabaseInterface:
         self.__path = "/".join(folder)
 
         # загружаем данные по бд общие
-        info = FileLoader.get_json(self.__path + "/info/files/.database_info.json")
+        info = FileLoader.get_json(self.__path +
+                                   "/info/files/.database_info.json")
         # Если файла нет, значит, пользователь идиот и его удалил
         if info is None:
             raise FileNotFoundError

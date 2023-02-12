@@ -4,7 +4,7 @@ from typing import Sized
 
 class FileLoader:
     @staticmethod
-    def get_file(file_name: str, datatype=list) -> list[Sized] or str or None:
+    def get_file(file_name: str, datatype=list) -> list[Sized] | str | None:
         try:
             file = open(file_name)
             res = file.read()
@@ -19,7 +19,7 @@ class FileLoader:
         return res
 
     @staticmethod
-    def get_json(file_name: str) -> dict or None:
+    def get_json(file_name: str) -> dict | None:
         try:
             file = open(file_name)
             res = json.load(file)
