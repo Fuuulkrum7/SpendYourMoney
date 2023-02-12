@@ -1,4 +1,5 @@
 import os
+from platform import system
 
 from sqlalchemy.engine.base import Engine
 from sqlalchemy_utils import database_exists
@@ -17,15 +18,15 @@ class DatabaseInterface:
     info: dict
 
     def __init__(self):
+        sep = "\\" if system() == "Windows" else "/"
         # Получаем путь до папки, где лежит файл
-        folder = os.path.abspath("database_interface.py").split("/")
+        folder = os.path.abspath("database_interface.py").split(sep)
         # Удаляем папку, где лежит файл, из пути
         folder.pop()
         # Сохраняем его
         self.__path = "/".join(folder)
 
         # загружаем данные по бд общие
-        print(self.__path)
         info = FileLoader.get_json(self.__path +
                                    "/info/files/.database_info.json")
         # Если файла нет, значит, пользователь идиот и его удалил
