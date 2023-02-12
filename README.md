@@ -33,7 +33,7 @@ s = GetSecurity(
 )
 ```
 
-As you can see, it is permitted not to write something in all fields, it is allowed to fill only that variables, that you 
+As you can see, it is permitted not to write something in each field, it is allowed to fill only that variables, that you 
 know. __WARNING__. If now only name of security, program will always try to find it in internet, because at this moment
 we have some problems with python, which interprets some strings with `f"LIKE %{name}%"`. We'll fix this problem soon.
 
