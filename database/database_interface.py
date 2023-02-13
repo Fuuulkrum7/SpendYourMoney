@@ -89,40 +89,66 @@ class DatabaseInterface:
                         table: str, where: str = "",
                         sort_query: list[str] = None,
                         join: str = "") -> list[dict]:
+        """
+        :param rows: Столбцы, по которым будет проводиться выборка. В случае
+        использования join требуется указать имя таблицы, из которой берутся
+        данные столбцы.
+        :param table: Основная таблица, из которой ведется выборка.
+        :param where: Параметр-условие, по которому ведется выборка.
+        Для join использовать ON.
+        :param sort_query: Сортировка по какому элементу.
+        :param join: Для объединения двух таблиц в запросе.
+        :return: Возвращаем данные, которые уже спарсили, используя имена
+        столбцов.
+        """
+        # Начинаем формировать запрос
         query = f"SELECT "
 
+        # Перебираем столбцы
         i = 0
         for key, row in rows.items():
+            # По умолчанию имени таблицы нет
             tbl = ""
+            # Если у нас несколько таблиц, указываем их имена
             if len(rows) > 1:
                 tbl = key + "."
-            query += ", ".join(map(lambda x: f"{tbl}{x.name}", row))
+            # Формируем строку
+            query += ", ".join(map(lambda x: f"{tbl}{x.value}", row))
 
             i += 1
+            # Если не последняя строка таблицы, добавляем запятую
             if i < len(rows):
                 query += ", "
 
+        # Основная таблица
         query += f" FROM {table}"
 
+        # Если данные в join есть, добавляем их
         if join:
             query += f" INNER JOIN {join}"
 
+        # Если надо указать условие выборки, делаем это
         if where:
             query += f" {where}"
 
+        # Если сортировка не пустая, формируем ее
         if sort_query is not None:
             query += " ORDER BY "
             query += ", ".join(sort_query)
 
+        # Подключаемся к бд
         with self.__engine.connect() as conn:
+            # Делаем запрос
             result = conn.execute(query)
             values: list[dict] = []
 
+            # Перебираем полученные данные
             for r in result:
+                # Формируем словарь из пар имя столбца - значение
                 value: dict = {}
                 for sub_row in rows.values():
                     for row in sub_row:
-                        value[row.name] = r[row.name]
+                        value[row.value] = r[row.value]
                 values.append(value)
 
             conn.close()

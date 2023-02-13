@@ -135,7 +135,7 @@ class GetCoupons(SecurityGetter):
         a = db.get_data_by_sql(
             {table: list(CouponInfo)},
             table,
-            where=f"WHERE {CouponInfo.security_id.name} = {security_id}"
+            where=f"WHERE {CouponInfo.security_id.value} = {security_id}"
         )
 
         # парсим данные в купоны
@@ -292,7 +292,7 @@ class GetDividends(SecurityGetter):
         a = db.get_data_by_sql(
             {table: list(DividendInfo)},
             table,
-            where=f"WHERE {DividendInfo.security_id.name} = {security_id}"
+            where=f"WHERE {DividendInfo.security_id.value} = {security_id}"
         )
 
         # Разве что тут мы вместо купонов создаем

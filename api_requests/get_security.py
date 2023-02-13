@@ -163,9 +163,9 @@ class GetSecurity(SecurityGetter):
         # И потом будет ещё поиск по имени, но там надо использовать
         # LIKE %query_text%, а питон ругается на наличие процентов в строке
         query = "WHERE "
-        query += f"`{SecuritiesInfo.figi.name}` = '{query_text}' OR "
-        query += f"`{SecuritiesInfo.ticker.name}` = '{query_text}' OR "
-        query += f"`{SecuritiesInfo.class_code.name}` = '{query_text}'"
+        query += f"`{SecuritiesInfo.figi.value}` = '{query_text}' OR "
+        query += f"`{SecuritiesInfo.ticker.value}` = '{query_text}' OR "
+        query += f"`{SecuritiesInfo.class_code.value}` = '{query_text}'"
 
         # Получаем имя таблицы
         table = SecuritiesInfoTable().get_name()
@@ -283,7 +283,7 @@ class GetSecurity(SecurityGetter):
                     f"{table}",
                     join=f"{BondsInfoTable().get_table()}",
                     where=query + f"{BondsInfoTable().get_table()}."
-                                  f"{BondsInfo.security_id.name}"
+                                  f"{BondsInfo.security_id.value}"
                 )
             # Получаем все индексы для купонов
             indexes = [x["security_id"] for x in a]
