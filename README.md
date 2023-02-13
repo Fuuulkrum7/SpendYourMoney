@@ -48,7 +48,7 @@ for _isin_). But be careful! It can take lots of time, if you would try to find 
 is created for looking not big number of papers (or for looking big number of them locally. But api-request will take too much time)
 
 
-### Прежде всего, вам нужно создать пользователя в вашей базе данных.
+### Первым делом вам нужно создать пользователя в вашей базе данных.
 Для этого запустите mysql, введите пароль root и выполните следующие команды:
 
 ```
