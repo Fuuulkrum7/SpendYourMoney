@@ -112,7 +112,7 @@ class GetCoupons(SecurityGetter):
         db.add_unique_data(
             table,
             query=query,
-            append_string="ON DUPLICATE KEY UPDATE security_id=security_id"
+            append_string={"security_id": "security_id"}
         )
 
         db.close_engine()
@@ -276,7 +276,7 @@ class GetDividends(SecurityGetter):
         db.add_unique_data(
             table,
             query=query,
-            append_string="ON DUPLICATE KEY UPDATE security_id=security_id"
+            append_string={"security_id": "security_id"}
         )
 
         db.close_engine()

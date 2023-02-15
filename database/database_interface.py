@@ -82,7 +82,7 @@ class DatabaseInterface:
             conn.close()
 
     def add_unique_data(self, table: Base, query: list[dict] = None,
-                        values: dict = None, append_string: str = ""):
+                        values: dict = None, append_string: dict = {}):
         # Если вообще данных для добавления нет
         if query is None and values is None:
             return
@@ -99,9 +99,14 @@ class DatabaseInterface:
 
         # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
+            insrt = sqlalchemy.insert(table).values(query)
+            insrt = insrt.on_duplicate_key_update(
+                status='U',
+                **append_string
+            )
+
             conn.execute(
-                sqlalchemy.insert(table, append_string=append_string),
-                query
+                insrt
             )
             conn.close()
 

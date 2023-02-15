@@ -104,8 +104,7 @@ class GetSecurity(SecurityGetter):
                 db.add_unique_data(
                     table.get_table(),
                     values=security.get_as_dict_security(),
-                    append_string="ON DUPLICATE KEY UPDATE "
-                                  "security_id=security_id"
+                    append_string={"figi": "figi"}
                 )
                 # Получаем курсор, из него мы
                 # вытянем id только что добавленной цб
@@ -140,7 +139,7 @@ class GetSecurity(SecurityGetter):
             db.add_unique_data(
                 table.get_table(),
                 values=security.get_as_dict(),
-                append_string="ON DUPLICATE KEY UPDATE security_id=security_id"
+                append_string={"security_id": "security_id"}
             )
 
             # Аналогично с получением индекса.
