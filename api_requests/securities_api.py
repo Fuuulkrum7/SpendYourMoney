@@ -109,9 +109,10 @@ class GetCoupons(SecurityGetter):
             query.append(values.get_as_dict())
 
         # Добавляем данные в бд
-        db.add_data(
+        db.add_unique_data(
             table,
-            query=query
+            query=query,
+            append_string="ON DUPLICATE KEY UPDATE security_id=security_id"
         )
 
         db.close_engine()
@@ -272,9 +273,10 @@ class GetDividends(SecurityGetter):
         for values in self.dividend:
             query.append(values.get_as_dict())
 
-        db.add_data(
+        db.add_unique_data(
             table,
-            query=query
+            query=query,
+            append_string="ON DUPLICATE KEY UPDATE security_id=security_id"
         )
 
         db.close_engine()

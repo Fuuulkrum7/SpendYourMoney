@@ -2,6 +2,7 @@ import os
 from platform import system
 
 from sqlalchemy.engine.base import Engine
+from sqlalchemy import text
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *
@@ -40,7 +41,7 @@ class DatabaseInterface:
             # Подключаемся к бд
             self.__engine = \
                 sqlalchemy.create_engine(
-                    f"mysql+pymysql://{self.info['username']}:"
+                    f"mysql+mysqldb://{self.info['username']}:"
                     f"{self.info['password']}@localhost/"
                     f"{self.info['name']}"
                 )
@@ -80,16 +81,37 @@ class DatabaseInterface:
             )
             conn.close()
 
-    def add_unique_data(self, table: Base,
-                        query: list[dict] = None, values: dict = None):
-        pass
+    def add_unique_data(self, table: Base, query: list[dict] = None,
+                        values: dict = None, append_string: str = ""):
+        # Если вообще данных для добавления нет
+        if query is None and values is None:
+            return
+
+        # Если тело запроса не пустое, фильтруем на всякий случай
+        if query is None:
+            query = [dict(filter(
+                lambda x: not (x[0] in ["UID", "ID"]), values.items()
+            ))]
+        else:
+            query = [dict(filter(
+                lambda x: not (x[0] in ["UID", "ID"]), val.items()
+            )) for val in query]
+
+        # Подсоединяемся к бд и добавляем данные
+        with self.__engine.connect() as conn:
+            conn.execute(
+                sqlalchemy.insert(table, append_string=append_string),
+                query
+            )
+            conn.close()
 
     # вариант получения данных путем создания запроса sql
     def get_data_by_sql(self, rows: dict[str, list[Enum]],
                         table: str, where: str = "",
                         sort_query: list[str] = None,
-                        join: str = "") -> list[dict]:
+                        join: str = "", params: dict = {}) -> list[dict]:
         """
+        :param params:
         :param rows: Столбцы, по которым будет проводиться выборка. В случае
         использования join требуется указать имя таблицы, из которой берутся
         данные столбцы.
@@ -136,10 +158,12 @@ class DatabaseInterface:
             query += " ORDER BY "
             query += ", ".join(sort_query)
 
+        query = text(query)
+
         # Подключаемся к бд
         with self.__engine.connect() as conn:
             # Делаем запрос
-            result = conn.execute(query)
+            result = conn.execute(query, **params)
             values: list[dict] = []
 
             # Перебираем полученные данные
@@ -174,7 +198,7 @@ class DatabaseInterface:
         scripts = list(filter(len, scripts.replace("\n", "").split(";")))
 
         self.__engine = sqlalchemy.create_engine(
-            f"mysql+pymysql://{self.info['username']}:"
+            f"mysql+mysqldb://{self.info['username']}:"
             f"{self.info['password']}@localhost"
         )
 

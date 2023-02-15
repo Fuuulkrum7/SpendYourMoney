@@ -72,7 +72,6 @@ class GetSecurity(SecurityGetter):
         except Exception as e:
             print(e)
             self.status_code = 300
-            raise e
 
         if not self.securities:
             self.get_from_api()
@@ -102,9 +101,11 @@ class GetSecurity(SecurityGetter):
             if self.add_to_other:
                 # Запускаем скрипт добавления данных в бд
                 # Там передаем таблицу и данные, переведенные в словарь
-                db.add_data(
+                db.add_unique_data(
                     table.get_table(),
-                    values=security.get_as_dict_security()
+                    values=security.get_as_dict_security(),
+                    append_string="ON DUPLICATE KEY UPDATE "
+                                  "security_id=security_id"
                 )
                 # Получаем курсор, из него мы
                 # вытянем id только что добавленной цб
@@ -136,9 +137,10 @@ class GetSecurity(SecurityGetter):
                 table = StocksInfoTable()
 
             # Добавление данных в нужную таблицу
-            db.add_data(
+            db.add_unique_data(
                 table.get_table(),
-                values=security.get_as_dict()
+                values=security.get_as_dict(),
+                append_string="ON DUPLICATE KEY UPDATE security_id=security_id"
             )
 
             # Аналогично с получением индекса.
@@ -166,6 +168,7 @@ class GetSecurity(SecurityGetter):
         query += f"`{SecuritiesInfo.figi.value}` = '{query_text}' OR "
         query += f"`{SecuritiesInfo.ticker.value}` = '{query_text}' OR "
         query += f"`{SecuritiesInfo.class_code.value}` = '{query_text}'"
+        query += f"`{SecuritiesInfo.security_name.value}` LIKE :par"
 
         # Получаем имя таблицы
         table = SecuritiesInfoTable().get_name()
@@ -177,7 +180,8 @@ class GetSecurity(SecurityGetter):
             a = db.get_data_by_sql(
                 {table: list(SecuritiesInfo)},
                 table,
-                where=query
+                where=query,
+                params={"par": f"%{query_text}%"}
             )
 
             # Перебираем массив полученных данных
@@ -192,6 +196,8 @@ class GetSecurity(SecurityGetter):
             query = "ON "
             query += f"({table}.{SecuritiesInfo.figi.value}" \
                      f" = '{query_text}' OR "
+            query += f"{table}.{SecuritiesInfo.security_name.value} " \
+                     f"LIKE :par OR "
             query += f"{table}.{SecuritiesInfo.ticker.value}" \
                      f" = '{query_text}' OR "
             query += f"{table}.{SecuritiesInfo.class_code.value}" \
@@ -208,7 +214,8 @@ class GetSecurity(SecurityGetter):
                 join=f"{StocksInfoTable().get_table()}",
                 where=query + f"{StocksInfoTable().get_table()}."
                               f"{StocksInfo.security_id.value}",
-                sort_query=[f"{StocksInfo.security_id.value} ASC"]
+                sort_query=[f"{StocksInfo.security_id.value} ASC"],
+                params={"par": f"%{query_text}%"}
             )
             # Получаем массив индексов цб
             indexes = [x["security_id"] for x in a]
@@ -268,9 +275,6 @@ class GetSecurity(SecurityGetter):
                 # Добавляем в массив
                 self.securities.append(stock)
 
-                # Просто вывод данных
-                if len(stock.dividend):
-                    print("div", stock.dividend[0].get_as_dict())
                 print(self.securities[-1].get_as_dict())
                 print(self.securities[-1].get_as_dict_security())
 
@@ -283,7 +287,8 @@ class GetSecurity(SecurityGetter):
                     f"{table}",
                     join=f"{BondsInfoTable().get_table()}",
                     where=query + f"{BondsInfoTable().get_table()}."
-                                  f"{BondsInfo.security_id.value}"
+                                  f"{BondsInfo.security_id.value}",
+                    params={"par": f"%{query_text}%"}
                 )
             # Получаем все индексы для купонов
             indexes = [x["security_id"] for x in a]
@@ -333,8 +338,7 @@ class GetSecurity(SecurityGetter):
                 else:
                     # А если были, то сохраняем
                     bond.coupon = coupon
-                if len(bond.coupon):
-                    print("coup", bond.coupon[0].get_as_dict())
+
                 # И добавляем облигацию в список существующих
                 self.securities.append(bond)
 
@@ -387,7 +391,7 @@ class GetSecurity(SecurityGetter):
                 )
 
                 # Создаем заранее переменную
-                loaded_instrument: tinkoffShare or tinkoffBond
+                loaded_instrument: tinkoffBond or tinkoffShare
 
                 # В зависимости от типа данных,
                 # делаем запрос определенного типа

@@ -5,13 +5,14 @@ from preinstall import installation
 try:
     import cryptography
     import sqlalchemy
-    import pymysql
+    import MySQLdb
     from tinkoff.invest import CandleInterval, AsyncClient, Client
     from tinkoff.invest.utils import now
 except ImportError:
     installation(["tinkoff-investments",
                   "SQLAlchemy<2.0.0", "SQLAlchemy-Utils",
-                  "function", "pymysql", "cryptography"])
+                  "function", "pymysql", "cryptography",
+                  "mysqlclient"])
     import cryptography
     from tinkoff.invest import CandleInterval, AsyncClient, Client
     from tinkoff.invest.utils import now
@@ -46,7 +47,7 @@ s = GetSecurity(
             ticker="",
             class_code=""
         ),
-        "TCS009029557"
+        "RU0007661625"
     ),
     lambda x: print("done, status: ", x),
     TOKEN
