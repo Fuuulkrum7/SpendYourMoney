@@ -209,7 +209,9 @@ class GetSecurity(SecurityGetter):
                 f"{table}",
                 join=f"{StocksInfoTable().get_table()}",
                 where=query + f"{StocksInfoTable().get_table()}."
-                              f"{StocksInfo.security_id.value}",
+                              f"{StocksInfo.security_id.value}"
+                              f" AND {table}."
+                              f"{SecuritiesInfo.security_type.value} = 0",
                 sort_query=[f"{StocksInfo.security_id.value} ASC"],
                 params={"par": f"%{query_text}%"}
             )
@@ -280,7 +282,9 @@ class GetSecurity(SecurityGetter):
                     f"{table}",
                     join=f"{BondsInfoTable().get_table()}",
                     where=query + f"{BondsInfoTable().get_table()}."
-                                  f"{BondsInfo.security_id.value}",
+                                  f"{BondsInfo.security_id.value}"
+                                  f" AND {table}."
+                                  f"{SecuritiesInfo.security_type.value} = 1",
                     params={"par": f"%{query_text}%"}
                 )
             # Получаем все индексы для купонов
