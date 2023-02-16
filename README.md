@@ -38,8 +38,8 @@ s = GetSecurity(
 ```
 
 As you can see, it is permitted not to fill each field, it is allowed to fill only that variables, that you 
-know. __WARNING__. If name of "security" is specified only, program will always try to find it in internet, because at this moment
-we have some problems with python, which interprets some strings with `f"LIKE %{name}%"`. We'll fix this problem soon.
+know.
+
 
 If you want to find as much, as it is possible, pay attention for second variable in __StandardQuery__ constructor.
 In this line you can write all information about security, for which there's no field in __SecurityInfo__ (for example, 
@@ -86,8 +86,7 @@ s = GetSecurity(
 )
 ```
 
-Как видно из данного примера, можно не заполнять каждое поле класса, а только те, данные для которых вы знаете. __ПРЕДУПРЕЖДЕНИЕ__. Если указано только имя ценной бумаги, программа всегда будет пытаться найти ее в интернете, т.к. в этот момент
-у нас есть некоторые проблемы с python, который интерпретирует некоторые строки с `f"LIKE %{name}%"`. Мы исправим эту проблему в ближайшее время.
+Как видно из данного примера, можно не заполнять каждое поле класса, а только те, данные для которых вы знаете.
 
 Если вы хотите загрузить как можно больше ценных бумаг, обратите внимание на вторую переменную в конструкторе __StandardQuery__.
 В этой строке вы можете написать всю информацию о безопасности, для которой нет поля в __SecurityInfo__ (например,
