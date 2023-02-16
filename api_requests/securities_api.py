@@ -111,8 +111,7 @@ class GetCoupons(SecurityGetter):
         # Добавляем данные в бд
         db.add_unique_data(
             table,
-            query=query,
-            append_string={"security_id": "security_id"}
+            query=query
         )
 
         db.close_engine()
@@ -275,8 +274,7 @@ class GetDividends(SecurityGetter):
 
         db.add_unique_data(
             table,
-            query=query,
-            append_string={"security_id": "security_id"}
+            query=query
         )
 
         db.close_engine()

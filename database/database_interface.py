@@ -3,6 +3,7 @@ from platform import system
 
 from sqlalchemy.engine.base import Engine
 from sqlalchemy import text
+from sqlalchemy.dialects.mysql import insert, Insert
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *
@@ -76,13 +77,13 @@ class DatabaseInterface:
         # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
             conn.execute(
-                sqlalchemy.insert(table),
+                insert(table),
                 query
             )
             conn.close()
 
     def add_unique_data(self, table: Base, query: list[dict] = None,
-                        values: dict = None, append_string: dict = {}):
+                        values: dict = None):
         # Если вообще данных для добавления нет
         if query is None and values is None:
             return
@@ -99,11 +100,7 @@ class DatabaseInterface:
 
         # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
-            insrt = sqlalchemy.insert(table).values(query)
-            insrt = insrt.on_duplicate_key_update(
-                status='U',
-                **append_string
-            )
+            insrt = insert(table).prefix_with("IGNORE").values(query)
 
             conn.execute(
                 insrt

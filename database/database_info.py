@@ -52,7 +52,7 @@ class DividendInfo(Enum):
 class SecuritiesHistory(Enum):
     security_id = "security_id"
     price = "price"
-    time = "time"
+    info_time = "info_time"
     volume = "volume"
 
 
@@ -311,7 +311,7 @@ class SecuritiesHistoryTable(Base):
                            autoincrement=True)
     security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     price = sqlalchemy.Column(DOUBLE)
-    time = sqlalchemy.Column(sqlalchemy.DateTime)
+    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
     volume = sqlalchemy.Column(sqlalchemy.Integer)
 
     def get_table(self):
@@ -328,7 +328,7 @@ class HistoryOfPredictionsTable(Base):
                            autoincrement=True)
     security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     price = sqlalchemy.Column(DOUBLE)
-    time = sqlalchemy.Column(sqlalchemy.DateTime)
+    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
     volume = sqlalchemy.Column(sqlalchemy.Integer)
 
     def get_table(self):

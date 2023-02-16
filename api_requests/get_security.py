@@ -88,7 +88,6 @@ class GetSecurity(SecurityGetter):
         # Перебираем массив ценных бумаг для получения данных
         print("at insert")
         for security in self.securities:
-            print(security.get_as_dict_security())
             # Защита от вылезания за границы
             if i < len(self.sub_data):
                 sub_data = self.sub_data[i]
@@ -103,8 +102,7 @@ class GetSecurity(SecurityGetter):
                 # Там передаем таблицу и данные, переведенные в словарь
                 db.add_unique_data(
                     table.get_table(),
-                    values=security.get_as_dict_security(),
-                    append_string={"figi": "figi"}
+                    values=security.get_as_dict_security()
                 )
                 # Получаем курсор, из него мы
                 # вытянем id только что добавленной цб
@@ -138,8 +136,7 @@ class GetSecurity(SecurityGetter):
             # Добавление данных в нужную таблицу
             db.add_unique_data(
                 table.get_table(),
-                values=security.get_as_dict(),
-                append_string={"security_id": "security_id"}
+                values=security.get_as_dict()
             )
 
             # Аналогично с получением индекса.
@@ -274,9 +271,6 @@ class GetSecurity(SecurityGetter):
                 # Добавляем в массив
                 self.securities.append(stock)
 
-                print(self.securities[-1].get_as_dict())
-                print(self.securities[-1].get_as_dict_security())
-
             # И облигации
             a = db.get_data_by_sql(
                     {
@@ -340,10 +334,6 @@ class GetSecurity(SecurityGetter):
 
                 # И добавляем облигацию в список существующих
                 self.securities.append(bond)
-
-                # Просто вывод данных
-                print(self.securities[-1].get_as_dict())
-                print(self.securities[-1].get_as_dict_security())
 
         db.close_engine()
         # Чтобы не лезть в апи, если все хорошо и данные найдены

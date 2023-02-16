@@ -47,7 +47,7 @@ s = GetSecurity(
             ticker="",
             class_code=""
         ),
-        "RU0007661625"
+        " "
     ),
     lambda x: print("done, status: ", x),
     TOKEN
