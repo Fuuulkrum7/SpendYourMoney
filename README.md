@@ -14,7 +14,10 @@ get would be written in console. Also, venv is not created yet, so we added to _
 downloads all modules, that are necessary for program stable work. 
 
 After this steps, you will see some information about loaded from internet or local database securities. Information, 
-using which we are creating request is located near 40-54 lines of code in __main.py__. So, if you want to find security 
+using which we are creating request is located near 40-54 lines of code in __main.py__.
+
+#### GetSecurity
+So, if you want to find security 
 by _figi_, you need to write its name in field __figi=__. Other parts of your response should be written in such way. 
 __ticker__=_ticker_, etc. Field __id__ is not necessary to be changed.
 
@@ -48,6 +51,21 @@ for _isin_). But be careful! It can take lots of time, if you would try to find 
 is created for looking not big number of papers (or for looking big number of them locally. But api-request will take too much time)
 
 
+#### LoadAllSecurities
+If you want this program to work faster, just use first class `LoadAllSecurities`
+This class must be used only one time (or each time after clearing database). This class
+downloads __all__ securities from API. Of course, it's impossible to load all data about dividends and
+coupons in one time, so this class loads only Bonds and Stocks. For downloading just write 
+
+```
+loader = LoadAllSecurities(
+    lambda x: print(f"done, code = {x}"),
+    TOKEN
+)
+loader.start()
+```
+It will take near 8-12 seconds (depends on your Internet speed)
+
 ### Первым делом вам нужно создать пользователя в вашей базе данных.
 Для этого запустите mysql, введите пароль root и выполните следующие команды:
 
@@ -63,7 +81,11 @@ GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
 загружает все модули, необходимые для стабильной работы программы.
 
 После выполнения этих шагов вы увидите некоторую информацию о ценных бумагах, загруженных из Интернета или локальной базы данных. Данные,
-с помощью которых мы создаем запрос, находятся в районе 40-54 строк кода в __main.py__. Если вы хотите найти ценную бумагу по
+с помощью которых мы создаем запрос, находятся в районе 40-54 строк кода в __main.py__. 
+
+#### GetSecurity
+
+Если вы хотите найти ценную бумагу по
 _figi_, вам нужно написать ее _figi_ в поле __figi=__. Остальные части вашего ответа должны быть написаны таким же образом.
 __ticker__=_ticker_ и т.д. В поле __id__ ничего вносить не нужно.
 
@@ -92,3 +114,18 @@ s = GetSecurity(
 В этой строке вы можете написать всю информацию о безопасности, для которой нет поля в __SecurityInfo__ (например,
 для _isin_). Но будьте осторожны! Это может занять много времени, если вы попытаетесь найти информацию о большом количестве ценных бумаг, указывая, к примеру, `security_name = " "` без указания другой информации о цб, запрос займет много времени, потому что этот класс
 создан для поиска небольшого количества бумаг (или для поиска большого количества, но локально. Сам же api-запрос будет занимать слишком много времени)
+
+#### LoadAllSecurities
+Если вы хотите ускорить работу программы, попробуйте воспользоваться предварительной 
+загрузкой всех ценных бумаг, которую осуществляет класс `LoadAllSecurities`. 
+Этот класс должен быть запущен только один раз (или каждый раз после пересоздания бд). 
+Разумеется, загрузка всех данных, заняла бы слишком много времени, поэтому данный класс
+загружает только Акции и Облигации (Stocks и Bonds). Для загрузки используйте данный код:
+```
+loader = LoadAllSecurities(
+    lambda x: print(f"done, code = {x}"),
+    TOKEN
+)
+loader.start()
+```
+Загрузка займет около 8-12 секунд, время зависит от скорости интернета и памяти.

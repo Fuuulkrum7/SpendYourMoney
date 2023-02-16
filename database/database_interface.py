@@ -3,7 +3,7 @@ from platform import system
 
 from sqlalchemy.engine.base import Engine
 from sqlalchemy import text
-from sqlalchemy.dialects.mysql import insert, Insert
+from sqlalchemy.dialects.mysql import insert
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *
@@ -15,9 +15,14 @@ class DatabaseInterface:
     Класс, отвечающий за прямую работу с бд. Запускать в отдельном потоке.
     """
     __engine: Engine = None
+    # 0 - ещё не подключена
+    # 1 - успешно подключена
+    # -1 - подключение закончилось ошибкой
     connected: int = 0
     __path: str
+    # Информация о базе данных
     info: dict
+    library = "pymysql"
 
     def __init__(self):
         sep = "\\" if system() == "Windows" else "/"
@@ -42,7 +47,7 @@ class DatabaseInterface:
             # Подключаемся к бд
             self.__engine = \
                 sqlalchemy.create_engine(
-                    f"mysql+mysqldb://{self.info['username']}:"
+                    f"mysql+{self.library}://{self.info['username']}:"
                     f"{self.info['password']}@localhost/"
                     f"{self.info['name']}"
                 )
@@ -200,7 +205,7 @@ class DatabaseInterface:
         scripts = list(filter(len, scripts.replace("\n", "").split(";")))
 
         self.__engine = sqlalchemy.create_engine(
-            f"mysql+mysqldb://{self.info['username']}:"
+            f"mysql+{self.library}://{self.info['username']}:"
             f"{self.info['password']}@localhost"
         )
 

@@ -119,7 +119,7 @@ class Dividend:
             declared_date: date or str = None,
             record_date: date or str = None,
             last_buy_date: date or str = None,
-            yield_value: float = None,
+            yield_value: float or MoneyValue = None,
             security_id: int = None,
             div_id: int = -1,
             ID: int = -1):
@@ -236,12 +236,12 @@ class Bond(Security):
     def __init__(
             self,
             coupon_quantity_per_year: int = 0,
-            nominal: float or MoneyValue = 1000,
+            nominal: float or MoneyValue = 1000.0,
             amortization_flag: bool = False,
             maturity_date: date or str = None,
             bond_id: int = -1,
             ID: int = -1,
-            aci_value: float or MoneyValue = 0,
+            aci_value: float or MoneyValue = 0.0,
             issue_size: int = 0,
             issue_size_plan: int = 0,
             floating_coupon_flag: bool = False,

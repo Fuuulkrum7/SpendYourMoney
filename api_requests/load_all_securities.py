@@ -1,8 +1,7 @@
 from time import time
 
 import function
-import sqlalchemy
-from threading import  Thread
+from threading import Thread
 from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
     Bond as tinkoffBond, InstrumentStatus
 
@@ -14,9 +13,19 @@ from securities.securities import Bond, Stock
 
 
 class LoadAllSecurities(Thread):
+    """
+    Класс, отвечающий за загрузку всех цб без доп. информации
+    """
     # Список цб
     securities: list[Bond or Stock] = []
-    # Интересно, что же это такое... Даже не знаю
+    # Статус-код
+    # 200 - успешно
+    # 301 - ошибка при добавлении
+    # 400 - ошибка при загрузке (любая)
+    # 402 - при загрузке облигаций
+    # 403 - при загрузке акций
+    # 404 - первые две одновременно, данных нет
+    # 405 - ошибка неизвестного типа, просто что-то пошло не так
     status_code: int = 200
 
     def __init__(self, on_finish: function, token: str):
@@ -25,8 +34,9 @@ class LoadAllSecurities(Thread):
         self.on_finish = on_finish
         self.__token = token
 
-    # Тут все банально
+    # Тут все банально, запускаем все методы
     def run(self) -> None:
+        # Засекаем время
         t = time()
 
         try:
@@ -51,27 +61,36 @@ class LoadAllSecurities(Thread):
         db = DatabaseInterface()
         db.connect_to_db()
 
+        # Таблица, куда добавим цб
         table = SecuritiesInfoTable()
 
+        # Сортируем по фиги
         self.securities.sort(key=lambda x: x.info.figi)
 
+        # Получаем массив данных для добавления
         securities = [value.get_as_dict_security()
                       for value in self.securities]
 
+        # Добавляем
         db.add_unique_data(
             table=table.get_table(),
             query=securities
         )
 
+        # Получаем id только что добавленных цб
+        # Отсортированных по фиги, что позволяет нам установить
+        # соответствие между id цб и ее индексом в списке всех цб
         all_id = db.get_data_by_sql(
             {table.get_name(): [SecuritiesInfo.ID]},
             table.get_name(),
             sort_query=[f"{SecuritiesInfo.figi.value} ASC"]
         )
 
+        # Ставим нужные id
         for i in range(len(self.securities)):
             self.securities[i].info.id = all_id[i][SecuritiesInfo.ID.value]
 
+        # Парсим в массивы данные по конкретным видам цб
         bonds, stocks = [], []
 
         for sec in self.securities:
@@ -80,6 +99,7 @@ class LoadAllSecurities(Thread):
             else:
                 stocks.append(sec.get_as_dict())
 
+        # Добавляем в бд
         db.add_unique_data(
             table=StocksInfoTable().get_table(),
             query=stocks
@@ -91,12 +111,15 @@ class LoadAllSecurities(Thread):
         )
 
     def get_from_api(self):
+        # Устанавливаем соединение
         with Client(self.__token) as client:
             try:
+                # Загружаем все облигации
                 bonds: list[tinkoffBond] = client.instruments.bonds(
                     instrument_status=InstrumentStatus.INSTRUMENT_STATUS_ALL
                 ).instruments
 
+                # Создаем из них экземпляры нужного нам класса
                 for loaded_instrument in bonds:
                     self.securities.append(
                         Bond(
@@ -132,6 +155,7 @@ class LoadAllSecurities(Thread):
                 self.status_code = 402
                 print(e)
 
+            # Аналогично, но с акциями
             try:
                 stocks: list[tinkoffShare] = client.instruments.shares(
                     instrument_status=InstrumentStatus.INSTRUMENT_STATUS_ALL
@@ -162,4 +186,5 @@ class LoadAllSecurities(Thread):
                     )
             except RequestError as e:
                 print(e)
+                # Если ранее была ошибка, ставим код 404
                 self.status_code = 403 if self.status_code != 402 else 404
