@@ -21,6 +21,7 @@ except ImportError:
 from securities.securities import SecurityInfo
 from api_requests.security_getter import StandardQuery
 from api_requests.get_security import GetSecurity
+from api_requests.load_all_securities import LoadAllSecurities
 
 
 TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTO" \
@@ -38,6 +39,14 @@ async def main():
 
 
 print("start")
+
+"""
+s = LoadAllSecurities(
+    lambda x: print(f"done, code = {x}"),
+    TOKEN
+)
+
+"""
 s = GetSecurity(
     StandardQuery(
         SecurityInfo(
@@ -47,7 +56,7 @@ s = GetSecurity(
             ticker="",
             class_code=""
         ),
-        "Селектел"
+        "выпуск"
     ),
     lambda x: print("done, status: ", x),
     TOKEN

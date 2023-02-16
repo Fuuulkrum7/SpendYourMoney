@@ -8,7 +8,7 @@ from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
 from api_requests.securities_api import GetDividends, GetCoupons
 from api_requests.security_getter import SecurityGetter, StandardQuery
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
-    StocksInfoTable, SecuritiesInfo, StocksInfo, BondsInfo, DividendInfoTable, \
+    StocksInfoTable, SecuritiesInfo, StocksInfo, BondsInfo, DividendInfoTable,\
     DividendInfo, CouponInfoTable, CouponInfo
 from database.database_interface import DatabaseInterface
 from securities.securiries_types import SecurityType, StockType
