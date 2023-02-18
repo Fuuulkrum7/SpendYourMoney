@@ -1,3 +1,4 @@
+import asyncio
 from datetime import timedelta
 
 from preinstall import installation
@@ -32,8 +33,8 @@ async def main():
     async with AsyncClient(TOKEN) as client:
         async for candle in client.get_all_candles(
             figi="BBG006L8G4H1",
-            from_=now() - timedelta(days=1),
-            interval=CandleInterval.CANDLE_INTERVAL_DAY,
+            from_=now() - timedelta(minutes=5),
+            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
         ):
             print(candle)
 
@@ -64,5 +65,5 @@ s = GetSecurity(
 s.start()
 
 if __name__ == "__main__":
-    # asyncio.run(main())
+    asyncio.run(main())
     pass

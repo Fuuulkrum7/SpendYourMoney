@@ -110,6 +110,8 @@ class LoadAllSecurities(Thread):
             query=bonds
         )
 
+        db.close_engine()
+
     def get_from_api(self):
         # Устанавливаем соединение
         with Client(self.__token) as client:
