@@ -1,26 +1,42 @@
 from datetime import datetime
+from math import log10, ceil
 from threading import Thread
 from time import time
 
-from tinkoff.invest import CandleInterval
+from tinkoff.invest import CandleInterval, Client, RequestError, \
+    HistoricCandle, MoneyValue, Quotation
 
+from api_requests.security_getter import SecurityGetter
 from database.database_info import SecuritiesHistory, SecuritiesHistoryTable
 from database.database_interface import DatabaseInterface
 from securities.securities import SecurityInfo
 from securities.securities_history import SecurityHistory
 
 
-class GetSecurityHistory(Thread):
-    history: list[SecurityHistory]
+def convert_money_value(data: MoneyValue or Quotation or float):
+    if isinstance(data, float):
+        return data
+    return data.units + data.nano / 10 ** ceil(
+        log10(data.nano if data.nano > 0 else 1)
+    )
+
+
+class GetSecurityHistory(SecurityGetter):
+    history: list[SecurityHistory] = []
+    insert_data: list[SecurityHistory] = []
     __token: str
     _from: datetime
     to: datetime
     interval: CandleInterval
     insert: bool
     info: SecurityInfo
+    status_code: int = 200
 
-    def __init__(self, token: str, _from: datetime, to: datetime,
-                 interval: CandleInterval, info: SecurityInfo):
+    def __init__(self, token: str = "", _from: datetime = None,
+                 to: datetime = None,
+                 interval: CandleInterval =
+                 CandleInterval.CANDLE_INTERVAL_UNSPECIFIED,
+                 info: SecurityInfo = None, on_finish=None):
         super().__init__()
 
         self._from = _from
@@ -28,6 +44,7 @@ class GetSecurityHistory(Thread):
         self.__token = token
         self.interval = interval
         self.info = info
+        self.on_finish = on_finish
 
     def run(self) -> None:
         t = time()
@@ -35,38 +52,12 @@ class GetSecurityHistory(Thread):
         print(time() - t)
 
         if self.insert:
-            self.insert_to_db()
+            self.insert_to_database()
+
+        self.on_finish(self.status_code)
 
     def load_data(self):
-        db = DatabaseInterface()
-        db.connect_to_db()
-
-        if self.interval == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            dtime = datetime()
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            dtime = datetime()
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            dtime = datetime()
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            dtime = datetime()
-        else:
-            dtime = datetime()
-
-
-        table = SecuritiesHistoryTable()
-        where = f"{SecuritiesHistory.security_id.value} = {self.info.id}"
-        where += f"AND {SecuritiesHistory.info_time.value} " \
-                 f"BETWEEN {self._from} AND {self.to}" \
-                 f""
-
-        db.get_data_by_sql(
-            {table.get_name(): list(SecuritiesHistory)},
-            table.get_name(),
-            where=where,
-            sort_query=[f"{SecuritiesHistory.info_time.value} ASC"]
-        )
-
-        db.close_engine()
+        self.get_from_bd()
 
         if self.interval == CandleInterval.CANDLE_INTERVAL_1_MIN:
             a = divmod((self.to - self._from).total_seconds(), 60)[0]
@@ -84,5 +75,92 @@ class GetSecurityHistory(Thread):
             a = divmod((self.to - self._from).total_seconds(), 360)[0] // 24
             self.insert = len(self.history) != a
 
-    def insert_to_db(self):
-        pass
+        if self.insert:
+            self.get_from_api()
+
+    def insert_to_database(self):
+        db = DatabaseInterface()
+        db.connect_to_db()
+
+        table = SecuritiesHistoryTable().get_table()
+
+        query = [val.get_as_dict() for val in self.insert_data]
+
+        db.add_unique_data(
+            query=query,
+            table=table
+        )
+
+        db.close_engine()
+
+    def get_from_bd(self):
+        db = DatabaseInterface()
+        db.connect_to_db()
+
+        table = SecuritiesHistoryTable()
+        where = f"WHERE {SecuritiesHistory.security_id.value} = {self.info.id}"
+        where += f" AND {SecuritiesHistory.info_time.value} " \
+                 f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
+                 f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' " \
+                 f""
+
+        if self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
+            where += f" AND {SecuritiesHistory.info_time.value} % 5 = 0"
+        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
+            where += f" AND {SecuritiesHistory.info_time.value} % 15 = 0"
+        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
+            where += f" AND {SecuritiesHistory.info_time.value} % 60 = 0"
+        elif self.interval == CandleInterval.CANDLE_INTERVAL_DAY:
+            where += f" AND {SecuritiesHistory.info_time.value} " \
+                     f"% 60 * 24 = 0"
+
+        histories = db.get_data_by_sql(
+            {table.get_name(): list(SecuritiesHistory)},
+            table.get_name(),
+            where=where,
+            sort_query=[f"{SecuritiesHistory.info_time.value} ASC"]
+        )
+
+        for history in histories:
+            self.history.append(
+                SecurityHistory(
+                    info_time=history[SecuritiesHistory.info_time.value],
+                    security_id=self.info.id,
+                    price=history[SecuritiesHistory.price.value],
+                    volume=history[SecuritiesHistory.volume.value]
+                )
+            )
+
+        db.close_engine()
+
+    def get_from_api(self):
+        with Client(self.__token) as client:
+            try:
+                result = client.get_all_candles(
+                    figi=self.info.figi,
+                    from_=self._from,
+                    to=self.to,
+                    interval=self.interval,
+                )
+            except RequestError as e:
+                print(e)
+                self.status_code = 400
+
+            result = list(map(self.get_from_candle, result))
+
+            result = list(filter(
+                lambda x: not (x in self.history),
+                result
+            ))
+
+            print(result)
+            self.history.extend(result)
+            self.insert_data = result
+
+    def get_from_candle(self, candle: HistoricCandle) -> SecurityHistory:
+        return SecurityHistory(
+            price=convert_money_value(candle.close),
+            security_id=self.info.id,
+            volume=candle.volume,
+            info_time=candle.time
+        )

@@ -1,7 +1,9 @@
 import asyncio
 from datetime import timedelta
 
+from api_requests.get_security_history import GetSecurityHistory
 from preinstall import installation
+from securities.securities_history import SecurityHistory
 
 try:
     import cryptography
@@ -39,6 +41,25 @@ async def main():
             print(candle)
 
 
+def load_securities(x):
+    print(*[val.get_as_dict_security() for val in s.securities],
+          sep='\n')
+
+    res = GetSecurityHistory(
+        info=s.securities[0].info,
+        _from=now() - timedelta(minutes=5),
+        to=now(),
+        interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+        token=TOKEN,
+        on_finish=lambda n: print(
+            *[val.get_as_dict() for val in res.history],
+            sep='\n'
+        )
+    )
+
+    res.start()
+
+
 print("start")
 
 """
@@ -57,13 +78,16 @@ s = GetSecurity(
             ticker="",
             class_code=""
         ),
-        "Газпром"
+        "LKOH"
     ),
-    lambda x: print("done, status: ", x),
+    load_securities,
     TOKEN
 )
 s.start()
 
+sec = SecurityHistory()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
     pass

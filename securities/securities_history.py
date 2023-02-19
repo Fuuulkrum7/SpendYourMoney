@@ -23,6 +23,9 @@ class SecurityHistory:
         self.volume = volume
         self.info_time = info_time
 
+    def __contains__(self, item):
+        return self.__eq__(item)
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -35,6 +38,9 @@ class SecurityHistory:
         return hash(
             (self.volume, self.price, self.security_id, self.info_time)
         )
+
+    def __str__(self):
+        return self.get_as_dict()
 
     def get_as_dict(self):
         return {
