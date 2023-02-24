@@ -94,6 +94,7 @@ class GetSecurityHistory(SecurityGetter):
         db.close_engine()
 
     def get_from_bd(self):
+        # TODO fix bug with local data load
         db = DatabaseInterface()
         db.connect_to_db()
 

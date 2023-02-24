@@ -116,6 +116,17 @@ class UserTableSQLAlchemy(Base):
     status = sqlalchemy.Column(sqlalchemy.Integer)
     access_level = sqlalchemy.Column(sqlalchemy.Integer)
 
+    __table__ = sqlalchemy.Table(
+        __tablename__,
+        Base.metadata,
+        UID,
+        username,
+        token,
+        password,
+        status,
+        access_level
+    )
+
     def get_table(self):
         return self.__table__
 
