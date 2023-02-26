@@ -63,3 +63,7 @@ class SecurityGetter(ABC, Thread):
     @abstractmethod
     def get_from_api(self):
         pass
+
+    # Метод получения загруженных данный
+    def get_data(self):
+        pass

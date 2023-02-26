@@ -87,8 +87,8 @@ class GetSecurityHistory(SecurityGetter):
         query = [val.get_as_dict() for val in self.insert_data]
 
         db.add_unique_data(
-            query=query,
-            table=table
+            table,
+            query=query
         )
 
         db.close_engine()
@@ -165,3 +165,6 @@ class GetSecurityHistory(SecurityGetter):
             volume=candle.volume,
             info_time=candle.time
         )
+
+    def get_data(self):
+        return self.history

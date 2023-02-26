@@ -206,6 +206,9 @@ class GetCoupons(SecurityGetter):
             ) for coupon in sub_data
         ]
 
+    def get_data(self):
+        return self.coupon
+
 
 class GetDividends(SecurityGetter):
     """
@@ -350,3 +353,6 @@ class GetDividends(SecurityGetter):
                 security_id=self.query.security_info.id)
             for div in sub_data
         ]
+
+    def get_data(self):
+        return self.dividend

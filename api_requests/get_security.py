@@ -505,3 +505,6 @@ class GetSecurity(SecurityGetter):
 
             # Пишем то, сколько инструментов мы нашли
             print(len(self.securities))
+
+    def get_data(self) -> list[Security] or None:
+        return self.securities
