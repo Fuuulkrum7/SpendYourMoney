@@ -34,14 +34,17 @@ class User:
     def get_token(self):
         return self.__token
 
+    def set_uid(self, id: int):
+        self.__user_id = id
+
     def get_uid(self):
         return self.__user_id
 
     def get_as_dict(self) -> dict:
         return {
-            UserTable.status: self.status.value,
-            UserTable.access_level: self.access_level.value,
-            UserTable.username: self.username,
-            UserTable.token: self.__token,
-            UserTable.UID: self.__user_id
+            UserTable.status.value: self.status.value,
+            UserTable.access_level.value: self.access_level.value,
+            UserTable.username.value: self.username,
+            UserTable.token.value: self.__token,
+            UserTable.UID.value: self.__user_id
         }

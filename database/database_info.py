@@ -108,13 +108,13 @@ class UserTableSQLAlchemy(Base):
     """
     __tablename__ = "user_table"
 
-    UID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
+    UID = sqlalchemy.Column("UID", sqlalchemy.Integer, primary_key=True,
                             autoincrement=True)
-    username = sqlalchemy.Column(sqlalchemy.VARCHAR)
-    token = sqlalchemy.Column(sqlalchemy.VARCHAR)
-    password = sqlalchemy.Column(sqlalchemy.VARCHAR)
-    status = sqlalchemy.Column(sqlalchemy.Integer)
-    access_level = sqlalchemy.Column(sqlalchemy.Integer)
+    username = sqlalchemy.Column("username", sqlalchemy.VARCHAR)
+    token = sqlalchemy.Column("token", sqlalchemy.VARCHAR)
+    password = sqlalchemy.Column("password", sqlalchemy.VARCHAR)
+    status = sqlalchemy.Column("status", sqlalchemy.Integer)
+    access_level = sqlalchemy.Column("access_level", sqlalchemy.Integer)
 
     __table__ = sqlalchemy.Table(
         __tablename__,

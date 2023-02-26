@@ -1,6 +1,7 @@
 import hashlib
 from threading import Thread
 
+import sqlalchemy
 import tinkoff.invest
 from tinkoff.invest import Client, RequestError
 
@@ -49,12 +50,13 @@ class CheckUser(Thread):
                                     UserTable.username, UserTable.access_level,
                                     UserTable.status]},
                 table.get_name(),
-                where=f" WHERE {UserTable.username.value} = {self.login} AND "
-                      f"{UserTable.password.value} = {self.password} "
+                where=f" WHERE {UserTable.username.value} = '{self.login}' AND"
+                      f" {UserTable.password.value} = '{self.password}' "
             )
 
             if result:
                 self.user = User(**result[0])
+                self.__token = self.user.get_token()
             else:
                 self.status_code = 301
         except Exception as e:
@@ -77,14 +79,25 @@ class CheckUser(Thread):
                         self.status_code = 500 if self.status_code >= 300 \
                             else 400
                     else:
+                        result = result[0]
                         self.status_code = 200 if self.status_code == 201 \
                             else 202
+                        self.user = User(
+                            token=self.__token,
+                            username=self.login,
+                            access_level=result.access_level,
+                            status=result.status,
+                            user_id=0
+                        )
                 except RequestError as e:
                     print(e)
                     self.status_code = 500 if self.status_code >= 300 \
                         else 211
 
         self.on_finish(self.status_code)
+
+    def get_user(self):
+        return self.user
 
 
 class CreateUser(Thread):
@@ -100,7 +113,7 @@ class CreateUser(Thread):
         self.on_finish = on_finish
 
     def run(self) -> None:
-        check = CheckUser(
+        check: CheckUser = CheckUser(
             self.user.username,
             self.password,
             lambda x: x,
@@ -114,6 +127,8 @@ class CreateUser(Thread):
         # Все ок, создаем пользователя
         if code == 202:
             try:
+                self.user = check.get_user()
+
                 db = DatabaseInterface()
                 db.connect_to_db()
 
@@ -123,10 +138,19 @@ class CreateUser(Thread):
 
                 table = UserTableSQLAlchemy()
                 db.add_data(
-                    table.get_table(),
+                    table=table.get_table(),
                     values=query
                 )
 
+                cursor: sqlalchemy.engine.cursor = \
+                    db.execute_sql("SELECT MAX(UID) FROM " + table.get_name())
+
+                # Собственно, тут мы их и получаем.
+                # И обновляем индекс security_id
+                # Чтобы потом можно было найти цб в таблице
+                for val in cursor:
+                    self.user.set_uid(val[0])
+                    break
                 db.close_engine()
             except Exception as e:
                 print(e)
@@ -140,3 +164,5 @@ class CreateUser(Thread):
         # Ошибка необрабатываемая
         else:
             self.status_code = 500
+
+        self.on_finish(self.status_code)
