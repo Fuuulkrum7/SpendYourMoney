@@ -1,3 +1,4 @@
+from threading import Thread
 from time import time
 
 import function
@@ -61,7 +62,7 @@ class GetSecurity(SecurityGetter):
                 print(e)
                 self.status_code = 301
 
-        self.on_finish(self.status_code)
+        Thread(target=self.on_finish, args=(self.status_code, ))
 
     # Тоже банально
     def load_data(self):

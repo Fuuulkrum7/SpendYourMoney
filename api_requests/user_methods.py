@@ -13,22 +13,24 @@ from info.user import User
 class CheckUser(Thread):
     """
     class for checking user data. codes:
+    1** - problems with userdata
+    100 - login exists, but password is incorrect
     2** - success
     200 - user exists in db and remotely
     201 - user exists locally, but remotely we did not check
     202 - locally does not exist, remotely - yes
     211 - locally ok, remotely - error
+    250 - no data locally, remotely - did not check
     3**
     300 - error occurred, remotely did not check
-    301 - no data locally, remotely - did not check
     4**
-    400 - locally - ok, remotely - no user
+    400 - remotely no user
     5**
-    full troubles
+    complete nightmare
     """
     password: str
     login: str
-    user: User
+    user: User = None
     status_code: int = 201
 
     def __init__(self, login: str, password: str, on_finish, token: str = ""):
@@ -48,17 +50,23 @@ class CheckUser(Thread):
             result = db.get_data_by_sql(
                 {table.get_name(): [UserTable.UID, UserTable.token,
                                     UserTable.username, UserTable.access_level,
-                                    UserTable.status]},
+                                    UserTable.status, UserTable.password]},
                 table.get_name(),
-                where=f" WHERE {UserTable.username.value} = '{self.login}' AND"
-                      f" {UserTable.password.value} = '{self.password}' "
+                where=f" WHERE {UserTable.username.value} = '{self.login}' "
             )
 
             if result:
-                self.user = User(**result[0])
-                self.__token = self.user.get_token()
+                result = list(filter(
+                    lambda x: x[UserTable.password.value] == self.password,
+                    result
+                ))
+                if len(result):
+                    self.user = User(**result[0])
+                    self.__token = self.user.get_token()
+                else:
+                    self.status_code = 100
             else:
-                self.status_code = 301
+                self.status_code = 250
         except Exception as e:
             print(e)
             self.status_code = 300
@@ -91,7 +99,7 @@ class CheckUser(Thread):
                         )
                 except RequestError as e:
                     print(e)
-                    self.status_code = 500 if self.status_code >= 300 \
+                    self.status_code = 500 if self.status_code >= 250 \
                         else 211
 
         self.on_finish(self.status_code)
@@ -101,7 +109,14 @@ class CheckUser(Thread):
 
 
 class CreateUser(Thread):
-    user: User
+    """
+    status-codes
+    1** - some userdata exists
+    100 - user exists
+    101 - login exists, password is incorrect
+    102 - invalid token.
+    """
+    user: User = None
     status_code: int = 200
     password: str
 
@@ -158,11 +173,17 @@ class CreateUser(Thread):
         # пользователь уже есть
         elif code in [200, 211]:
             self.status_code = 100
+        # Такой логин уже есть
+        elif code == 100:
+            self.status_code = 101
         # кривой токен/его вообще нет
         elif code in [400, 201, 300, 301]:
-            self.status_code = 101
+            self.status_code = 102
         # Ошибка необрабатываемая
         else:
             self.status_code = 500
 
-        self.on_finish(self.status_code)
+        Thread(target=self.on_finish, args=(self.status_code, ))
+
+    def get_user(self):
+        return self.user

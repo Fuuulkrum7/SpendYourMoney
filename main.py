@@ -52,7 +52,7 @@ def main():
                 ticker="",
                 class_code=""
             ),
-            "LKOH"
+            "Yandex"
         ),
         lambda x: print("done, code = ", x),
         user.get_token()
@@ -78,6 +78,8 @@ def create_user(code: int):
     if code == 200:
         user = get.user
         main()
+    elif code == 100:
+        print("Некорректный логин или пароль")
     else:
         print(code)
         token = input("Увы, пользователя нет. Введите токен"

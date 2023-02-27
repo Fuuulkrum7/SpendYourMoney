@@ -54,7 +54,7 @@ class LoadAllSecurities(Thread):
                 print(e)
                 self.status_code = 301
 
-        self.on_finish(self.status_code)
+        Thread(target=self.on_finish, args=(self.status_code, ))
 
     def insert_to_database(self):
         # Подключаемся к базе данных

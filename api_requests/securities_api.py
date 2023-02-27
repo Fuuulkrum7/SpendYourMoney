@@ -1,4 +1,5 @@
 from datetime import datetime
+from threading import Thread
 
 import function
 
@@ -70,7 +71,7 @@ class GetCoupons(SecurityGetter):
                 self.status_code = 311
 
         # Вызов функции
-        self.on_finish(self.status_code)
+        Thread(target=self.on_finish, args=(self.status_code, ))
 
     def load_data(self):
         # Если надо проверять локально, делам это
@@ -246,7 +247,7 @@ class GetDividends(SecurityGetter):
                 print(e)
                 self.status_code = 311
 
-        self.on_finish(self.status_code)
+        Thread(target=self.on_finish, args=(self.status_code, ))
 
     # И тут тоже, только имя переменной сменилось
     def load_data(self):
