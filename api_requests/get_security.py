@@ -166,10 +166,10 @@ class GetSecurity(SecurityGetter):
         # И потом будет ещё поиск по имени, но там надо использовать
         # LIKE %query_text%, а питон ругается на наличие процентов в строке
         query = "WHERE "
-        query += f"`{SecuritiesInfo.figi.value}` = '{query_text}' OR "
-        query += f"`{SecuritiesInfo.ticker.value}` = '{query_text}' OR "
-        query += f"`{SecuritiesInfo.class_code.value}` = '{query_text}'"
-        query += f"`{SecuritiesInfo.security_name.value}` LIKE :par"
+        query += f"{SecuritiesInfo.figi.value} = '{query_text}' OR "
+        query += f"{SecuritiesInfo.ticker.value} = '{query_text}' OR "
+        query += f"{SecuritiesInfo.class_code.value} = '{query_text}'"
+        query += f" OR {SecuritiesInfo.security_name.value} LIKE :par"
 
         # Получаем имя таблицы
         table = SecuritiesInfoTable().get_name()

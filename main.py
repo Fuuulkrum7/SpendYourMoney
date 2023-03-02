@@ -57,11 +57,13 @@ def main():
         lambda x, y: print("done, code = ",
                            x,
                            "data: ",
-                           *([i.get_as_dict_security() for i in y]),
+                           *([i.get_as_dict() for i in y]),
                            sep='\n'
                            ),
         user.get_token(),
-        check_only_locally=True
+        load_coupons=False,
+        load_dividends=False,
+        load_full_info=False
     )
     s.start()
 
