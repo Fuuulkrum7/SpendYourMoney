@@ -1,9 +1,5 @@
 from datetime import timedelta
-
-from api_requests.get_security_history import GetSecurityHistory
-from info.user import User
 from preinstall import installation
-from securities.securities_history import SecurityHistory
 
 try:
     import cryptography
@@ -21,6 +17,9 @@ except ImportError:
     from tinkoff.invest.utils import now
 
 
+from api_requests.get_security_history import GetSecurityHistory
+from info.user import User
+from securities.securities_history import SecurityHistory
 from securities.securities import SecurityInfo
 from api_requests.security_getter import StandardQuery
 from api_requests.get_security import GetSecurity
@@ -28,8 +27,7 @@ from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.user_methods import CheckUser, CreateUser
 
 
-# TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTOfiVKj
-# d7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
+# TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTOfiVKjd7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
 
 user: User = None
 
@@ -37,8 +35,8 @@ user: User = None
 def main():
     """
     s = LoadAllSecurities(
-        lambda x: print(f"done, code = {x}"),
-        TOKEN
+        lambda x, y: print(f"done, code = {x}"),
+        user.get_token()
     )
 
     """
@@ -78,7 +76,7 @@ def after_create(code: int, loaded_data):
 
 def create_user(code: int, loaded_data):
     global user
-    if code == 200:
+    if code == 200 or code == 211:
         user = loaded_data
         print("success login")
         main()
