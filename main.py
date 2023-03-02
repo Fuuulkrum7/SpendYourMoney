@@ -18,12 +18,12 @@ except ImportError:
 
 
 from api_requests.get_security_history import GetSecurityHistory
-from info.user import User
+from api_requests.load_all_securities import LoadAllSecurities
 from securities.securities_history import SecurityHistory
+from info.user import User
 from securities.securities import SecurityInfo
 from api_requests.security_getter import StandardQuery
 from api_requests.get_security import GetSecurity
-from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.user_methods import CheckUser, CreateUser
 
 
@@ -41,6 +41,7 @@ def main():
 
     """
 
+    # В текущий момент мы ищем только локально
     data = input("Enter security name\n")
     s = GetSecurity(
         StandardQuery(
@@ -57,8 +58,10 @@ def main():
                            x,
                            "data: ",
                            *([i.get_as_dict_security() for i in y]),
-                           sep='\n'),
-        user.get_token()
+                           sep='\n'
+                           ),
+        user.get_token(),
+        check_only_locally=True
     )
     s.start()
 
@@ -76,6 +79,7 @@ def after_create(code: int, loaded_data):
 
 def create_user(code: int, loaded_data):
     global user
+    print(code)
     if code == 200 or code == 211:
         user = loaded_data
         print("success login")
