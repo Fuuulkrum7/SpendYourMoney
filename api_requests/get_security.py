@@ -29,8 +29,10 @@ class GetSecurity(SecurityGetter):
     """
     # Список цб
     securities: list[Security or Bond or Stock] = []
-    # Добавлять ли цб
-    add_to_other: bool
+    # Список цб, которые требуется добавить в бд
+    for_insert: list[Bond or Stock] = []
+    # Загружать ли полную инфу о цб
+    load_full_info: bool
     # Интересно, что же это такое... Даже не знаю
     status_code: int = 200
     # Список потоков для получения дивов/купонов.
@@ -42,12 +44,12 @@ class GetSecurity(SecurityGetter):
 
     # Инициализация, всё банально
     def __init__(self, query: StandardQuery, on_finish: function, token: str,
-                 insert_to_db=True, add_to_other=True, check_locally=True,
+                 insert_to_db=True, load_full_info=True, check_locally=True,
                  load_dividends: bool = True, load_coupons: bool = True,
                  check_only_locally: bool = False):
         super().__init__()
         self.query = query
-        self.add_to_other = add_to_other
+        self.load_full_info = load_full_info
         self.on_finish = on_finish
         self.__token = token
         self.check_locally = check_locally
@@ -105,7 +107,7 @@ class GetSecurity(SecurityGetter):
             table = SecuritiesInfoTable()
 
             # Если надо добавить данные в прочие таблицы
-            if self.add_to_other:
+            if self.load_full_info:
                 # Запускаем скрипт добавления данных в бд
                 # Там передаем таблицу и данные, переведенные в словарь
                 db.add_unique_data(
@@ -125,10 +127,10 @@ class GetSecurity(SecurityGetter):
                     break
 
             # Если надо добавить облигации или акции, меняем таблицу на нужную
-            if self.add_to_other and \
+            if self.load_full_info and \
                     security.security_type == SecurityType.BOND:
                 table = BondsInfoTable()
-            elif self.add_to_other and \
+            elif self.load_full_info and \
                     security.security_type == SecurityType.STOCK:
                 table = StocksInfoTable()
 
@@ -175,7 +177,7 @@ class GetSecurity(SecurityGetter):
         # Если не надо добавлять данные в прочие таблицы
         # (или же, что то же самое, получать прочие данные),
         # добавляем данные. Все в требуемом формате
-        if not self.add_to_other:
+        if not self.load_full_info:
             a = db.get_data_by_sql(
                 {table: list(SecuritiesInfo)},
                 table,
@@ -444,90 +446,95 @@ class GetSecurity(SecurityGetter):
                     security_name=loaded_instrument.name
                 )
 
-                # Если надо ещё данные
-                if self.add_to_other:
-                    sub = None
-                    # Если это облигация
-                    if security.security_type == SecurityType.BOND:
-                        coupon = []
-                        if self.load_coupons:
-                            # Создаем поток для получения данных по купонам
-                            sub = GetCoupons(
-                                StandardQuery(self.query.security_info,
-                                              self.query.query_text),
-                                lambda x, y: x,
-                                self.__token,
-                                insert_to_db=False,
-                                check_only_locally=self.check_only_locally
-                            )
+                if not self.load_full_info:
+                    self.securities.append(security)
 
-                            sub.start()
-                            sub.join()
-
-                            # Обновляем статус-код
-                            self.status_code = sub.status_code
-
-                            coupon = sub.coupon
-
-                        # Создаем облигацию
-                        security = Bond(
-                            security=security,
-                            coupon_quantity_per_year=loaded_instrument.
-                            coupon_quantity_per_year,
-                            nominal=loaded_instrument.nominal,
-                            amortization_flag=loaded_instrument.
-                            amortization_flag,
-                            maturity_date=loaded_instrument.maturity_date.
-                            date(),
-                            bond_id=-2,
-                            aci_value=loaded_instrument.aci_value,
-                            issue_size=loaded_instrument.issue_size,
-                            issue_size_plan=loaded_instrument.issue_size_plan,
-                            floating_coupon_flag=loaded_instrument.
-                            floating_coupon_flag,
-                            perpetual_flag=loaded_instrument.perpetual_flag,
-                            coupon=coupon
+                # Загружаем акции и облигации
+                sub = None
+                # Если это облигация
+                if security.security_type == SecurityType.BOND:
+                    coupon = []
+                    if self.load_coupons:
+                        # Создаем поток для получения данных по купонам
+                        sub = GetCoupons(
+                            StandardQuery(self.query.security_info,
+                                          self.query.query_text),
+                            lambda x, y: x,
+                            self.__token,
+                            insert_to_db=False,
+                            check_only_locally=self.check_only_locally
                         )
-                    elif security.security_type == SecurityType.STOCK:
-                        divs = []
 
-                        if self.load_dividends and \
-                                loaded_instrument.div_yield_flag:
-                            # То же, но с дивидендами
-                            sub = GetDividends(
-                                StandardQuery(self.query.security_info,
-                                              self.query.query_text),
-                                lambda x, y: x,
-                                self.__token,
-                                insert_to_db=False,
-                                check_only_locally=self.check_only_locally
-                            )
-                            sub.start()
-                            sub.join()
+                        sub.start()
+                        sub.join()
 
-                            # И статус-код тоже обновляем
-                            self.status_code = sub.status_code
+                        # Обновляем статус-код
+                        self.status_code = sub.status_code
 
-                            divs = sub.dividend
+                        coupon = sub.coupon
 
-                        # Создаем акцию
-                        security = Stock(
-                            security=security,
-                            stock_id=-2,
-                            ipo_date=loaded_instrument.ipo_date.date(),
-                            issue_size=loaded_instrument.issue_size,
-                            stock_type=StockType(loaded_instrument.share_type),
-                            otc_flag=loaded_instrument.otc_flag,
-                            div_yield_flag=loaded_instrument.div_yield_flag,
-                            dividend=divs
+                    # Создаем облигацию
+                    security = Bond(
+                        security=security,
+                        coupon_quantity_per_year=loaded_instrument.
+                        coupon_quantity_per_year,
+                        nominal=loaded_instrument.nominal,
+                        amortization_flag=loaded_instrument.
+                        amortization_flag,
+                        maturity_date=loaded_instrument.maturity_date.
+                        date(),
+                        bond_id=-2,
+                        aci_value=loaded_instrument.aci_value,
+                        issue_size=loaded_instrument.issue_size,
+                        issue_size_plan=loaded_instrument.issue_size_plan,
+                        floating_coupon_flag=loaded_instrument.
+                        floating_coupon_flag,
+                        perpetual_flag=loaded_instrument.perpetual_flag,
+                        coupon=coupon
+                    )
+                elif security.security_type == SecurityType.STOCK:
+                    divs = []
+
+                    if self.load_dividends and \
+                            loaded_instrument.div_yield_flag:
+                        # То же, но с дивидендами
+                        sub = GetDividends(
+                            StandardQuery(self.query.security_info,
+                                          self.query.query_text),
+                            lambda x, y: x,
+                            self.__token,
+                            insert_to_db=False,
+                            check_only_locally=self.check_only_locally
                         )
+                        sub.start()
+                        sub.join()
+
+                        # И статус-код тоже обновляем
+                        self.status_code = sub.status_code
+
+                        divs = sub.dividend
+
+                    # Создаем акцию
+                    security = Stock(
+                        security=security,
+                        stock_id=-2,
+                        ipo_date=loaded_instrument.ipo_date.date(),
+                        issue_size=loaded_instrument.issue_size,
+                        stock_type=StockType(loaded_instrument.share_type),
+                        otc_flag=loaded_instrument.otc_flag,
+                        div_yield_flag=loaded_instrument.div_yield_flag,
+                        dividend=divs
+                    )
 
                     # И если данные были реально получены
                     if security.info.id != -1:
                         if sub is not None:
                             # Добавляем поток и цб
                             self.sub_data.append(sub)
-                        self.securities.append(security)
+                        if self.load_full_info:
+                            self.securities.append(security)
+
+                        self.for_insert.append(security)
 
             # Пишем то, сколько инструментов мы нашли
             print(len(self.securities))
