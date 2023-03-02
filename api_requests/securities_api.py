@@ -47,7 +47,8 @@ class GetCoupons(SecurityGetter):
     status_code: int = 200
 
     def __init__(self, query: StandardQuery, on_finish: function, token: str,
-                 check_locally=True, insert_to_db=True):
+                 check_locally=True, insert_to_db=True,
+                 check_only_locally=False):
         # Просто сохраняем данные по переменным
         super().__init__()
         self.query = query
@@ -55,6 +56,7 @@ class GetCoupons(SecurityGetter):
         self.__token = token
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
+        self.check_only_locally = check_only_locally
 
     def run(self) -> None:
         # запускаем загрузку данных
@@ -85,7 +87,7 @@ class GetCoupons(SecurityGetter):
 
         # Если мы данные все ещё не загрузили,
         # лезем в апи
-        if not self.coupon:
+        if not self.coupon and not self.check_only_locally:
             self.get_from_api()
 
     def insert_to_database(self):
@@ -229,13 +231,15 @@ class GetDividends(SecurityGetter):
 
     # Инициализация, все стандартно
     def __init__(self, query: StandardQuery, on_finish: function,
-                 token: str, check_locally=True, insert_to_db=True):
+                 token: str, check_locally=True, insert_to_db=True,
+                 check_only_locally=False):
         super().__init__()
         self.query = query
         self.on_finish = on_finish
         self.__token = token
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
+        self.check_only_locally = check_only_locally
 
     # и тут тоже все так же, как в предыдущем классе
     def run(self) -> None:
@@ -260,7 +264,7 @@ class GetDividends(SecurityGetter):
             print(e)
             self.status_code = 310
 
-        if not self.dividend:
+        if not self.dividend and not self.check_only_locally:
             self.get_from_api()
 
     # И даже тут!
