@@ -54,7 +54,8 @@ class GetSecurityHistory(SecurityGetter):
         if self.insert:
             self.insert_to_database()
 
-        Thread(target=self.on_finish, args=(self.status_code, ))
+        Thread(target=self.on_finish,
+               args=(self.status_code, self.history)).start()
 
     def load_data(self):
         self.get_from_bd()

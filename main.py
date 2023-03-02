@@ -32,7 +32,6 @@ from api_requests.user_methods import CheckUser, CreateUser
 # d7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
 
 user: User = None
-create: CreateUser
 
 
 def main():
@@ -43,6 +42,8 @@ def main():
     )
 
     """
+
+    data = input("Enter security name\n")
     s = GetSecurity(
         StandardQuery(
             SecurityInfo(
@@ -52,31 +53,34 @@ def main():
                 ticker="",
                 class_code=""
             ),
-            "Yandex"
+            data
         ),
-        lambda x: print("done, code = ", x),
+        lambda x, y: print("done, code = ",
+                           x,
+                           "data: ",
+                           *([i.get_as_dict_security() for i in y]),
+                           sep='\n'),
         user.get_token()
     )
     s.start()
 
-    sec = SecurityHistory()
 
-
-def after_create(code: int):
+def after_create(code: int, loaded_data):
     global user
     if code == 200:
         print("success")
-        user = create.user
+        user = loaded_data
         if __name__ == "__main__":
             main()
     else:
         print("error")
 
 
-def create_user(code: int):
-    global user, create
+def create_user(code: int, loaded_data):
+    global user
     if code == 200:
-        user = get.user
+        user = loaded_data
+        print("success login")
         main()
     elif code == 100:
         print("Некорректный логин или пароль")
@@ -121,9 +125,8 @@ print("start")
 login = input("Enter login\n")
 password = input("Enter password\n")
 
-get = CheckUser(
+CheckUser(
     login,
     password,
     create_user
-)
-get.start()
+).start()

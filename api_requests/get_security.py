@@ -62,7 +62,8 @@ class GetSecurity(SecurityGetter):
                 print(e)
                 self.status_code = 301
 
-        Thread(target=self.on_finish, args=(self.status_code, ))
+        Thread(target=self.on_finish,
+               args=(self.status_code, self.securities)).start()
 
     # Тоже банально
     def load_data(self):
@@ -258,7 +259,7 @@ class GetSecurity(SecurityGetter):
 
                         dividends = GetDividends(
                             self.query,
-                            lambda x: x,
+                            lambda x, y: x,
                             self.__token,
                             check_locally=False
                         )
@@ -323,7 +324,7 @@ class GetSecurity(SecurityGetter):
                     # Загружаем купоны
                     coup = GetCoupons(
                         self.query,
-                        lambda x: x,
+                        lambda x, y: x,
                         self.__token,
                         check_locally=False
                     )
@@ -441,7 +442,7 @@ class GetSecurity(SecurityGetter):
                         sub = GetCoupons(
                             StandardQuery(self.query.security_info,
                                           self.query.query_text),
-                            lambda x: x,
+                            lambda x, y: x,
                             self.__token,
                             insert_to_db=False
                         )
@@ -476,7 +477,7 @@ class GetSecurity(SecurityGetter):
                         sub = GetDividends(
                             StandardQuery(self.query.security_info, self.query.
                                           query_text),
-                            lambda x: x,
+                            lambda x, y: x,
                             self.__token,
                             insert_to_db=False
                         )

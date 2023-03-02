@@ -71,7 +71,8 @@ class GetCoupons(SecurityGetter):
                 self.status_code = 311
 
         # Вызов функции
-        Thread(target=self.on_finish, args=(self.status_code, ))
+        Thread(target=self.on_finish,
+               args=(self.status_code, self.coupon)).start()
 
     def load_data(self):
         # Если надо проверять локально, делам это
@@ -247,7 +248,8 @@ class GetDividends(SecurityGetter):
                 print(e)
                 self.status_code = 311
 
-        Thread(target=self.on_finish, args=(self.status_code, ))
+        Thread(target=self.on_finish,
+               args=(self.status_code, self.dividend)).start()
 
     # И тут тоже, только имя переменной сменилось
     def load_data(self):

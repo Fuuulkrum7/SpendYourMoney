@@ -60,8 +60,12 @@ class CheckUser(Thread):
                     lambda x: x[UserTable.password.value] == self.password,
                     result
                 ))
+
                 if len(result):
-                    self.user = User(**result[0])
+                    result = result[0]
+                    result.pop("password")
+
+                    self.user = User(**result)
                     self.__token = self.user.get_token()
                 else:
                     self.status_code = 100
@@ -102,7 +106,8 @@ class CheckUser(Thread):
                     self.status_code = 500 if self.status_code >= 250 \
                         else 211
 
-        self.on_finish(self.status_code)
+        Thread(target=self.on_finish, args=(self.status_code, self.user)).\
+            start()
 
     def get_user(self):
         return self.user
@@ -183,7 +188,8 @@ class CreateUser(Thread):
         else:
             self.status_code = 500
 
-        Thread(target=self.on_finish, args=(self.status_code, ))
+        Thread(target=self.on_finish, args=(self.status_code, self.user))\
+            .start()
 
     def get_user(self):
         return self.user
