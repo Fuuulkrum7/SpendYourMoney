@@ -63,7 +63,7 @@ class GetSecurity(SecurityGetter):
     def run(self) -> None:
         self.load_data()
 
-        if self.securities and self.insert_to_db:
+        if self.for_insert and self.insert_to_db:
             try:
                 self.insert_to_database()
             except Exception as e:
