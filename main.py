@@ -19,17 +19,25 @@ except ImportError:
 
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
-from securities.securities_history import SecurityHistory
 from info.user import User
-from securities.securities import SecurityInfo
+from securities.securities import SecurityInfo, Security
 from api_requests.security_getter import StandardQuery
 from api_requests.get_security import GetSecurity
 from api_requests.user_methods import CheckUser, CreateUser
 
 
-# TOKEN = "t.0GnEOB1p5ODjob-f4qhnvbf2xgH1Up6ORFTOfiVKjd7EP4g_SkM8lQWX4Cins9fHNnb3oBqS4dzwQGBt1t7XVA"
-
 user: User = None
+
+
+def on_finish(x, y: list[Security]):
+    print("done, code = ",
+          x,
+          "data: ",
+          *([i.get_as_dict() for i in y]),
+          sep='\n'
+          )
+    for val in y:
+        load_securities(val.info)
 
 
 def main():
@@ -54,12 +62,7 @@ def main():
             ),
             data
         ),
-        lambda x, y: print("done, code = ",
-                           x,
-                           "data: ",
-                           *([i.get_as_dict() for i in y]),
-                           sep='\n'
-                           ),
+        on_finish,
         user.get_token(),
         load_coupons=False,
         load_dividends=False,
@@ -103,25 +106,20 @@ def create_user(code: int, loaded_data):
         create.start()
 
 
-"""
-def load_securities(x):
-    print(*[val.get_as_dict_security() for val in s.securities],
-          sep='\n')
-
+def load_securities(info):
     res = GetSecurityHistory(
-        info=s.securities[0].info,
-        _from=now() - timedelta(minutes=5),
+        info=info,
+        _from=now() - timedelta(days=60),
         to=now(),
-        interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+        interval=CandleInterval.CANDLE_INTERVAL_HOUR,
         token=user.get_token(),
-        on_finish=lambda n: print(
+        on_finish=lambda n, y: print(
             *[val.get_as_dict() for val in res.history],
             sep='\n'
         )
     )
 
     res.start()
-"""
 
 
 print("start")

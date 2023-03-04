@@ -4,6 +4,7 @@ from platform import system
 from sqlalchemy.engine.base import Engine
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.sql import ColumnCollection
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *
@@ -89,8 +90,9 @@ class DatabaseInterface:
 
     def add_unique_data(self, table: Base, query: list[dict] = None,
                         values: dict = None):
+
         # Если вообще данных для добавления нет
-        if query is None and values is None:
+        if query is None and values is None or not query and not values:
             return
 
         # Если тело запроса не пустое, фильтруем на всякий случай
@@ -105,10 +107,19 @@ class DatabaseInterface:
 
         # Подсоединяемся к бд и добавляем данные
         with self.__engine.connect() as conn:
-            insrt = insert(table).prefix_with("IGNORE").values(query)
+            insrt = insert(table).values(query)
+
+            columns = {}
+            for key, item in insrt.inserted.items():
+                if not (key in ["ID", "UID"]):
+                    columns[key] = item
+
+            on_duplicate = insrt.on_duplicate_key_update(
+                **columns
+            )
 
             conn.execute(
-                insrt
+                on_duplicate
             )
             conn.close()
 

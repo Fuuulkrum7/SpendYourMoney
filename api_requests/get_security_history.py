@@ -155,7 +155,6 @@ class GetSecurityHistory(SecurityGetter):
                 result
             ))
 
-            print(result)
             self.history.extend(result)
             self.insert_data = result
 

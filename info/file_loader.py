@@ -49,7 +49,7 @@ class FileLoader:
         try:
             f = open(file_name, "w")
             json.dump(
-                json.dumps(data),
+                data,
                 f
             )
             f.close()

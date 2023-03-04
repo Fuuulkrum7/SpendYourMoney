@@ -77,13 +77,11 @@ CREATE TABLE IF NOT EXISTS dividend_info (
 );
 
 CREATE TABLE IF NOT EXISTS securities_history (
-    ID INT NOT NULL AUTO_INCREMENT,
-    security_id INT,
+    security_id INT NOT NULL,
     price DOUBLE,
     info_time DATETIME NOT NULL,
     volume INT,
-    PRIMARY KEY(ID),
-    UNIQUE (info_time)
+    CONSTRAINT UC_history PRIMARY KEY (security_id, info_time)
 );
 
 CREATE TABLE IF NOT EXISTS history_of_predictions (
