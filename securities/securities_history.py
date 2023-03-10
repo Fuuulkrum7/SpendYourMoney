@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from tinkoff.invest import MoneyValue
 
@@ -21,7 +21,7 @@ class SecurityHistory:
         self.price = price
         self.security_id = security_id
         self.volume = volume
-        self.info_time = info_time
+        self.info_time = info_time.replace(tzinfo=timezone.utc)
 
     def __contains__(self, item):
         return self.__eq__(item)

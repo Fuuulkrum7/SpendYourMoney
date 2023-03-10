@@ -318,11 +318,11 @@ class DividendInfoTable(Base):
 class SecuritiesHistoryTable(Base):
     __tablename__ = "securities_history"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False,
+                                    primary_key=True)
     price = sqlalchemy.Column(DOUBLE)
-    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    info_time = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False,
+                                  primary_key=True)
     volume = sqlalchemy.Column(sqlalchemy.Integer)
 
     def get_table(self):
@@ -335,11 +335,11 @@ class SecuritiesHistoryTable(Base):
 class HistoryOfPredictionsTable(Base):
     __tablename__ = "history_of_predictions"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False,
+                                    primary_key=True)
     price = sqlalchemy.Column(DOUBLE)
-    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    info_time = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False,
+                                  primary_key=True)
     volume = sqlalchemy.Column(sqlalchemy.Integer)
 
     def get_table(self):

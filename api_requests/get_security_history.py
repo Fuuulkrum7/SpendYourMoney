@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from math import log10, ceil
 from threading import Thread
 from time import time
@@ -21,14 +21,13 @@ def convert_money_value(data: MoneyValue or Quotation or float):
     )
 
 
-class GetSecurityHistory(SecurityGetter):
+class GetSecurityHistory(Thread):
     history: list[SecurityHistory] = []
     insert_data: list[SecurityHistory] = []
     __token: str
     _from: datetime
     to: datetime
     interval: CandleInterval
-    insert: bool
     info: SecurityInfo
     status_code: int = 200
 
@@ -48,36 +47,17 @@ class GetSecurityHistory(SecurityGetter):
 
     def run(self) -> None:
         t = time()
-        self.load_data()
+
+        self.get_from_bd()
+        self.get_from_api()
+
         print(time() - t)
 
-        if self.insert:
+        if self.insert_data:
             self.insert_to_database()
 
         Thread(target=self.on_finish,
                args=(self.status_code, self.history)).start()
-
-    def load_data(self):
-        self.get_from_bd()
-
-        if self.interval == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0]
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0] // 5
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0] // 15
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            a = divmod((self.to - self._from).total_seconds(), 360)[0]
-            self.insert = len(self.history) != a
-        else:
-            a = divmod((self.to - self._from).total_seconds(), 360)[0] // 24
-            self.insert = len(self.history) != a
-
-        if self.insert:
-            self.get_from_api()
 
     def insert_to_database(self):
         db = DatabaseInterface()
@@ -99,22 +79,25 @@ class GetSecurityHistory(SecurityGetter):
         db = DatabaseInterface()
         db.connect_to_db()
 
-        table = SecuritiesHistoryTable()
-        where = f"WHERE {SecuritiesHistory.security_id.value} = {self.info.id}"
-        where += f" AND {SecuritiesHistory.info_time.value} " \
-                 f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
-                 f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' " \
-                 f""
+        self._from = self._from.replace(tzinfo=timezone.utc)
+        self.to = self.to.replace(tzinfo=timezone.utc)
 
+        table = SecuritiesHistoryTable()
+        where = f"WHERE {SecuritiesHistory.security_id.value}={self.info.id}" \
+                f" AND {SecuritiesHistory.info_time.value} " \
+                f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
+                f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' "
+
+        millis_time = f"UNIX_TIMESTAMP({SecuritiesHistory.info_time.value})"
         if self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            where += f" AND {SecuritiesHistory.info_time.value} % 5 = 0"
+            where += f" AND {millis_time} % 300 = 0"
         elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            where += f" AND {SecuritiesHistory.info_time.value} % 15 = 0"
+            where += f" AND {millis_time} % 900 = 0"
         elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            where += f" AND {SecuritiesHistory.info_time.value} % 60 = 0"
+            where += f" AND {millis_time} % 3600 = 0"
         elif self.interval == CandleInterval.CANDLE_INTERVAL_DAY:
-            where += f" AND {SecuritiesHistory.info_time.value} " \
-                     f"% 60 * 24 = 0"
+            where += f" AND TIMEDIFF(info_time, CAST(CAST(info_time AS DATE)" \
+                     f" AS DATETIME)) = CAST(\"07:00:00\" as TIME)"
 
         histories = db.get_data_by_sql(
             {table.get_name(): list(SecuritiesHistory)},

@@ -109,9 +109,9 @@ def create_user(code: int, loaded_data):
 def load_securities(info):
     res = GetSecurityHistory(
         info=info,
-        _from=now() - timedelta(days=60),
+        _from=now() - timedelta(days=10),
         to=now(),
-        interval=CandleInterval.CANDLE_INTERVAL_HOUR,
+        interval=CandleInterval.CANDLE_INTERVAL_DAY,
         token=user.get_token(),
         on_finish=lambda n, y: print(
             *[val.get_as_dict() for val in res.history],
