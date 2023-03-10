@@ -85,9 +85,8 @@ CREATE TABLE IF NOT EXISTS securities_history (
 );
 
 CREATE TABLE IF NOT EXISTS history_of_predictions (
-    ID INT NOT NULL AUTO_INCREMENT,
     security_id INT,
     price DOUBLE,
     info_time DATETIME,
-    PRIMARY KEY(ID)
+    CONSTRAINT UC_history PRIMARY KEY (security_id, info_time)
 );
