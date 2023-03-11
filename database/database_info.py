@@ -54,6 +54,7 @@ class SecuritiesHistory(Enum):
     price = "price"
     info_time = "info_time"
     volume = "volume"
+    CANDLE_INTERVAL = "candle_interval"
 
 
 class SecuritiesInfo(Enum):
@@ -318,12 +319,23 @@ class DividendInfoTable(Base):
 class SecuritiesHistoryTable(Base):
     __tablename__ = "securities_history"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    price = sqlalchemy.Column(DOUBLE)
-    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    volume = sqlalchemy.Column(sqlalchemy.Integer)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False,  primary_key=True)
+    price = sqlalchemy.Column("price", DOUBLE)
+    info_time = sqlalchemy.Column("info_time", sqlalchemy.DateTime,
+                                  nullable=False, primary_key=True)
+    volume = sqlalchemy.Column("volume", sqlalchemy.Integer)
+    candle_interval = sqlalchemy.Column("candle_interval", sqlalchemy.Integer)
+
+    __table__ = sqlalchemy.Table(
+        __tablename__,
+        Base.metadata,
+        security_id,
+        price,
+        info_time,
+        volume,
+        candle_interval
+    )
 
     def get_table(self):
         return self.__table__
@@ -335,12 +347,19 @@ class SecuritiesHistoryTable(Base):
 class HistoryOfPredictionsTable(Base):
     __tablename__ = "history_of_predictions"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    price = sqlalchemy.Column(DOUBLE)
-    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    volume = sqlalchemy.Column(sqlalchemy.Integer)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False, primary_key=True)
+    price = sqlalchemy.Column("price", DOUBLE)
+    info_time = sqlalchemy.Column("info_time", sqlalchemy.DateTime,
+                                  nullable=False, primary_key=True)
+
+    __table__ = sqlalchemy.Table(
+        __tablename__,
+        Base.metadata,
+        security_id,
+        price,
+        info_time
+    )
 
     def get_table(self):
         return self.__table__

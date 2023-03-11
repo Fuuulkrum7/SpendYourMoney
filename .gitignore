@@ -8,6 +8,8 @@ parts
 src/*.egg-info
 lib
 lib64
+venv
+.idea
 *.pyc
 *.pyo
 *.manifest
@@ -16,3 +18,5 @@ lib64
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+info/files/.db_version

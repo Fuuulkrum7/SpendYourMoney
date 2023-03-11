@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from math import log10, ceil
 from threading import Thread
 from time import time
@@ -21,14 +21,13 @@ def convert_money_value(data: MoneyValue or Quotation or float):
     )
 
 
-class GetSecurityHistory(SecurityGetter):
+class GetSecurityHistory(Thread):
     history: list[SecurityHistory] = []
     insert_data: list[SecurityHistory] = []
     __token: str
     _from: datetime
     to: datetime
     interval: CandleInterval
-    insert: bool
     info: SecurityInfo
     status_code: int = 200
 
@@ -48,36 +47,24 @@ class GetSecurityHistory(SecurityGetter):
 
     def run(self) -> None:
         t = time()
-        self.load_data()
+
+        self.get_from_bd()
+        self.get_from_api()
+
         print(time() - t)
 
-        if self.insert:
+        if self.insert_data:
             self.insert_to_database()
 
+        history = self.insert_data[0:-1] + self.history
+        if self.history and self.insert_data and \
+                self.history[-1].info_time == self.insert_data[-1].info_time:
+            history[-1] = self.insert_data[-1]
+
+        history.sort(key=lambda x: x.info_time)
+
         Thread(target=self.on_finish,
-               args=(self.status_code, self.history)).start()
-
-    def load_data(self):
-        self.get_from_bd()
-
-        if self.interval == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0]
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0] // 5
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0] // 15
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            a = divmod((self.to - self._from).total_seconds(), 360)[0]
-            self.insert = len(self.history) != a
-        else:
-            a = divmod((self.to - self._from).total_seconds(), 360)[0] // 24
-            self.insert = len(self.history) != a
-
-        if self.insert:
-            self.get_from_api()
+               args=(self.status_code, history)).start()
 
     def insert_to_database(self):
         db = DatabaseInterface()
@@ -85,7 +72,8 @@ class GetSecurityHistory(SecurityGetter):
 
         table = SecuritiesHistoryTable().get_table()
 
-        query = [val.get_as_dict() for val in self.insert_data]
+        query = [val.get_as_dict_candle(self.interval)
+                 for val in self.insert_data]
 
         db.add_unique_data(
             table,
@@ -99,22 +87,17 @@ class GetSecurityHistory(SecurityGetter):
         db = DatabaseInterface()
         db.connect_to_db()
 
-        table = SecuritiesHistoryTable()
-        where = f"WHERE {SecuritiesHistory.security_id.value} = {self.info.id}"
-        where += f" AND {SecuritiesHistory.info_time.value} " \
-                 f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
-                 f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' " \
-                 f""
+        self._from = self._from.replace(tzinfo=timezone.utc)
+        self.to = self.to.replace(tzinfo=timezone.utc)
 
-        if self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            where += f" AND {SecuritiesHistory.info_time.value} % 5 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            where += f" AND {SecuritiesHistory.info_time.value} % 15 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            where += f" AND {SecuritiesHistory.info_time.value} % 60 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_DAY:
-            where += f" AND {SecuritiesHistory.info_time.value} " \
-                     f"% 60 * 24 = 0"
+        table = SecuritiesHistoryTable()
+        where = f"WHERE {SecuritiesHistory.security_id.value}={self.info.id}" \
+                f" AND {SecuritiesHistory.info_time.value} " \
+                f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
+                f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' "
+
+        where += f" AND {SecuritiesHistory.CANDLE_INTERVAL.value} = " \
+                 f"{self.interval.value}"
 
         histories = db.get_data_by_sql(
             {table.get_name(): list(SecuritiesHistory)},
@@ -148,15 +131,12 @@ class GetSecurityHistory(SecurityGetter):
                 print(e)
                 self.status_code = 400
 
-            result = list(map(self.get_from_candle, result))
+            self.insert_data = list(map(self.get_from_candle, result))
 
-            result = list(filter(
+            self.insert_data = list(filter(
                 lambda x: not (x in self.history),
-                result
+                self.insert_data
             ))
-
-            self.history.extend(result)
-            self.insert_data = result
 
     def get_from_candle(self, candle: HistoricCandle) -> SecurityHistory:
         return SecurityHistory(
