@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from tinkoff.invest import MoneyValue
+from tinkoff.invest import MoneyValue, CandleInterval
 
 from database.database_info import SecuritiesHistory
 
@@ -23,24 +23,24 @@ class SecurityHistory:
         self.volume = volume
         self.info_time = info_time.replace(tzinfo=timezone.utc)
 
-    def __contains__(self, item):
-        return self.__eq__(item)
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
-            return NotImplemented
+            return False
         return other.price == self.price and \
             other.security_id == self.security_id and \
-            other.info_time == other.info_time and \
+            other.info_time == self.info_time and \
             other.volume == self.volume
 
     def __hash__(self):
         return hash(
-            (self.volume, self.price, self.security_id, self.info_time)
+            (self.security_id, self.info_time)
         )
 
     def __str__(self):
-        return self.get_as_dict()
+        return str(self.get_as_dict())
+
+    def __repr__(self):
+        return self.__str__()
 
     def get_as_dict(self):
         return {
@@ -49,3 +49,9 @@ class SecurityHistory:
             SecuritiesHistory.volume.value: self.volume,
             SecuritiesHistory.info_time.value: self.info_time
         }
+
+    def get_as_dict_candle(self, candle: CandleInterval) -> dict:
+        val = self.get_as_dict()
+        val.update({SecuritiesHistory.CANDLE_INTERVAL.value: candle.value})
+
+        return val

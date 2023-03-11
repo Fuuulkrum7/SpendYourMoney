@@ -51,7 +51,7 @@ class LoadAllSecurities(Thread):
             try:
                 self.insert_to_database()
             except Exception as e:
-                print(e)
+                print(str(e)[0:1000])
                 self.status_code = 301
 
         Thread(target=self.on_finish,
@@ -69,8 +69,9 @@ class LoadAllSecurities(Thread):
         self.securities.sort(key=lambda x: x.info.figi)
 
         # Получаем массив данных для добавления
-        securities = [value.get_as_dict_security()
-                      for value in self.securities]
+        securities = [
+            value.get_as_dict_security() for value in self.securities
+        ]
 
         # Добавляем
         db.add_unique_data(
@@ -88,7 +89,7 @@ class LoadAllSecurities(Thread):
         )
 
         # Ставим нужные id
-        for i in range(len(self.securities)):
+        for i in range(len(all_id)):
             self.securities[i].info.id = all_id[i][SecuritiesInfo.ID.value]
 
         # Парсим в массивы данные по конкретным видам цб

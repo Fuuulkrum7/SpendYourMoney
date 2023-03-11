@@ -111,10 +111,10 @@ def load_securities(info):
         info=info,
         _from=now() - timedelta(days=10),
         to=now(),
-        interval=CandleInterval.CANDLE_INTERVAL_DAY,
+        interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
         token=user.get_token(),
         on_finish=lambda n, y: print(
-            *[val.get_as_dict() for val in res.history],
+            *[val.get_as_dict() for val in y],
             sep='\n'
         )
     )

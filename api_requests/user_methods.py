@@ -136,7 +136,7 @@ class CreateUser(Thread):
         check: CheckUser = CheckUser(
             self.user.username,
             self.password,
-            lambda x: x,
+            lambda x, y: x,
             token=self.user.get_token()
         )
         check.start()

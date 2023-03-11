@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS securities_info (
     ID INT NOT NULL AUTO_INCREMENT,
     figi VARCHAR(14) NOT NULL,
     ticker VARCHAR(15),
-    security_name VARCHAR(70),
-    class_code VARCHAR(15),
+    security_name VARCHAR(100),
+    class_code VARCHAR(18),
     lot INT,
     currency VARCHAR(5),
     country VARCHAR(70),
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS bonds_info (
     maturity_date DATE,
     nominal DOUBLE,
     aci_value DOUBLE,
-    issue_size INT,
-    issue_size_plan INT,
+    issue_size BIGINT,
+    issue_size_plan BIGINT,
     floating_coupon_flag BOOLEAN,
     perpetual_flag BOOLEAN,
     amortization_flag BOOLEAN,
@@ -81,7 +81,8 @@ CREATE TABLE IF NOT EXISTS securities_history (
     price DOUBLE,
     info_time DATETIME NOT NULL,
     volume INT,
-    CONSTRAINT UC_history PRIMARY KEY (security_id, info_time)
+    candle_interval INT NOT NULL,
+    CONSTRAINT UC_history PRIMARY KEY (security_id, info_time, candle_interval)
 );
 
 CREATE TABLE IF NOT EXISTS history_of_predictions (

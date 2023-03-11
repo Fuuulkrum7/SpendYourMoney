@@ -56,8 +56,15 @@ class GetSecurityHistory(Thread):
         if self.insert_data:
             self.insert_to_database()
 
+        history = self.insert_data[0:-1] + self.history
+        if self.history and self.insert_data and \
+                self.history[-1].info_time == self.insert_data[-1].info_time:
+            history[-1] = self.insert_data[-1]
+
+        history.sort(key=lambda x: x.info_time)
+
         Thread(target=self.on_finish,
-               args=(self.status_code, self.history)).start()
+               args=(self.status_code, history)).start()
 
     def insert_to_database(self):
         db = DatabaseInterface()
@@ -65,7 +72,8 @@ class GetSecurityHistory(Thread):
 
         table = SecuritiesHistoryTable().get_table()
 
-        query = [val.get_as_dict() for val in self.insert_data]
+        query = [val.get_as_dict_candle(self.interval)
+                 for val in self.insert_data]
 
         db.add_unique_data(
             table,
@@ -88,16 +96,8 @@ class GetSecurityHistory(Thread):
                 f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
                 f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' "
 
-        millis_time = f"UNIX_TIMESTAMP({SecuritiesHistory.info_time.value})"
-        if self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            where += f" AND {millis_time} % 300 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            where += f" AND {millis_time} % 900 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            where += f" AND {millis_time} % 3600 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_DAY:
-            where += f" AND TIMEDIFF(info_time, CAST(CAST(info_time AS DATE)" \
-                     f" AS DATETIME)) = CAST(\"07:00:00\" as TIME)"
+        where += f" AND {SecuritiesHistory.CANDLE_INTERVAL.value} = " \
+                 f"{self.interval.value}"
 
         histories = db.get_data_by_sql(
             {table.get_name(): list(SecuritiesHistory)},
@@ -131,15 +131,12 @@ class GetSecurityHistory(Thread):
                 print(e)
                 self.status_code = 400
 
-            result = list(map(self.get_from_candle, result))
+            self.insert_data = list(map(self.get_from_candle, result))
 
-            result = list(filter(
+            self.insert_data = list(filter(
                 lambda x: not (x in self.history),
-                result
+                self.insert_data
             ))
-
-            self.history.extend(result)
-            self.insert_data = result
 
     def get_from_candle(self, candle: HistoricCandle) -> SecurityHistory:
         return SecurityHistory(
