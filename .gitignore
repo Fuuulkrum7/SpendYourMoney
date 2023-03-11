@@ -9,7 +9,6 @@ src/*.egg-info
 lib
 lib64
 venv
-.idea
 *.pyc
 *.pyo
 *.manifest
