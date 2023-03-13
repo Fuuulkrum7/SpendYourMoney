@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19dc91ad-e9dd-470c-ac92-da21f1ab96e5" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api_requests/get_security_history.py" beforeDir="false" afterPath="$PROJECT_DIR$/api_requests/get_security_history.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api_requests/user_methods.py" beforeDir="false" afterPath="$PROJECT_DIR$/api_requests/user_methods.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database/database_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/database_interface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/securities/securities_history.py" beforeDir="false" afterPath="$PROJECT_DIR$/securities/securities_history.py" afterDir="false" />

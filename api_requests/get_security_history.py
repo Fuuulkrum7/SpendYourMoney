@@ -118,7 +118,10 @@ class GetSecurityHistory(Thread):
 
         # Получаем историю курса в порядке возрастания времени
         histories = db.get_data_by_sql(
-            {table.get_name(): list(SecuritiesHistory)},
+            {table.get_name(): [SecuritiesHistory.security_id,
+                                SecuritiesHistory.info_time,
+                                SecuritiesHistory.volume,
+                                SecuritiesHistory.price]},
             table.get_name(),
             where=where,
             sort_query=[f"{SecuritiesHistory.info_time.value} ASC"]
@@ -131,16 +134,18 @@ class GetSecurityHistory(Thread):
 
     # Здесь обращаемся к серверу
     def get_from_api(self):
+        result = ()
         # Создаем подключение
         with Client(self.__token) as client:
             # Грузим все данные
             try:
-                result = client.get_all_candles(
+                result = tuple(client.get_all_candles(
                     figi=self.info.figi,
                     from_=self._from,
                     to=self.to,
                     interval=self.interval,
-                )
+                ))
+
             except RequestError as e:
                 print(e)
                 self.status_code = 400

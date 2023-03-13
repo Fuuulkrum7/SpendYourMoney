@@ -112,7 +112,7 @@ def load_securities(info):
         info=info,
         _from=now() - timedelta(days=300),
         to=now(),
-        interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+        interval=CandleInterval.CANDLE_INTERVAL_DAY,
         token=user.get_token(),
         on_finish=lambda n, y: print(
             len(y),
@@ -125,8 +125,8 @@ def load_securities(info):
 
 print("start")
 
-login = "fuuulkrum7"#input("Enter login\n")
-password = "password"#input("Enter password\n")
+login = "fuuulkrum7"  # input("Enter login\n")
+password = "password"  # input("Enter password\n")
 
 CheckUser(
     login,

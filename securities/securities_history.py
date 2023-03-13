@@ -10,9 +10,13 @@ class SecurityHistory:
     Класс, содержащий внутри себя данные о стоимости цб в конкретный
     момент времени
     """
+    # момент времени
     info_time: datetime
+    # цена в этот момент времени
     price: float
+    # id нашей цб
     security_id: int
+    # объем торгов
     volume: int
 
     def __init__(
@@ -24,11 +28,14 @@ class SecurityHistory:
             candle_interval: CandleInterval =
             CandleInterval.CANDLE_INTERVAL_UNSPECIFIED
     ):
+        # парсим данные по полям
+        # candle_interval - защита от ошибок
         self.price = price
         self.security_id = security_id
         self.volume = volume
         self.info_time = info_time.replace(tzinfo=timezone.utc)
 
+    # Для проверки на равенство
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
@@ -37,6 +44,7 @@ class SecurityHistory:
             other.info_time == self.info_time and \
             other.volume == self.volume
 
+    # И работы с множествами
     def __hash__(self):
         return hash(
             (self.security_id, self.info_time, self.volume)
@@ -56,6 +64,7 @@ class SecurityHistory:
             SecuritiesHistory.info_time.value: self.info_time
         }
 
+    # Метод нужен для более удобного добавления данных в бд
     def get_as_dict_candle(self, candle: CandleInterval) -> dict:
 
         return {
