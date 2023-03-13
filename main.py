@@ -38,6 +38,7 @@ def on_finish(x, y: list[Security]):
           )
     for val in y:
         load_securities(val.info)
+        break
 
 
 def main():
@@ -109,12 +110,12 @@ def create_user(code: int, loaded_data):
 def load_securities(info):
     res = GetSecurityHistory(
         info=info,
-        _from=now() - timedelta(days=10),
+        _from=now() - timedelta(days=300),
         to=now(),
-        interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+        interval=CandleInterval.CANDLE_INTERVAL_DAY,
         token=user.get_token(),
         on_finish=lambda n, y: print(
-            *[val.get_as_dict() for val in y],
+            len(y),
             sep='\n'
         )
     )
@@ -124,8 +125,8 @@ def load_securities(info):
 
 print("start")
 
-login = input("Enter login\n")
-password = input("Enter password\n")
+login = "fuuulkrum7"  # input("Enter login\n")
+password = "password"  # input("Enter password\n")
 
 CheckUser(
     login,

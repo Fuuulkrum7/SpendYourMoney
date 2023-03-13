@@ -121,11 +121,12 @@ class DatabaseInterface:
             return
 
         # Если тело запроса не пустое, фильтруем на всякий случай
-        if query is None:
+        # С защитой от id
+        if query is None and ("UID" in values or "ID" in values):
             query = [dict(filter(
                 lambda x: not (x[0] in ["UID", "ID"]), values.items()
             ))]
-        else:
+        elif query and ("UID" in query[0] or "ID" in query[0]):
             query = [dict(filter(
                 lambda x: not (x[0] in ["UID", "ID"]), val.items()
             )) for val in query]
