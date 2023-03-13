@@ -6,6 +6,10 @@ from database.database_info import SecuritiesHistory
 
 
 class SecurityHistory:
+    """
+    Класс, содержащий внутри себя данные о стоимости цб в конкретный
+    момент времени
+    """
     info_time: datetime
     price: float
     security_id: int
@@ -16,7 +20,9 @@ class SecurityHistory:
             info_time: datetime = None,
             security_id: int = 0,
             price: float or MoneyValue = 0,
-            volume: int = 1
+            volume: int = 1,
+            candle_interval: CandleInterval =
+            CandleInterval.CANDLE_INTERVAL_UNSPECIFIED
     ):
         self.price = price
         self.security_id = security_id
@@ -33,7 +39,7 @@ class SecurityHistory:
 
     def __hash__(self):
         return hash(
-            (self.security_id, self.info_time)
+            (self.security_id, self.info_time, self.volume)
         )
 
     def __str__(self):
@@ -51,7 +57,11 @@ class SecurityHistory:
         }
 
     def get_as_dict_candle(self, candle: CandleInterval) -> dict:
-        val = self.get_as_dict()
-        val.update({SecuritiesHistory.CANDLE_INTERVAL.value: candle.value})
 
-        return val
+        return {
+            SecuritiesHistory.security_id.value: self.security_id,
+            SecuritiesHistory.price.value: self.price,
+            SecuritiesHistory.volume.value: self.volume,
+            SecuritiesHistory.info_time.value: self.info_time,
+            SecuritiesHistory.CANDLE_INTERVAL.value: candle.value
+        }

@@ -1,4 +1,4 @@
-### First of all, you need to create a user in your database.
+## First of all, you need to create a user in your database.
 For making it, run mysql, enter your root password and then execute this commands:
 
 ```
@@ -66,7 +66,7 @@ loader.start()
 ```
 It will take near 8-12 seconds (depends on your Internet speed)
 
-### Первым делом вам нужно создать пользователя в вашей базе данных.
+## Первым делом вам нужно создать пользователя в вашей базе данных.
 Для этого запустите mysql, введите пароль root и выполните следующие команды:
 
 ```
