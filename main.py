@@ -1,5 +1,8 @@
+import sys
 from datetime import timedelta
 from preinstall import installation
+
+from PyQt5.QtWidgets import QApplication
 
 try:
     import cryptography
@@ -24,6 +27,7 @@ from securities.securities import SecurityInfo, Security
 from api_requests.security_getter import StandardQuery
 from api_requests.get_security import GetSecurity
 from api_requests.user_methods import CheckUser, CreateUser
+from ui_dev.first_gui import CreateWindow
 
 
 user: User = None
@@ -123,13 +127,17 @@ def load_securities(info):
     res.start()
 
 
-print("start")
+login = "fuuulkrum7"
+password = "password"
+# CheckUser(
+#     login,
+#     password,
+#     create_user
+# ).start()
 
-login = "fuuulkrum7"  # input("Enter login\n")
-password = "password"  # input("Enter password\n")
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    wndw = CreateWindow(app)
+    wndw.createMain()
+    sys.exit(app.exec_())
 
-CheckUser(
-    login,
-    password,
-    create_user
-).start()
