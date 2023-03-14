@@ -138,6 +138,6 @@ password = "password"
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     wndw = CreateWindow(app)
-    wndw.createMain()
+    wndw.create_main()
     sys.exit(app.exec_())
 
