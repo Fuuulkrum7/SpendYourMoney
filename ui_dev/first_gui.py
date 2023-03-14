@@ -2,8 +2,8 @@ import os
 import sys
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
+from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool
+from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QApplication
 from PyQt5.QtWidgets import QMessageBox
 
 from api_requests.get_security import GetSecurity
@@ -11,7 +11,7 @@ from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.user_methods import CheckUser, CreateUser
 from info.user import User
-from securities.securities import SecurityInfo
+from securities.securities import SecurityInfo, Security
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
@@ -144,6 +144,8 @@ class Window(QMainWindow):
         super(Window, self).__init__()
         self.output = QtWidgets.QTextBrowser(self)
         self.user: User = None
+
+        self.threadpool = QThreadPool()
         self.initUI()
 
     def initUI(self):
@@ -160,7 +162,6 @@ class Window(QMainWindow):
 
         # connect button to function on_click
         self.button.clicked.connect(self.find_securities)
-
 
         # Create a button in the window
         self.load_all_btn = QPushButton('Load all', self)
@@ -198,16 +199,42 @@ class Window(QMainWindow):
             load_full_info=False
         ).start()
 
-    def after_search(self, code, data):
-        for i in data:
-            self.output.append(str(i.get_as_dict()))
+    def after_search(self, code, data: list[Security]):
+        data = [d.get_as_dict() for d in data]
+        self.threadpool.start(Worker(data=data, out=self.output))
 
     def load_all(self):
         LoadAllSecurities(
-            lambda x, y: self.output.append(f"done, code = {x}"),
+            self.after_load,
             self.user.get_token()
         ).start()
+        self.output.append("Load started")
 
+    def after_load(self, code, data):
+        print(code)
+        self.threadpool.start(Worker(data=[code], out=self.output))
+
+
+class Worker(QRunnable):
+    '''
+    Worker thread
+    '''
+
+    def __init__(self, *args, **kwargs):
+        self.data = kwargs["data"]
+        self.out = kwargs["out"]
+        kwargs.pop("out")
+        kwargs.pop("data")
+
+        super().__init__(*args, **kwargs)
+
+    @pyqtSlot()
+    def run(self):
+        '''
+        Your code goes in this function
+        '''
+        for i in self.data:
+            self.out.append(str(i))
 
 class CreateWindow:
     login: LoginWindow = None
