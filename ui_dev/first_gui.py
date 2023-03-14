@@ -233,8 +233,9 @@ class Worker(QRunnable):
         '''
         Your code goes in this function
         '''
-        for i in self.data:
-            self.out.append(str(i))
+        parsed = [str(i) for i in self.data]
+        self.out.append("\n".join(parsed))
+
 
 class CreateWindow:
     login: LoginWindow = None
