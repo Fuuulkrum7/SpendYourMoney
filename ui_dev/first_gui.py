@@ -24,6 +24,7 @@ class LoginWindow(QtWidgets.QDialog):
 
     def __init__(self, on_reg):
         super(LoginWindow, self).__init__()
+        self.horizontalGroupBox = None
         self.parent_window: CreateWindow = on_reg
         self.setWindowTitle("SpendYourMoney")
         self.setupLoginUI()
@@ -51,7 +52,7 @@ class LoginWindow(QtWidgets.QDialog):
         self.horizontalGroupBox = QtWidgets.QGroupBox("Registration", self)
         buttonRegisterInstead = QtWidgets.QPushButton("Go to registration",
                                                       self)
-        buttonRegisterInstead.clicked.connect(self.parent_window.createLogin)
+        buttonRegisterInstead.clicked.connect(self.parent_window.createReg)
         self.layout_main.addWidget(self.horizontalGroupBox)
         self.lower_layout = QtWidgets.QHBoxLayout(self.horizontalGroupBox)
         self.lower_layout.addWidget(buttonRegisterInstead)
@@ -106,7 +107,7 @@ class RegisterWindow(QtWidgets.QDialog):
         self.horizontalGroupBox = QtWidgets.QGroupBox("Sign in", self)
         buttonLoginInstead = QtWidgets.QPushButton("Back to login",
                                                    self)
-        buttonLoginInstead.clicked.connect(self.parent_window.createReg)
+        buttonLoginInstead.clicked.connect(self.parent_window.createLogin)
         layout_main.addWidget(self.horizontalGroupBox)
         layout = QtWidgets.QHBoxLayout(self.horizontalGroupBox)
         layout.addWidget(buttonLoginInstead)
