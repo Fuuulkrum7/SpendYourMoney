@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
 from PyQt5.QtWidgets import QMessageBox
 
 from api_requests.get_security import GetSecurity
+from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.user_methods import CheckUser, CreateUser
 from info.user import User
@@ -149,16 +150,25 @@ class Window(QMainWindow):
         # Create textbox
         self.textbox = QLineEdit(self)
         self.textbox.move(20, 20)
-        self.textbox.resize(280, 40)
-        self.textbox.setPlaceholderText("Security name")
+        self.textbox.resize(360, 40)
+        self.textbox.setPlaceholderText("Security name (more than 2 symbols)")
 
         # Create a button in the window
         self.button = QPushButton('Find security', self)
-        self.button.move(340, 20)
+        self.button.move(400, 20)
         self.button.resize(120, 40)
 
         # connect button to function on_click
         self.button.clicked.connect(self.find_securities)
+
+
+        # Create a button in the window
+        self.load_all_btn = QPushButton('Load all', self)
+        self.load_all_btn.move(540, 20)
+        self.load_all_btn.resize(120, 40)
+
+        # connect button to function on_click
+        self.load_all_btn.clicked.connect(self.load_all)
 
         self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
@@ -168,6 +178,8 @@ class Window(QMainWindow):
         self.user = user
 
     def find_securities(self):
+        if len(self.textbox.text()) <= 2:
+            return
         GetSecurity(
             StandardQuery(
                 SecurityInfo(
@@ -189,6 +201,12 @@ class Window(QMainWindow):
     def after_search(self, code, data):
         for i in data:
             self.output.append(str(i.get_as_dict()))
+
+    def load_all(self):
+        LoadAllSecurities(
+            lambda x, y: self.output.append(f"done, code = {x}"),
+            self.user.get_token()
+        ).start()
 
 
 class CreateWindow:
@@ -214,7 +232,6 @@ class CreateWindow:
         self.main_window.setFixedSize(self.WIDTH, self.HEIGHT)
 
         self.create_login()
-        self.main_window.show()
 
         sys.exit(self.app.exec_())
 
