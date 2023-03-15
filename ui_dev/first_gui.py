@@ -4,7 +4,6 @@ from datetime import timedelta
 
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
@@ -16,14 +15,18 @@ from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.user_methods import CheckUser, CreateUser
 from info.user import User
-from securities.securities import SecurityInfo, Security
+from securities.securities import SecurityInfo
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
 
 
 class LoginWindow(QtWidgets.QDialog):
-    login_pushed = False
+    """
+    Класс для выполнения входа в аккаунт или перехода к регистрации
+    """
+    login_pushed: bool = False
+
     loginval: QLineEdit
     passwordval: QLineEdit
 
@@ -41,14 +44,15 @@ class LoginWindow(QtWidgets.QDialog):
         self.creater: CreateWindow = on_reg
         self.setWindowTitle("SpendYourMoney")
 
-        self.threadpool = QThreadPool()
-
         self.setWindowFlags(self.windowFlags() | PyQt5.QtCore.Qt.Window)
         self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
 
         self.setup_login_ui()
 
     def setup_login_ui(self):
+        """
+        Отвечает за настройку виджетов в диалоговом окне
+        """
         self.verticalGroupBox = QtWidgets.QGroupBox("Sign in", self)
         self.layout_main = QtWidgets.QVBoxLayout(self)
         self.layout_main.addWidget(self.verticalGroupBox)
@@ -77,6 +81,9 @@ class LoginWindow(QtWidgets.QDialog):
         self.lower_layout.addWidget(button_register_instead)
 
     def create_user(self, result):
+        """
+        Отвечает за вывод сообщений об ошибке
+        """
         code, user = result
         self.login_pushed = False
         self.creater.user = user
@@ -93,6 +100,9 @@ class LoginWindow(QtWidgets.QDialog):
             QMessageBox.warning(self, 'Error', "Invalid token")
 
     def handle_login(self):
+        """
+        Запускает проверку параметров входа
+        """
         if not self.login_pushed:
             self.check_thread = CheckUser(self.loginval.text(),
                                           self.passwordval.text(),
@@ -101,11 +111,17 @@ class LoginWindow(QtWidgets.QDialog):
             self.login_pushed = True
 
     def closeEvent(self, evnt):
+        """
+        Закрытие окна
+        """
         evnt.ignore()
         quit(0)
 
 
 class RegisterWindow(QtWidgets.QDialog):
+    """
+    Класс для создания аккаунта
+    """
     register_pushed = False
     newloginval: QLineEdit
     newpasswordval: QLineEdit
@@ -120,13 +136,15 @@ class RegisterWindow(QtWidgets.QDialog):
         self.creater: CreateWindow = on_login
         self.setWindowTitle("SpendYourMoney")
         self.setup_register_ui()
-        self.threadpool = QThreadPool()
 
         self.setWindowFlags(self.windowFlags() | PyQt5.QtCore.Qt.Window)
         self.setParent(parent)
         self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
 
     def setup_register_ui(self):
+        """
+        Отвечает за настройку виджетов в диалоговом окне
+        """
         layout_main = QtWidgets.QVBoxLayout(self)
         layout_main.addWidget(self.verticalGroupBox)
         layout = QtWidgets.QVBoxLayout(self.verticalGroupBox)
@@ -152,6 +170,9 @@ class RegisterWindow(QtWidgets.QDialog):
         layout.addWidget(button_login_instead)
 
     def after_create(self, result):
+        """
+        Отвечает за вывод сообщений об ошибке
+        """
         code, loaded_data = result
 
         self.register_pushed = False
@@ -165,6 +186,9 @@ class RegisterWindow(QtWidgets.QDialog):
             QMessageBox.warning(self, 'Error', 'Something went wrong')
 
     def handle_register(self):
+        """
+        Отвечает за создание пользователя в бд
+        """
         if not self.register_pushed:
             self.registration_thread = CreateUser(
                 User(
@@ -179,11 +203,17 @@ class RegisterWindow(QtWidgets.QDialog):
             self.register_pushed = True
 
     def closeEvent(self, evnt):
+        """
+        Закрытие окна
+        """
         evnt.ignore()
         quit(0)
 
 
 class Window(QMainWindow):
+    """
+    Класс для поиска цб
+    """
     securities_thread: GetSecurity = None
     all_securities_thread: LoadAllSecurities = None
 
@@ -195,7 +225,6 @@ class Window(QMainWindow):
         self.output = QtWidgets.QTextBrowser(self)
         self.user: User = None
 
-        self.threadpool = QThreadPool()
         self.initUI()
 
     def initUI(self):
