@@ -9,7 +9,7 @@ CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
 ```
 
-Open project folder in terminal and execute this to install necessary modules and run the script
+Open project folder in terminal and execute this to install necessary modules
 
 ```commandline
 pip install -r requirements.txt
@@ -23,8 +23,6 @@ python main.py
 
 As it is a pre-version and GUI is in alpha-version, most part of information you can
 get would be written in console.
-
-After this steps, you will see some information about loaded from internet or local database securities.
 
 ### Use GUI for search
 
@@ -146,8 +144,6 @@ python main.py
 
 Поскольку это предварительная версия и графический интерфейс находтся в стадии альфа-верст, вся информация, 
 которую вы можете получить, будет отображаться в консоли.
-
-После выполнения этих шагов вы увидите некоторую информацию о ценных бумагах, загруженных из Интернета или локальной базы данных.
 
 ### Use GUI for search
 
