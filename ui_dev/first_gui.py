@@ -19,9 +19,10 @@ os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
 
 
 class LoginWindow(QtWidgets.QDialog):
+    login_pushed = False
     loginval: QLineEdit
     passwordval: QLineEdit
-    newtokenval: QLineEdit
+
 
     layout_main: QtWidgets.QVBoxLayout
     upper_layout: QtWidgets.QVBoxLayout
@@ -83,12 +84,15 @@ class LoginWindow(QtWidgets.QDialog):
             QMessageBox.warning(self, 'Error', "Invalid token")
 
     def create_user(self, code, user):
+        self.login_pushed = False
         self.creater.user = user
         self.threadpool.start(Worker(data=code, on_finish=self.on_finish))
 
     def handle_login(self):
-        CheckUser(self.loginval.text(), self.passwordval.text(),
-                  self.create_user).start()
+        if not self.login_pushed:
+            CheckUser(self.loginval.text(), self.passwordval.text(),
+                      self.create_user).start()
+            self.login_pushed = True
 
     def closeEvent(self, evnt):
         evnt.ignore()
@@ -96,6 +100,7 @@ class LoginWindow(QtWidgets.QDialog):
 
 
 class RegisterWindow(QtWidgets.QDialog):
+    register_pushed = False
     newloginval: QLineEdit
     newpasswordval: QLineEdit
     newtokenval: QLineEdit
@@ -148,18 +153,21 @@ class RegisterWindow(QtWidgets.QDialog):
             QMessageBox.warning(self, 'Error', 'Something went wrong')
 
     def after_create(self, code: int, loaded_data):
+        self.register_pushed = False
         self.creater.user = loaded_data
         self.threadpool.start(Worker(data=code, on_finish=self.on_finish))
 
     def handle_register(self):
-        CreateUser(
-            User(
-                username=self.newloginval.text(),
-                token=self.newtokenval.text()
-            ),
-            self.newpasswordval.text(),
-            self.after_create
-        ).start()
+        if not self.register_pushed:
+            CreateUser(
+                User(
+                    username=self.newloginval.text(),
+                    token=self.newtokenval.text()
+                ),
+                self.newpasswordval.text(),
+                self.after_create
+            ).start()
+            self.register_pushed = True
 
     def closeEvent(self, evnt):
         evnt.ignore()
