@@ -26,4 +26,3 @@ if __name__ == '__main__':
     wndw = CreateWindow(app)
     wndw.create_main()
     sys.exit(app.exec_())
-
