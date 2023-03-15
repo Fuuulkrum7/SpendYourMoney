@@ -43,7 +43,7 @@ __ticker__=_ticker_, etc. Field __id__ is not necessary to be changed.
 Here is an example of such request:
 
 ```
-s = GetSecurity(
+security_thread = GetSecurity(
     StandardQuery(
         SecurityInfo(
             id=0,
@@ -54,9 +54,10 @@ s = GetSecurity(
         ),
         ""
     ),
-    lambda x, y: print("done, status: ", x),
+    lambda x: print("done, status: ", x[0]),
     TOKEN
 )
+security_thread.start()
 ```
 
 As you can see, it is permitted not to fill each field, it is allowed to fill only that variables, that you 
@@ -104,17 +105,18 @@ info = SecurityInfo(
 Then you should run such class object
 
 ```
-GetSecurityHistory(
+history = GetSecurityHistory(
     info=info,
     _from=now() - timedelta(days=300),
     to=now(),
     interval=CandleInterval.CANDLE_INTERVAL_DAY,
     token=TOKEN,
-    on_finish=lambda n, y: print(
-        len(y),
+    on_finish=lambda data: print(
+        *data[1],
         sep='\n'
     )
-).start()
+)
+history.start()
 ```
 
 As you can seem this class loads historic candles for 300 days as one day candles.
@@ -164,7 +166,7 @@ __ticker__=_ticker_ и т.д. В поле __id__ ничего вносить н�
 Вот пример запроса:
 
 ```
-s = GetSecurity(
+security_thread = GetSecurity(
     StandardQuery(
         SecurityInfo(
             id=0,
@@ -175,9 +177,10 @@ s = GetSecurity(
         ),
         ""
     ),
-    lambda x: print("done, status: ", x),
+    lambda x: print("done, status: ", x[0]),
     TOKEN
 )
+security_thread.start()
 ```
 
 Как видно из данного примера, можно не заполнять каждое поле класса, а только те, данные для которых вы знаете.
@@ -221,17 +224,18 @@ info = SecurityInfo(
 И запустить данный код
 
 ```
-GetSecurityHistory(
+history = GetSecurityHistory(
     info=info,
     _from=now() - timedelta(days=300),
     to=now(),
     interval=CandleInterval.CANDLE_INTERVAL_DAY,
     token=TOKEN,
-    on_finish=lambda n, y: print(
-        *y,
+    on_finish=lambda data: print(
+        *data[1],
         sep='\n'
     )
-).start()
+)
+history.start()
 ```
 
 Как можно заметить, данный класс загружает и выводит историю курса цб за 300 дней по дням.
