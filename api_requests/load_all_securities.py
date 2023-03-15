@@ -1,7 +1,8 @@
 from time import time
 
 import function
-from threading import Thread
+from PyQt5.QtCore import QThread as Thread, pyqtSignal
+
 from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
     Bond as tinkoffBond, InstrumentStatus
 
@@ -27,11 +28,12 @@ class LoadAllSecurities(Thread):
     # 404 - первые две одновременно, данных нет
     # 405 - ошибка неизвестного типа, просто что-то пошло не так
     status_code: int = 200
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, on_finish: function, token: str):
         super().__init__()
 
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
         self.__token = token
 
     # Тут все банально, запускаем все методы
@@ -54,8 +56,7 @@ class LoadAllSecurities(Thread):
                 print(str(e)[0:1000])
                 self.status_code = 301
 
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.securities)).start()
+        self.data_downloaded.emit((self.status_code, self.securities))
 
     def insert_to_database(self):
         # Подключаемся к базе данных

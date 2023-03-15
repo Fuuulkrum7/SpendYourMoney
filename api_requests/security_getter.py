@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import function
 
-from threading import Thread
+from PyQt5.QtCore import QThread as Thread
 from securities.securities import SecurityInfo
 
 
@@ -32,7 +32,7 @@ class StandardQuery:
         return self.query_text
 
 
-class SecurityGetter(ABC, Thread):
+class SecurityGetter(Thread):
     # тело запроса
     query: StandardQuery
     # проверять ли данные локально
