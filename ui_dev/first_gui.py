@@ -4,7 +4,7 @@ import sys
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool
-from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QApplication
+from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
 from PyQt5.QtWidgets import QMessageBox
 
 from api_requests.get_security import GetSecurity
@@ -177,6 +177,9 @@ class RegisterWindow(QtWidgets.QDialog):
 class Window(QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
+        self.textbox = QLineEdit(self)
+        self.button = QPushButton('Find security', self)
+        self.load_all_btn = QPushButton('Load all', self)
         self.output = QtWidgets.QTextBrowser(self)
         self.user: User = None
 
@@ -185,13 +188,11 @@ class Window(QMainWindow):
 
     def initUI(self):
         # Create textbox
-        self.textbox = QLineEdit(self)
         self.textbox.move(20, 20)
         self.textbox.resize(360, 40)
         self.textbox.setPlaceholderText("Security name (more than 2 symbols)")
 
         # Create a button in the window
-        self.button = QPushButton('Find security', self)
         self.button.move(400, 20)
         self.button.resize(120, 40)
 
@@ -199,7 +200,6 @@ class Window(QMainWindow):
         self.button.clicked.connect(self.find_securities)
 
         # Create a button in the window
-        self.load_all_btn = QPushButton('Load all', self)
         self.load_all_btn.move(540, 20)
         self.load_all_btn.resize(120, 40)
 
@@ -251,9 +251,9 @@ class Window(QMainWindow):
 
 
 class Worker(QRunnable):
-    '''
+    """
     Worker thread
-    '''
+    """
 
     def __init__(self, *args, data=None, out=None, on_finish=None, **kwargs):
         self.on_finish = on_finish
@@ -264,9 +264,9 @@ class Worker(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        '''
+        """
         Your code goes in this function
-        '''
+        """
         if self.out is not None:
             parsed = [str(i) for i in self.data]
             self.out.append("\n".join(parsed))
@@ -283,7 +283,6 @@ class CreateWindow:
     WIDTH = 720
     HEIGHT = 480
 
-    # TODO delete on_finish
     def __init__(self, app):
         self.app = app
 
@@ -313,7 +312,7 @@ class CreateWindow:
         self.login = LoginWindow(self, self.main_window)
 
         if self.reg is not None:
-            self.reg.destroy(destroyWindow=True)
+            self.reg.deleteLater()
             self.reg = None
 
         self.login.show()
@@ -322,7 +321,7 @@ class CreateWindow:
         self.reg = RegisterWindow(self, self.main_window)
 
         if self.login is not None:
-            self.login.destroy(destroyWindow=True)
+            self.login.deleteLater()
             self.login = None
 
         self.reg.show()
