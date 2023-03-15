@@ -3,6 +3,7 @@ from time import time
 
 import function
 import sqlalchemy
+from PyQt5.QtCore import pyqtSignal
 from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
     Bond as tinkoffBond, InstrumentIdType
 
@@ -41,6 +42,7 @@ class GetSecurity(SecurityGetter):
     # дивов мы ещё не знаем, какие будут id у цб
     # Которые мы только что скачали в базе данных
     sub_data: list[GetDividends or GetCoupons] = []
+    data_downloaded = pyqtSignal(object)
 
     # Инициализация, всё банально
     def __init__(self, query: StandardQuery, on_finish: function, token: str,
@@ -50,7 +52,7 @@ class GetSecurity(SecurityGetter):
         super().__init__()
         self.query = query
         self.load_full_info = load_full_info
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
         self.__token = token
         self.check_locally = check_locally
         self.check_only_locally = check_only_locally \
@@ -70,8 +72,7 @@ class GetSecurity(SecurityGetter):
                 print(e)
                 self.status_code = 301
 
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.securities)).start()
+        self.data_downloaded.emit((self.status_code, self.securities))
 
     # Тоже банально
     def load_data(self):

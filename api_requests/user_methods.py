@@ -1,5 +1,5 @@
 import hashlib
-from threading import Thread
+from PyQt5.QtCore import QThread as Thread, pyqtSignal
 
 import sqlalchemy
 import tinkoff.invest
@@ -36,6 +36,7 @@ class CheckUser(Thread):
     user: User = None
     # Статус-код, см выше
     status_code: int = 201
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, login: str, password: str, on_finish, token: str = ""):
         super().__init__()
@@ -43,7 +44,7 @@ class CheckUser(Thread):
         self.password = hashlib.sha512(password.encode('utf-8')).hexdigest()
         self.login = login
         self.__token = token
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
 
     def run(self) -> None:
         try:
@@ -130,8 +131,9 @@ class CheckUser(Thread):
                     self.status_code = 500 if self.status_code >= 250 \
                         else 211
 
-        Thread(target=self.on_finish, args=(self.status_code, self.user)).\
-            start()
+        # Thread(target=self.on_finish, args=(self.status_code, self.user)).\
+        #     start()
+        self.data_downloaded.emit((self.status_code, self.user))
 
     def get_user(self):
         return self.user
@@ -154,32 +156,34 @@ class CreateUser(Thread):
     user: User = None
     status_code: int = 200
     password: str
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, user: User, password: str, on_finish):
         super().__init__()
 
+        self.check = None
         self.user = user
         self.password = password
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
 
     def run(self) -> None:
         # Запускаем проверку пользователя
-        check: CheckUser = CheckUser(
+        self.check: CheckUser = CheckUser(
             self.user.username,
             self.password,
-            lambda x, y: x,
+            on_finish=self.on_finish,
             token=self.user.get_token()
         )
-        check.start()
-        check.join()
+        self.check.start()
 
-        code = check.status_code
+    def on_finish(self):
+        code = self.check.status_code
 
         # Все ок, создаем пользователя
         if code == 202:
             try:
                 # Получаем пользователя из метода по проверке
-                self.user = check.get_user()
+                self.user = self.check.get_user()
 
                 # Подключаемся к бд
                 db = DatabaseInterface()
@@ -189,7 +193,8 @@ class CreateUser(Thread):
                 query = self.user.get_as_dict()
                 # Добавляем поле пароль
                 query["password"] = \
-                    hashlib.sha512(self.password.encode('utf-8')).hexdigest()
+                    hashlib.sha512(
+                        self.password.encode('utf-8')).hexdigest()
 
                 # Добавляем данные в таблицу
                 table = UserTableSQLAlchemy()
@@ -199,7 +204,8 @@ class CreateUser(Thread):
                 )
 
                 cursor: sqlalchemy.engine.cursor = \
-                    db.execute_sql("SELECT MAX(UID) FROM " + table.get_name())
+                    db.execute_sql(
+                        "SELECT MAX(UID) FROM " + table.get_name())
 
                 # Получаем id и обновляем индекс пользователя
                 for val in cursor:
@@ -225,8 +231,7 @@ class CreateUser(Thread):
             self.status_code = 500
 
         # Запускаем поток
-        Thread(target=self.on_finish, args=(self.status_code, self.user))\
-            .start()
+        self.data_downloaded.emit((self.status_code, self.user))
 
     def get_user(self):
         return self.user

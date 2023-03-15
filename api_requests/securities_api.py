@@ -1,7 +1,7 @@
 from datetime import datetime
-from threading import Thread
 
 import function
+from PyQt5.QtCore import pyqtSignal
 
 from database.database_info import CouponInfoTable, DividendInfoTable, \
     CouponInfo, DividendInfo
@@ -45,6 +45,7 @@ class GetCoupons(SecurityGetter):
     coupon: list[Coupon] = []
     # Статус-код, все банально
     status_code: int = 200
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, query: StandardQuery, on_finish: function, token: str,
                  check_locally=True, insert_to_db=True,
@@ -52,7 +53,7 @@ class GetCoupons(SecurityGetter):
         # Просто сохраняем данные по переменным
         super().__init__()
         self.query = query
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
         self.__token = token
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
@@ -73,8 +74,7 @@ class GetCoupons(SecurityGetter):
                 self.status_code = 311
 
         # Вызов функции
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.coupon)).start()
+        self.data_downloaded.emit((self.status_code, self.coupon))
 
     def load_data(self):
         # Если надо проверять локально, делам это
@@ -228,6 +228,7 @@ class GetDividends(SecurityGetter):
     """
     dividend: list[Dividend] = []
     status_code: int = 200
+    data_downloaded = pyqtSignal(object)
 
     # Инициализация, все стандартно
     def __init__(self, query: StandardQuery, on_finish: function,
@@ -235,7 +236,7 @@ class GetDividends(SecurityGetter):
                  check_only_locally=False):
         super().__init__()
         self.query = query
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
         self.__token = token
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
@@ -252,8 +253,7 @@ class GetDividends(SecurityGetter):
                 print(e)
                 self.status_code = 311
 
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.dividend)).start()
+        self.data_downloaded.emit((self.status_code, self.dividend))
 
     # И тут тоже, только имя переменной сменилось
     def load_data(self):

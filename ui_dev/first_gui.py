@@ -23,6 +23,7 @@ class LoginWindow(QtWidgets.QDialog):
     loginval: QLineEdit
     passwordval: QLineEdit
 
+    check_thread: CheckUser
 
     layout_main: QtWidgets.QVBoxLayout
     upper_layout: QtWidgets.QVBoxLayout
@@ -71,7 +72,11 @@ class LoginWindow(QtWidgets.QDialog):
         self.lower_layout = QtWidgets.QHBoxLayout(self.horizontalGroupBox)
         self.lower_layout.addWidget(button_register_instead)
 
-    def on_finish(self, code):
+    def create_user(self, result):
+        code, user = result
+        self.login_pushed = False
+        self.creater.user = user
+
         if code in (200, 201, 202, 211):
             self.creater.after_enter()
         elif code == 100:
@@ -83,15 +88,12 @@ class LoginWindow(QtWidgets.QDialog):
         elif code in (400, 500):
             QMessageBox.warning(self, 'Error', "Invalid token")
 
-    def create_user(self, code, user):
-        self.login_pushed = False
-        self.creater.user = user
-        self.threadpool.start(Worker(data=code, on_finish=self.on_finish))
-
     def handle_login(self):
         if not self.login_pushed:
-            CheckUser(self.loginval.text(), self.passwordval.text(),
-                      self.create_user).start()
+            self.check_thread = CheckUser(self.loginval.text(),
+                                          self.passwordval.text(),
+                                          self.create_user)
+            self.check_thread.start()
             self.login_pushed = True
 
     def closeEvent(self, evnt):
@@ -104,6 +106,8 @@ class RegisterWindow(QtWidgets.QDialog):
     newloginval: QLineEdit
     newpasswordval: QLineEdit
     newtokenval: QLineEdit
+
+    registration_thread: CreateUser
 
     def __init__(self, on_login, parent):
         super(RegisterWindow, self).__init__(parent)
@@ -143,8 +147,12 @@ class RegisterWindow(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout(self.horizontalGroupBox)
         layout.addWidget(button_login_instead)
 
-    def on_finish(self, code):
-        print(code)
+    def after_create(self, result):
+        code, loaded_data = result
+
+        self.register_pushed = False
+        self.creater.user = loaded_data
+
         if code in (110, 101, 102):
             QMessageBox.warning(self, 'Error', "User already exists")
         elif code == 200:
@@ -152,21 +160,18 @@ class RegisterWindow(QtWidgets.QDialog):
         elif code in (300, 500):
             QMessageBox.warning(self, 'Error', 'Something went wrong')
 
-    def after_create(self, code: int, loaded_data):
-        self.register_pushed = False
-        self.creater.user = loaded_data
-        self.threadpool.start(Worker(data=code, on_finish=self.on_finish))
-
     def handle_register(self):
         if not self.register_pushed:
-            CreateUser(
+            self.registration_thread = CreateUser(
                 User(
                     username=self.newloginval.text(),
                     token=self.newtokenval.text()
                 ),
                 self.newpasswordval.text(),
                 self.after_create
-            ).start()
+            )
+
+            self.registration_thread.start()
             self.register_pushed = True
 
     def closeEvent(self, evnt):
@@ -175,6 +180,9 @@ class RegisterWindow(QtWidgets.QDialog):
 
 
 class Window(QMainWindow):
+    securities_thread: GetSecurity = None
+    all_securities_thread: LoadAllSecurities = None
+
     def __init__(self):
         super(Window, self).__init__()
         self.textbox = QLineEdit(self)
@@ -214,9 +222,11 @@ class Window(QMainWindow):
         self.user = user
 
     def find_securities(self):
-        if len(self.textbox.text()) <= 2:
+        if len(self.textbox.text()) <= 2 or (
+                self.securities_thread is not None and
+                self.securities_thread.isRunning()):
             return
-        GetSecurity(
+        self.securities_thread = GetSecurity(
             StandardQuery(
                 SecurityInfo(
                     id=0,
@@ -232,46 +242,32 @@ class Window(QMainWindow):
             load_coupons=False,
             load_dividends=False,
             load_full_info=False
-        ).start()
+        )
+        self.securities_thread.start()
 
-    def after_search(self, code, data: list[Security]):
+    def after_search(self, result):
+        code, data = result
         data = [d.get_as_dict() for d in data]
-        self.threadpool.start(Worker(data=data, out=self.output))
+        parsed = [str(i) for i in data]
+        self.output.append("\n".join(parsed))
 
     def load_all(self):
-        LoadAllSecurities(
+        if self.all_securities_thread is not None \
+                and self.all_securities_thread.isRunning():
+            return
+
+        self.all_securities_thread = LoadAllSecurities(
             self.after_load,
             self.user.get_token()
-        ).start()
+        )
+        self.all_securities_thread.start()
         self.output.append("Load started")
 
-    def after_load(self, code, data):
+    def after_load(self, result):
+        code, data = result
         print(code)
-        self.threadpool.start(Worker(data=[code], out=self.output))
-
-
-class Worker(QRunnable):
-    """
-    Worker thread
-    """
-
-    def __init__(self, *args, data=None, out=None, on_finish=None, **kwargs):
-        self.on_finish = on_finish
-        self.data = data
-        self.out = out
-
-        super().__init__(*args, **kwargs)
-
-    @pyqtSlot()
-    def run(self):
-        """
-        Your code goes in this function
-        """
-        if self.out is not None:
-            parsed = [str(i) for i in self.data]
-            self.out.append("\n".join(parsed))
-        else:
-            self.on_finish(self.data)
+        parsed = [str(i) for i in data]
+        self.output.append("\n".join(parsed))
 
 
 class CreateWindow:

@@ -3,6 +3,7 @@ from math import log10, ceil
 from threading import Thread
 from time import time
 
+from PyQt5.QtCore import pyqtSignal
 from tinkoff.invest import CandleInterval, Client, RequestError, \
     HistoricCandle, MoneyValue, Quotation
 
@@ -40,6 +41,7 @@ class GetSecurityHistory(Thread):
     info: SecurityInfo
     # Статус-код
     status_code: int = 200
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, token: str = "", _from: datetime = None,
                  to: datetime = None,
@@ -53,7 +55,7 @@ class GetSecurityHistory(Thread):
         self.__token = token
         self.interval = interval
         self.info = info
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
 
     def run(self) -> None:
         t = time()
@@ -66,8 +68,8 @@ class GetSecurityHistory(Thread):
         print(time() - t)
 
         # Создаем поток для функции и отправляем курс
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.history)).start()
+
+        self.data_downloaded.emit((self.status_code, self.history))
 
         # Попутно запускаем сохранение в бд
         if self.insert_data:
