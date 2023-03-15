@@ -4,4 +4,4 @@ SQLAlchemy-Utils==0.40.0
 function~=1.2.0
 cryptography==39.0.2
 pymysql~=1.0.2
-PyQt5==5.15.4
+PyQt5~=5.15.6

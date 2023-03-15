@@ -1,6 +1,7 @@
 import os
 import sys
 
+import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QApplication
@@ -28,11 +29,17 @@ class LoginWindow(QtWidgets.QDialog):
 
     verticalGroupBox: QtWidgets.QGroupBox
 
-    def __init__(self, on_reg):
-        super(LoginWindow, self).__init__()
+    def __init__(self, on_reg, parent):
+        super(LoginWindow, self).__init__(parent)
         self.horizontalGroupBox = None
-        self.parent_window: CreateWindow = on_reg
+        self.creater: CreateWindow = on_reg
         self.setWindowTitle("SpendYourMoney")
+
+        self.threadpool = QThreadPool()
+
+        self.setWindowFlags(self.windowFlags() | PyQt5.QtCore.Qt.Window)
+        self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
+
         self.setup_login_ui()
 
     def setup_login_ui(self):
@@ -58,15 +65,14 @@ class LoginWindow(QtWidgets.QDialog):
         self.horizontalGroupBox = QtWidgets.QGroupBox("Registration", self)
         button_register_instead = QtWidgets.QPushButton("Go to registration",
                                                         self)
-        button_register_instead.clicked.connect(self.parent_window.create_reg)
+        button_register_instead.clicked.connect(self.creater.create_reg)
         self.layout_main.addWidget(self.horizontalGroupBox)
         self.lower_layout = QtWidgets.QHBoxLayout(self.horizontalGroupBox)
         self.lower_layout.addWidget(button_register_instead)
 
-    def create_user(self, code, user):
-        self.parent_window.user = user
+    def on_finish(self, code):
         if code in (200, 201, 202, 211):
-            self.parent_window.after_enter()
+            self.creater.after_enter()
         elif code == 100:
             QMessageBox.warning(self, 'Error', 'Bad user or password')
         elif code == 250:
@@ -76,9 +82,17 @@ class LoginWindow(QtWidgets.QDialog):
         elif code in (400, 500):
             QMessageBox.warning(self, 'Error', "Invalid token")
 
+    def create_user(self, code, user):
+        self.creater.user = user
+        self.threadpool.start(Worker(data=code, on_finish=self.on_finish))
+
     def handle_login(self):
         CheckUser(self.loginval.text(), self.passwordval.text(),
                   self.create_user).start()
+
+    def closeEvent(self, evnt):
+        evnt.ignore()
+        quit(0)
 
 
 class RegisterWindow(QtWidgets.QDialog):
@@ -86,13 +100,18 @@ class RegisterWindow(QtWidgets.QDialog):
     newpasswordval: QLineEdit
     newtokenval: QLineEdit
 
-    def __init__(self, on_login):
-        super(RegisterWindow, self).__init__()
+    def __init__(self, on_login, parent):
+        super(RegisterWindow, self).__init__(parent)
         self.horizontalGroupBox = QtWidgets.QGroupBox("Sign in", self)
         self.verticalGroupBox = QtWidgets.QGroupBox("Registration", self)
-        self.parent_window: CreateWindow = on_login
+        self.creater: CreateWindow = on_login
         self.setWindowTitle("SpendYourMoney")
         self.setup_register_ui()
+        self.threadpool = QThreadPool()
+
+        self.setWindowFlags(self.windowFlags() | PyQt5.QtCore.Qt.Window)
+        self.setParent(parent)
+        self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
 
     def setup_register_ui(self):
         layout_main = QtWidgets.QVBoxLayout(self)
@@ -114,19 +133,23 @@ class RegisterWindow(QtWidgets.QDialog):
 
         button_login_instead = QtWidgets.QPushButton("Back to login",
                                                      self)
-        button_login_instead.clicked.connect(self.parent_window.create_login)
+        button_login_instead.clicked.connect(self.creater.create_login)
         layout_main.addWidget(self.horizontalGroupBox)
         layout = QtWidgets.QHBoxLayout(self.horizontalGroupBox)
         layout.addWidget(button_login_instead)
 
-    def after_create(self, code: int, loaded_data):
-        self.parent_window.user = loaded_data
+    def on_finish(self, code):
+        print(code)
         if code in (110, 101, 102):
             QMessageBox.warning(self, 'Error', "User already exists")
         elif code == 200:
-            self.parent_window.after_enter()
+            self.creater.after_enter()
         elif code in (300, 500):
             QMessageBox.warning(self, 'Error', 'Something went wrong')
+
+    def after_create(self, code: int, loaded_data):
+        self.creater.user = loaded_data
+        self.threadpool.start(Worker(data=code, on_finish=self.on_finish))
 
     def handle_register(self):
         CreateUser(
@@ -137,6 +160,10 @@ class RegisterWindow(QtWidgets.QDialog):
             self.newpasswordval.text(),
             self.after_create
         ).start()
+
+    def closeEvent(self, evnt):
+        evnt.ignore()
+        quit(0)
 
 
 class Window(QMainWindow):
@@ -220,11 +247,10 @@ class Worker(QRunnable):
     Worker thread
     '''
 
-    def __init__(self, *args, **kwargs):
-        self.data = kwargs["data"]
-        self.out = kwargs["out"]
-        kwargs.pop("out")
-        kwargs.pop("data")
+    def __init__(self, *args, data=None, out=None, on_finish=None, **kwargs):
+        self.on_finish = on_finish
+        self.data = data
+        self.out = out
 
         super().__init__(*args, **kwargs)
 
@@ -233,8 +259,11 @@ class Worker(QRunnable):
         '''
         Your code goes in this function
         '''
-        parsed = [str(i) for i in self.data]
-        self.out.append("\n".join(parsed))
+        if self.out is not None:
+            parsed = [str(i) for i in self.data]
+            self.out.append("\n".join(parsed))
+        else:
+            self.on_finish(self.data)
 
 
 class CreateWindow:
@@ -259,6 +288,7 @@ class CreateWindow:
                                      self.WIDTH, self.HEIGHT)
         self.main_window.setFixedSize(self.WIDTH, self.HEIGHT)
 
+        self.main_window.show()
         self.create_login()
 
         sys.exit(self.app.exec_())
@@ -269,11 +299,10 @@ class CreateWindow:
         elif self.reg is not None:
             self.reg.deleteLater()
 
-        self.main_window.show()
         self.main_window.set_user(self.user)
 
     def create_login(self):
-        self.login = LoginWindow(self)
+        self.login = LoginWindow(self, self.main_window)
 
         if self.reg is not None:
             self.reg.destroy(destroyWindow=True)
@@ -282,7 +311,7 @@ class CreateWindow:
         self.login.show()
 
     def create_reg(self):
-        self.reg = RegisterWindow(self)
+        self.reg = RegisterWindow(self, self.main_window)
 
         if self.login is not None:
             self.login.destroy(destroyWindow=True)
