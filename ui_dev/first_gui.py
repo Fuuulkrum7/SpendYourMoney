@@ -1,13 +1,17 @@
 import os
 import sys
+from datetime import timedelta
 
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
 from PyQt5.QtWidgets import QMessageBox
+from tinkoff.invest import CandleInterval
+from tinkoff.invest.utils import now
 
 from api_requests.get_security import GetSecurity
+from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.user_methods import CheckUser, CreateUser
@@ -245,6 +249,8 @@ class Window(QMainWindow):
         )
         self.securities_thread.start()
 
+        self.load_securities()
+
     def after_search(self, result):
         code, data = result
         data = [d.get_as_dict() for d in data]
@@ -268,6 +274,27 @@ class Window(QMainWindow):
         print(code)
         parsed = [str(i) for i in data]
         self.output.append("\n".join(parsed))
+
+    def load_securities(self):
+        self.res = GetSecurityHistory(
+            info=SecurityInfo(
+                figi="BBG006L8G4H1"
+            ),
+            _from=now() - timedelta(days=31),
+            to=now(),
+            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+            token=self.user.get_token(),
+            on_finish=self.on_load
+        )
+
+        self.res.start()
+
+    def on_load(self, data):
+        x, y = data
+        print(
+            len(y),
+            sep='\n'
+        )
 
 
 class CreateWindow:
