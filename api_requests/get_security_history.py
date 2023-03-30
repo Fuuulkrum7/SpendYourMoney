@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from math import log10, ceil
-from threading import Thread
 from time import time
 
+
+from PyQt5.QtCore import QThread as Thread
 from PyQt5.QtCore import pyqtSignal
 from tinkoff.invest import CandleInterval, Client, RequestError, \
     HistoricCandle, MoneyValue, Quotation
@@ -139,11 +140,15 @@ class GetSecurityHistory(Thread):
         result = ()
         # Создаем подключение
         with Client(self.__token) as client:
+            start = self._from
+            # if len(self.history) > 0:
+            #     start = self.history[-1].info_time
+
             # Грузим все данные
             try:
                 result = tuple(client.get_all_candles(
                     figi=self.info.figi,
-                    from_=self._from,
+                    from_=start,
                     to=self.to,
                     interval=self.interval,
                 ))
