@@ -59,15 +59,16 @@ class SecuritiesHistory(Enum):
 
 class SecuritiesInfo(Enum):
     ID = "ID"
-    figi = "figi"
-    ticker = "ticker"
-    security_name = "security_name"
-    class_code = "class_code"
-    lot = "lot"
-    currency = "currency"
-    country = "country"
-    sector = "sector"
-    security_type = "security_type"
+    FIGI = "figi"
+    TICKER = "ticker"
+    SECURITY_NAME = "security_name"
+    CLASS_CODE = "class_code"
+    LOT = "lot"
+    CURRENCY = "currency"
+    COUNTRY = "country"
+    SECTOR = "sector"
+    SECURITY_TYPE = "security_type"
+    COUNTRY_CODE = "country_code"
 
 
 class StocksInfo(Enum):
@@ -150,6 +151,7 @@ class SecuritiesInfoTable(Base):
     country = sqlalchemy.Column("country", sqlalchemy.VARCHAR)
     sector = sqlalchemy.Column("sector", sqlalchemy.VARCHAR)
     security_type = sqlalchemy.Column("security_type", sqlalchemy.Integer)
+    country_code = sqlalchemy.Column("country_code", sqlalchemy.VARCHAR)
 
     __table__ = sqlalchemy.Table(
         __tablename__,
@@ -162,6 +164,7 @@ class SecuritiesInfoTable(Base):
         lot,
         currency,
         country,
+        country_code,
         sector,
         security_type
     )
