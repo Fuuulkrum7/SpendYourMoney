@@ -38,7 +38,7 @@ class SecurityInfo:
                  ticker: str = None, security_name: str = None,
                  class_code: str = None):
         """
-        :param: int id, str figi, str ticker, str name, str class_code
+        :param: int id, str FIGI, str ticker, str name, str class_code
         """
         self.id = max(id, ID)
         self.class_code = class_code
@@ -48,11 +48,11 @@ class SecurityInfo:
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
-            SecuritiesInfo.ID.name: self.id,
-            SecuritiesInfo.figi.name: self.figi,
-            SecuritiesInfo.ticker.name: self.ticker,
-            SecuritiesInfo.security_name.name: self.name,
-            SecuritiesInfo.class_code.name: self.class_code
+            SecuritiesInfo.ID.value: self.id,
+            SecuritiesInfo.FIGI.value: self.figi,
+            SecuritiesInfo.TICKER.value: self.ticker,
+            SecuritiesInfo.SECURITY_NAME.value: self.name,
+            SecuritiesInfo.CLASS_CODE.value: self.class_code
         }
 
         return values
@@ -89,13 +89,13 @@ class Coupon:
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
-            CouponInfo.ID.name: self.coupon_id,
-            CouponInfo.security_id.name: self.security_id,
-            CouponInfo.coupon_date.name: self.coupon_date,
-            CouponInfo.coupon_number.name: self.coupon_number,
-            CouponInfo.fix_date.name: self.fix_date,
-            CouponInfo.pay_one_bond.name: self.pay_one_bound,
-            CouponInfo.coupon_type.name: self.coupon_type.value
+            CouponInfo.ID.value: self.coupon_id,
+            CouponInfo.security_id.value: self.security_id,
+            CouponInfo.coupon_date.value: self.coupon_date,
+            CouponInfo.coupon_number.value: self.coupon_number,
+            CouponInfo.fix_date.value: self.fix_date,
+            CouponInfo.pay_one_bond.value: self.pay_one_bound,
+            CouponInfo.coupon_type.value: self.coupon_type.value
         }
 
         return values
@@ -138,14 +138,14 @@ class Dividend:
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
-            DividendInfo.ID.name: self.div_id,
-            DividendInfo.security_id.name: self.security_id,
-            DividendInfo.payment_date.name: self.payment_date,
-            DividendInfo.declared_date.name: self.declared_date,
-            DividendInfo.record_date.name: self.record_date,
-            DividendInfo.last_buy_date.name: self.last_buy_date,
-            DividendInfo.div_value.name: self.div_value,
-            DividendInfo.yield_value.name: self.yield_value
+            DividendInfo.ID.value: self.div_id,
+            DividendInfo.security_id.value: self.security_id,
+            DividendInfo.payment_date.value: self.payment_date,
+            DividendInfo.declared_date.value: self.declared_date,
+            DividendInfo.record_date.value: self.record_date,
+            DividendInfo.last_buy_date.value: self.last_buy_date,
+            DividendInfo.div_value.value: self.div_value,
+            DividendInfo.yield_value.value: self.yield_value
         }
 
         return values
@@ -156,6 +156,7 @@ class Security:
     lot: int
     currency: str
     country: str
+    country_code: str
     sector: str
     security_type: SecurityType
     info: SecurityInfo
@@ -165,6 +166,7 @@ class Security:
             lot: int = 0,
             currency: str = None,
             country: str = None,
+            country_code: str = None,
             sector: str = None,
             security_type: SecurityType = SecurityType.DEFAULT,
             info: SecurityInfo = None,
@@ -175,12 +177,13 @@ class Security:
             ticker: str = None,
             security_name: str = None):
         """
-        :param: class_code, lot, currency, country, sector, security_type,
+        :param: class_code, lot, currency, country, sector, SECURITY_TYPE,
         SecurityInfo or others - like for SecurityInfo;
         """
         self.lot = lot
         self.currency = currency
         self.country = country
+        self.country_code = country_code
         self.sector = sector
         self.security_type = security_type if isinstance(security_type,
                                                          SecurityType) \
@@ -199,11 +202,12 @@ class Security:
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
-            SecuritiesInfo.lot.name: self.lot,
-            SecuritiesInfo.currency.name: self.currency,
-            SecuritiesInfo.country.name: self.country,
-            SecuritiesInfo.sector.name: self.sector,
-            SecuritiesInfo.security_type.name: self.security_type.value
+            SecuritiesInfo.LOT.value: self.lot,
+            SecuritiesInfo.CURRENCY.value: self.currency,
+            SecuritiesInfo.COUNTRY.value: self.country,
+            SecuritiesInfo.SECTOR.value: self.sector,
+            SecuritiesInfo.SECURITY_TYPE.value: self.security_type.value,
+            SecuritiesInfo.COUNTRY_CODE.value: self.country_code
         }
 
         values.update(self.info.get_as_dict())
@@ -252,6 +256,7 @@ class Bond(Security):
             lot: int = 0,
             currency: str = None,
             country: str = None,
+            country_code: str = None,
             sector: str = None,
             security_type: SecurityType = SecurityType.BOND,
             info: SecurityInfo = None,
@@ -269,6 +274,7 @@ class Bond(Security):
                 lot=lot,
                 currency=currency,
                 country=country,
+                country_code=country_code,
                 sector=sector,
                 security_type=security_type,
                 info=info,
@@ -293,18 +299,18 @@ class Bond(Security):
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
-            BondsInfo.ID.name: self.bond_id,
-            BondsInfo.coupon_quantity_per_year.name:
+            BondsInfo.ID.value: self.bond_id,
+            BondsInfo.coupon_quantity_per_year.value:
                 self.coupon_quantity_per_year,
-            BondsInfo.aci_value.name: self.aci_value,
-            BondsInfo.nominal.name: self.nominal,
-            BondsInfo.security_id.name: self.info.id,
-            BondsInfo.maturity_date.name: self.maturity_date,
-            BondsInfo.amortization_flag.name: self.amortization,
-            BondsInfo.issue_size.name: self.issue_size,
-            BondsInfo.issue_size_plan.name: self.issue_size_plan,
-            BondsInfo.floating_coupon_flag.name: self.floating_coupon,
-            BondsInfo.perpetual_flag.name: self.perpetual
+            BondsInfo.aci_value.value: self.aci_value,
+            BondsInfo.nominal.value: self.nominal,
+            BondsInfo.security_id.value: self.info.id,
+            BondsInfo.maturity_date.value: self.maturity_date,
+            BondsInfo.amortization_flag.value: self.amortization,
+            BondsInfo.issue_size.value: self.issue_size,
+            BondsInfo.issue_size_plan.value: self.issue_size_plan,
+            BondsInfo.floating_coupon_flag.value: self.floating_coupon,
+            BondsInfo.perpetual_flag.value: self.perpetual
         }
 
         return values
@@ -349,6 +355,7 @@ class Stock(Security):
             lot: int = 0,
             currency: str = None,
             country: str = None,
+            country_code: str = None,
             sector: str = None,
             security_type: SecurityType = SecurityType.STOCK,
             info: SecurityInfo = None,
@@ -365,6 +372,7 @@ class Stock(Security):
                 lot=lot,
                 currency=currency,
                 country=country,
+                country_code=country_code,
                 sector=sector,
                 security_type=security_type,
                 info=info,
@@ -386,13 +394,13 @@ class Stock(Security):
 
     def get_as_dict(self) -> dict[str, object]:
         values: dict[str, object] = {
-            StocksInfo.ID.name: self.stock_id,
-            StocksInfo.stock_type.name: self.stock_type.value,
-            StocksInfo.issue_size.name: self.issue_size,
-            StocksInfo.otc_flag.name: self.otc_flag,
-            StocksInfo.div_yield_flag.name: self.div_yield_flag,
-            StocksInfo.ipo_date.name: self.ipo_date,
-            StocksInfo.security_id.name: self.info.id
+            StocksInfo.ID.value: self.stock_id,
+            StocksInfo.stock_type.value: self.stock_type.value,
+            StocksInfo.issue_size.value: self.issue_size,
+            StocksInfo.otc_flag.value: self.otc_flag,
+            StocksInfo.div_yield_flag.value: self.div_yield_flag,
+            StocksInfo.ipo_date.value: self.ipo_date,
+            StocksInfo.security_id.value: self.info.id
         }
 
         return values

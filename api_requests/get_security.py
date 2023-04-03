@@ -129,10 +129,10 @@ class GetSecurity(SecurityGetter):
 
             # Если надо добавить облигации или акции, меняем таблицу на нужную
             if self.load_full_info and \
-                    security.security_type == SecurityType.BOND:
+                    security.SECURITY_TYPE == SecurityType.BOND:
                 table = BondsInfoTable()
             elif self.load_full_info and \
-                    security.security_type == SecurityType.STOCK:
+                    security.SECURITY_TYPE == SecurityType.STOCK:
                 table = StocksInfoTable()
 
             # Добавление данных в нужную таблицу
@@ -167,10 +167,10 @@ class GetSecurity(SecurityGetter):
         # И потом будет ещё поиск по имени, но там надо использовать
         # LIKE %query_text%, а питон ругается на наличие процентов в строке
         query = "WHERE "
-        query += f"{SecuritiesInfo.figi.value} = '{query_text}' OR "
-        query += f"{SecuritiesInfo.ticker.value} = '{query_text}' OR "
-        query += f"{SecuritiesInfo.class_code.value} = '{query_text}'"
-        query += f" OR {SecuritiesInfo.security_name.value} LIKE :par"
+        query += f"{SecuritiesInfo.FIGI.value} = '{query_text}' OR "
+        query += f"{SecuritiesInfo.TICKER.value} = '{query_text}' OR "
+        query += f"{SecuritiesInfo.CLASS_CODE.value} = '{query_text}'"
+        query += f" OR {SecuritiesInfo.SECURITY_NAME.value} LIKE :par"
 
         # Получаем имя таблицы
         table = SecuritiesInfoTable().get_name()
@@ -196,13 +196,13 @@ class GetSecurity(SecurityGetter):
             # добавляется проверка на совпадение
             # индекса таблицы всех цб и конкретной
             query = "ON "
-            query += f"({table}.{SecuritiesInfo.figi.value}" \
+            query += f"({table}.{SecuritiesInfo.FIGI.value}" \
                      f" = '{query_text}' OR "
-            query += f"{table}.{SecuritiesInfo.security_name.value} " \
+            query += f"{table}.{SecuritiesInfo.SECURITY_NAME.value} " \
                      f"LIKE :par OR "
-            query += f"{table}.{SecuritiesInfo.ticker.value}" \
+            query += f"{table}.{SecuritiesInfo.TICKER.value}" \
                      f" = '{query_text}' OR "
-            query += f"{table}.{SecuritiesInfo.class_code.value}" \
+            query += f"{table}.{SecuritiesInfo.CLASS_CODE.value}" \
                      f" = '{query_text}') " \
                      f"AND {table}.{SecuritiesInfo.ID.value} = "
 
@@ -217,7 +217,7 @@ class GetSecurity(SecurityGetter):
                 where=query + f"{StocksInfoTable().get_table()}."
                               f"{StocksInfo.security_id.value}"
                               f" AND {table}."
-                              f"{SecuritiesInfo.security_type.value} = 0",
+                              f"{SecuritiesInfo.SECURITY_TYPE.value} = 0",
                 sort_query=[f"{StocksInfo.security_id.value} ASC"],
                 params={"par": f"%{query_text}%"}
             )
@@ -294,7 +294,7 @@ class GetSecurity(SecurityGetter):
                     where=query + f"{BondsInfoTable().get_table()}."
                                   f"{BondsInfo.security_id.value}"
                                   f" AND {table}."
-                                  f"{SecuritiesInfo.security_type.value} = 1",
+                                  f"{SecuritiesInfo.SECURITY_TYPE.value} = 1",
                     params={"par": f"%{query_text}%"}
                 )
             # Получаем все индексы для купонов
@@ -439,6 +439,7 @@ class GetSecurity(SecurityGetter):
                     lot=loaded_instrument.lot,
                     currency=loaded_instrument.currency,
                     country=loaded_instrument.country_of_risk_name,
+                    country_code=loaded_instrument.country_of_risk,
                     sector=loaded_instrument.sector,
                     security_type=SecurityType(c),
                     id=0,
@@ -467,7 +468,7 @@ class GetSecurity(SecurityGetter):
                         )
 
                         sub.start()
-                        sub.join()
+                        sub.wait()
 
                         # Обновляем статус-код
                         self.status_code = sub.status_code
@@ -508,7 +509,7 @@ class GetSecurity(SecurityGetter):
                             check_only_locally=self.check_only_locally
                         )
                         sub.start()
-                        sub.join()
+                        sub.wait()
 
                         # И статус-код тоже обновляем
                         self.status_code = sub.status_code

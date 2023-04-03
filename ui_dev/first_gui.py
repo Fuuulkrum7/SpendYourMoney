@@ -278,13 +278,16 @@ class Window(QMainWindow):
         )
         self.securities_thread.start()
 
-        self.load_securities()
 
     def after_search(self, result):
         code, data = result
+
+        if data:
+            self.load_securities(data[0].info)
         data = [d.get_as_dict() for d in data]
         parsed = [str(i) for i in data]
         self.output.append("\n".join(parsed))
+
 
     def load_all(self):
         if self.all_securities_thread is not None \
@@ -304,14 +307,12 @@ class Window(QMainWindow):
         parsed = [str(i) for i in data]
         self.output.append("\n".join(parsed))
 
-    def load_securities(self):
+    def load_securities(self, info):
         self.res = GetSecurityHistory(
-            info=SecurityInfo(
-                figi="BBG006L8G4H1"
-            ),
-            _from=now() - timedelta(days=31),
+            info=info,
+            _from=now() - timedelta(days=970),
             to=now(),
-            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+            interval=CandleInterval.CANDLE_INTERVAL_DAY,
             token=self.user.get_token(),
             on_finish=self.on_load
         )

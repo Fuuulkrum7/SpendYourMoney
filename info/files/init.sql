@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS securities_info (
     lot INT,
     currency VARCHAR(5),
     country VARCHAR(70),
+    country_code VARCHAR(8),
     sector VARCHAR(30),
     security_type TINYINT,
     PRIMARY KEY(ID),

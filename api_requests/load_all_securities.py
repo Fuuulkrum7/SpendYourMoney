@@ -80,13 +80,17 @@ class LoadAllSecurities(Thread):
             query=securities
         )
 
+        where = ", ".join([f"'{i[SecuritiesInfo.FIGI.value]}'" for i in
+                           securities])
+
         # Получаем id только что добавленных цб
         # Отсортированных по фиги, что позволяет нам установить
         # соответствие между id цб и ее индексом в списке всех цб
         all_id = db.get_data_by_sql(
             {table.get_name(): [SecuritiesInfo.ID]},
             table.get_name(),
-            sort_query=[f"{SecuritiesInfo.figi.value} ASC"]
+            where=f" WHERE {SecuritiesInfo.FIGI.value} IN (" + where + ") ",
+            sort_query=[f"{SecuritiesInfo.FIGI.value} ASC"]
         )
 
         # Ставим нужные id
@@ -132,6 +136,7 @@ class LoadAllSecurities(Thread):
                             lot=loaded_instrument.lot,
                             currency=loaded_instrument.currency,
                             country=loaded_instrument.country_of_risk_name,
+                            country_code=loaded_instrument.country_of_risk,
                             sector=loaded_instrument.sector,
                             security_type=SecurityType.BOND,
                             security_id=0,
@@ -173,6 +178,7 @@ class LoadAllSecurities(Thread):
                             lot=loaded_instrument.lot,
                             currency=loaded_instrument.currency,
                             country=loaded_instrument.country_of_risk_name,
+                            country_code=loaded_instrument.country_of_risk,
                             sector=loaded_instrument.sector,
                             security_type=SecurityType.STOCK,
                             security_id=0,
