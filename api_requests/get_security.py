@@ -1,5 +1,5 @@
 from threading import Thread
-from time import time
+from time import time, sleep
 
 import function
 import sqlalchemy
@@ -63,6 +63,7 @@ class GetSecurity(SecurityGetter):
 
     # Тут все банально
     def run(self) -> None:
+        self.securities = []
         self.load_data()
 
         if self.for_insert and self.insert_to_db:
@@ -272,7 +273,7 @@ class GetSecurity(SecurityGetter):
                             check_only_locally=self.check_only_locally
                         )
                         dividends.start()
-                        dividends.join()
+                        dividends.wait()
 
                         # Обновляем значение
                         stock.dividend = dividends.dividend
@@ -344,7 +345,7 @@ class GetSecurity(SecurityGetter):
                         )
                         coup.start()
                         # Ждем, пока поток закончит работу
-                        coup.join()
+                        coup.wait()
 
                         # Обновляем данные по купонам
                         bond.coupon = coup.coupon

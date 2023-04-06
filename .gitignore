@@ -20,3 +20,6 @@ pip-delete-this-directory.txt
 
 info/files/.db_version
 .idea/
+
+parsed_*.json
+*figi*.txt

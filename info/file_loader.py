@@ -50,7 +50,9 @@ class FileLoader:
             f = open(file_name, "w")
             json.dump(
                 data,
-                f
+                f,
+                ensure_ascii=False,
+                indent=4
             )
             f.close()
 
