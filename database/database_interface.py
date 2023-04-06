@@ -33,7 +33,7 @@ class DatabaseInterface:
         # Удаляем папку, где лежит файл, из пути
         folder.pop()
         # Сохраняем его
-        self.__path = "/".join(folder)
+        self.__path = sep.join(folder)
 
         # загружаем данные по бд общие
         info = FileLoader.get_json(self.__path +
