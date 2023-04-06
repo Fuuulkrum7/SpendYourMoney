@@ -106,13 +106,13 @@ class LoginWindow(QtWidgets.QDialog):
         Запускает проверку параметров входа
         """
         if not self.login_pushed:
-            # self.check_thread = CheckUser(self.loginval.text(),
-            #                               self.passwordval.text(),
-            #                               self.create_user)
-
-            self.check_thread = CheckUser("admin",
-                                          "admin",
+            self.check_thread = CheckUser(self.loginval.text(),
+                                          self.passwordval.text(),
                                           self.create_user)
+
+            # self.check_thread = CheckUser("admin",
+            #                               "admin",
+            #                               self.create_user)
             self.check_thread.start()
             self.login_pushed = True
 
