@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from PyQt5.QtCore import QThread, pyqtSignal
-from keras import models
+from keras.models import load_model
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
 
@@ -33,7 +33,7 @@ class PredictCourse(QThread):
             return
 
         try:
-            model = models.load_model("model_best.keras")
+            model = load_model("neural_network/model_best.keras")
 
             parsed = [i.get_as_dict() for i in self.history]
             for i in parsed:
@@ -44,14 +44,15 @@ class PredictCourse(QThread):
 
             security["history"] = parsed
 
-            norm = normalize_data(security)
+            norm = normalize_data({"data": security})[0]
 
-            self.result = list(model.predict(norm))
+            self.result = model.predict(norm[:, -120:])
 
             self.data_downloaded.emit((self.status_code, self.result))
         except Exception as e:
             print(e)
             self.status_code = 500
+            raise e
 
     def on_load(self, result):
         code, data = result

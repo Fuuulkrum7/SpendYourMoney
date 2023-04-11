@@ -329,7 +329,7 @@ class Window(QMainWindow):
     def predict_it(self, result):
         code, data = result
 
-        self.output.append(f"Stock name - {data[0].security_name}. "
+        self.output.append(f"Stock name - {data[0].info.name}. "
                            f"Prediction: ")
 
         self.predict_thread = PredictCourse(
