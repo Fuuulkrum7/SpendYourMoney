@@ -10,7 +10,7 @@ from data_preparation import *
 data_test = get_json("parsed_test_data.json")
 data_main = get_json("parsed_data.json")
 
-codes = get_json("sector_codes.json")
+codes = get_json(".sector_codes.json")
 
 test_his = normalize_data(data_test)[0]
 sec_history = normalize_data(data_main)[0]

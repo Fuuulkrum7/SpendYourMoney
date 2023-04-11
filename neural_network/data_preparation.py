@@ -13,7 +13,7 @@ def norm_word(word) -> int:
 
 
 def normalize_data(data) -> np.array:
-    codes = get_json("sector_codes.json")
+    codes = get_json("info/files/.sector_codes.json")
     securities_history = []
     coefs = []
 
@@ -47,7 +47,7 @@ def normalize_data(data) -> np.array:
 
         # Нормализация даты ipo. До 1900 явно ничего не было в данных,
         # а 2100 год ещё далеко
-        parsed.append((int(value["ipo_date"][:4]) - 1900) / 200)
+        parsed.append((int(str(value["ipo_date"])[:4]) - 1900) / 200)
 
         sub_history = value.pop("history")
         value.pop("security_name")
@@ -55,7 +55,7 @@ def normalize_data(data) -> np.array:
         price, volume, days, months, day_of_week, sec = [], [], [], [], [], []
 
         for i in sub_history:
-            date_ = datetime.strptime(i["info_time"][:10], '%Y-%m-%d')
+            date_ = datetime.strptime(str(i["info_time"])[:10], '%Y-%m-%d')
             price.append(i["price"])
             volume.append(float(i["volume"]))
             days.append(float(date_.day))
