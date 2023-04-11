@@ -16,6 +16,7 @@ from api_requests.security_getter import StandardQuery
 from api_requests.user_methods import CheckUser, CreateUser
 from info.file_loader import FileLoader
 from info.user import User
+from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
 
@@ -222,6 +223,7 @@ class Window(QMainWindow):
     """
     securities_thread: GetSecurity = None
     all_securities_thread: LoadAllSecurities = None
+    predict_thread: PredictCourse = None
 
     figis = []
     data = {}
@@ -321,11 +323,43 @@ class Window(QMainWindow):
     #
     #     self.load_sec()
 
+    def on_predict_made(self, result):
+        self.output.append(str(result[1]))
+
+    def predict_it(self, result):
+        code, data = result
+
+        self.output.append(f"Stock name - {data[0].security_name}. "
+                           f"Prediction: ")
+
+        self.predict_thread = PredictCourse(
+            data[0],
+            self.on_predict_made,
+            self.user.get_token()
+        )
+
+        self.predict_thread.start()
+
     def after_search(self, result):
         code, data = result
 
         if data:
             self.load_securities(data[0].info)
+            if data[0].security_type == SecurityType.STOCK:
+                self.securities_thread = GetSecurity(
+                    StandardQuery(
+                        data[0].info,
+                        ""
+                    ),
+                    self.predict_it,
+                    self.user.get_token(),
+                    load_coupons=False,
+                    load_dividends=False,
+                    insert_to_db=False
+                )
+
+                self.securities_thread.start()
+
         data = [d.get_as_dict() for d in data]
         parsed = [str(i) for i in data]
         self.output.append("\n".join(parsed))
