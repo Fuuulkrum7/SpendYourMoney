@@ -13,6 +13,7 @@ from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
+from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
 from info.file_loader import FileLoader
 from info.user import User
@@ -224,6 +225,7 @@ class Window(QMainWindow):
     securities_thread: GetSecurity = None
     all_securities_thread: LoadAllSecurities = None
     predict_thread: PredictCourse = None
+    subscribe_thread = None
 
     figis = []
     data = {}
@@ -340,6 +342,9 @@ class Window(QMainWindow):
 
         self.predict_thread.start()
 
+    def show_course(self, result):
+        self.output.append(str(result))
+
     def after_search(self, result):
         code, data = result
 
@@ -359,6 +364,14 @@ class Window(QMainWindow):
                 )
 
                 self.securities_thread.start()
+
+                self.subscribe_thread = SubscribeOnMarket(
+                    data[0],
+                    self.user.get_token(),
+                    self.show_course
+                )
+
+                self.subscribe_thread.start()
 
         data = [d.get_as_dict() for d in data]
         parsed = [str(i) for i in data]
