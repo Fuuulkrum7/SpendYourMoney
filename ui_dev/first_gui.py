@@ -358,8 +358,8 @@ class Window(QMainWindow):
                     ),
                     self.predict_it,
                     self.user.get_token(),
-                    load_coupons=False,
                     load_dividends=False,
+                    load_coupons=False,
                     insert_to_db=False
                 )
 

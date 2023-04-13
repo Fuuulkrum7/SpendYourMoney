@@ -59,14 +59,14 @@ class GetSecurityHistory(Thread):
         self.data_downloaded.connect(on_finish)
 
     def run(self) -> None:
-        t = time()
+        # t = time()
 
         # Ищем и удаленно, и в бд
         self.get_from_bd()
-        print(time() - t)
+        # print(time() - t)
         self.get_from_api()
 
-        print(time() - t)
+        # print(time() - t)
 
         # Создаем поток для функции и отправляем курс
 
@@ -157,10 +157,10 @@ class GetSecurityHistory(Thread):
                 print(e)
                 self.status_code = 400
 
-            print("data loaded")
+            # print("data loaded")
             # Парсим данные в классы
             result = list(map(self.get_from_candle, result))
-            print("data parsed")
+            # print("data parsed")
 
             # Оставляем для добавления только те свечи, которые вы ещё не
             # добавили в бд
