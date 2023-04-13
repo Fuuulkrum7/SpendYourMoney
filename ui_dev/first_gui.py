@@ -3,7 +3,7 @@ import sys
 from datetime import timedelta
 
 import PyQt5
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtTest
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
@@ -13,8 +13,12 @@ from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
+from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
+from info.file_loader import FileLoader
 from info.user import User
+from neural_network.predictor import PredictCourse
+from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
 
 folder = 'platforms'
@@ -107,6 +111,10 @@ class LoginWindow(QtWidgets.QDialog):
             self.check_thread = CheckUser(self.loginval.text(),
                                           self.passwordval.text(),
                                           self.create_user)
+
+            # self.check_thread = CheckUser("admin",
+            #                               "admin",
+            #                               self.create_user)
             self.check_thread.start()
             self.login_pushed = True
 
@@ -216,6 +224,15 @@ class Window(QMainWindow):
     """
     securities_thread: GetSecurity = None
     all_securities_thread: LoadAllSecurities = None
+    predict_thread: PredictCourse = None
+    subscribe_thread = None
+
+    figis = []
+    data = {}
+    idx = 0
+    current_sec = None
+    res = None
+    delta = 0
 
     def __init__(self):
         super(Window, self).__init__()
@@ -259,16 +276,21 @@ class Window(QMainWindow):
                 self.securities_thread is not None and
                 self.securities_thread.isRunning()):
             return
+
+        # if self.textbox.text() == "start":
+        #     self.load_figis()
+        #     return
+
         self.securities_thread = GetSecurity(
             StandardQuery(
                 SecurityInfo(
                     id=0,
-                    figi="",
-                    security_name="",
-                    ticker="",
-                    class_code=""
+                    figi=self.textbox.text(),
+                    security_name=self.textbox.text(),
+                    ticker=self.textbox.text(),
+                    class_code=self.textbox.text()
                 ),
-                self.textbox.text()
+                ""
             ),
             self.after_search,
             self.user.get_token(),
@@ -278,16 +300,82 @@ class Window(QMainWindow):
         )
         self.securities_thread.start()
 
+    # def load_figis(self):
+    #     with open("figis.txt") as f:
+    #         a = f.read().split("\n")
+    #         a.pop()
+    #
+    #         self.figis = a
+    #         self.idx = 0
+    #
+    #         f.close()
+    #
+    #     key = 0
+    #     self.data = FileLoader.get_json("parsed_data.json")
+    #     if self.data is None:
+    #         self.data = {}
+    #     else:
+    #         key = list(self.data.keys())[-1]
+    #         key = self.figis.index(key)
+    #         print(key)
+    #         if len(self.figis) - key < 100:
+    #             self.output.append("load is finishing")
+    #
+    #     self.figis = self.figis[key: key + 101]
+    #
+    #     self.load_sec()
+
+    def on_predict_made(self, result):
+        self.output.append(str(result[1]))
+
+    def predict_it(self, result):
+        code, data = result
+
+        self.output.append(f"Stock name - {data[0].info.name}. "
+                           f"Prediction: ")
+
+        self.predict_thread = PredictCourse(
+            data[0],
+            self.on_predict_made,
+            self.user.get_token()
+        )
+
+        self.predict_thread.start()
+
+    def show_course(self, result):
+        self.output.append(str(result))
 
     def after_search(self, result):
         code, data = result
 
         if data:
             self.load_securities(data[0].info)
+            if data[0].security_type == SecurityType.STOCK:
+                self.securities_thread = GetSecurity(
+                    StandardQuery(
+                        data[0].info,
+                        ""
+                    ),
+                    self.predict_it,
+                    self.user.get_token(),
+                    load_coupons=False,
+                    load_dividends=False,
+                    insert_to_db=False
+                )
+
+                self.securities_thread.start()
+
+                self.subscribe_thread = SubscribeOnMarket(
+                    data[0],
+                    self.user.get_token(),
+                    self.show_course
+                )
+
+                self.subscribe_thread.start()
+
         data = [d.get_as_dict() for d in data]
         parsed = [str(i) for i in data]
         self.output.append("\n".join(parsed))
-
 
     def load_all(self):
         if self.all_securities_thread is not None \
@@ -310,7 +398,7 @@ class Window(QMainWindow):
     def load_securities(self, info):
         self.res = GetSecurityHistory(
             info=info,
-            _from=now() - timedelta(days=970),
+            _from=now() - timedelta(days=1000),
             to=now(),
             interval=CandleInterval.CANDLE_INTERVAL_DAY,
             token=self.user.get_token(),
@@ -325,6 +413,79 @@ class Window(QMainWindow):
             len(y),
             sep='\n'
         )
+
+    # def after_histr_load(self, data):
+    #     x, y = data
+    #
+    #     for_load = []
+    #     for i in y:
+    #         for_load.append(i.get_as_dict())
+    #         for_load[-1].pop("security_id")
+    #         for_load[-1]["info_time"] = str(for_load[-1]["info_time"])
+    #
+    #     self.data[self.current_sec.info.figi]["history"] = for_load
+    #
+    #     self.load_sec()
+    #
+    # def load_histr(self, data):
+    #     code, sec = data
+    #
+    #     if len(sec) and sec[0].security_type == SecurityType.STOCK:
+    #         self.current_sec = sec[0]
+    #         sec.clear()
+    #
+    #         sec = self.current_sec.get_as_dict_security()
+    #         sec.update(self.current_sec.get_as_dict())
+    #
+    #         sec.pop('country')
+    #         sec.pop('security_type')
+    #         sec.pop('ID')
+    #         sec.pop('security_id')
+    #         sec.pop('figi')
+    #         sec["ipo_date"] = str(sec["ipo_date"])
+    #
+    #         for_load = []
+    #
+    #         sec['history'] = for_load
+    #
+    #         self.data[self.current_sec.info.figi] = sec
+    #
+    #         self.res = GetSecurityHistory(
+    #             info=self.current_sec.info,
+    #             _from=now() - timedelta(days=1001),
+    #             to=now() - timedelta(days=1),
+    #             interval=CandleInterval.CANDLE_INTERVAL_DAY,
+    #             token=self.user.get_token(),
+    #             on_finish=self.after_histr_load
+    #         )
+    #
+    #         self.res.start()
+    #     else:
+    #         self.load_sec()
+    #
+    # def load_sec(self):
+    #     if self.idx < len(self.figis):
+    #         self.securities_thread = GetSecurity(
+    #             StandardQuery(
+    #                 SecurityInfo(
+    #                     id=0,
+    #                     figi=self.figis[self.idx],
+    #                 ),
+    #                 ""
+    #             ),
+    #             self.load_histr,
+    #             self.user.get_token(),
+    #             load_coupons=False,
+    #             load_dividends=False,
+    #             insert_to_db=False
+    #         )
+    #         print(self.figis[self.idx])
+    #         self.idx += 1
+    #
+    #         self.securities_thread.start()
+    #     else:
+    #         print("finish")
+    #         FileLoader.save_json(f"parsed_data.json", self.data)
 
 
 class CreateWindow:

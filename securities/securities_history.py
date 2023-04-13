@@ -1,8 +1,17 @@
 from datetime import datetime, timezone
+from math import log10, ceil
 
-from tinkoff.invest import MoneyValue, CandleInterval
+from tinkoff.invest import MoneyValue, CandleInterval, Quotation
 
 from database.database_info import SecuritiesHistory
+
+
+def convert_money_value(data: MoneyValue or Quotation or float):
+    if isinstance(data, float):
+        return data
+    return data.units + data.nano / 10 ** ceil(
+        log10(data.nano if data.nano > 0 else 1)
+    )
 
 
 class SecurityHistory:
@@ -30,7 +39,7 @@ class SecurityHistory:
     ):
         # парсим данные по полям
         # candle_interval - защита от ошибок
-        self.price = price
+        self.price = convert_money_value(price)
         self.security_id = security_id
         self.volume = volume
         self.info_time = info_time.replace(tzinfo=timezone.utc)

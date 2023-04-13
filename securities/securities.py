@@ -152,7 +152,6 @@ class Dividend:
 
 
 class Security:
-    __required_args = 6
     lot: int
     currency: str
     country: str
