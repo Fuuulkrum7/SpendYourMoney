@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal
 from keras.models import load_model
 from tinkoff.invest import CandleInterval
@@ -46,13 +47,14 @@ class PredictCourse(QThread):
 
             norm = normalize_data({"data": security})[0]
 
-            self.result = model.predict(norm[:, -120:])
+            self.result = model.predict(norm[:, -120:])[0] * 100
+
+            self.result = list(np.around(self.result, decimals=5))
 
             self.data_downloaded.emit((self.status_code, self.result))
         except Exception as e:
             print(e)
             self.status_code = 500
-            raise e
 
     def on_load(self, result):
         code, data = result
