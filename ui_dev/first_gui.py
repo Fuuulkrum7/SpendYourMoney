@@ -4,7 +4,8 @@ from datetime import timedelta
 
 import PyQt5
 from PyQt5 import QtWidgets, QtCore, QtTest
-from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
+    QTextBrowser
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
@@ -238,8 +239,13 @@ class Window(QMainWindow):
         super(Window, self).__init__()
         self.textbox = QLineEdit(self)
         self.button = QPushButton('Find security', self)
+        self.advanced = QPushButton('Advanced search', self)
+        self.figi = QLineEdit(self)
+        self.name = QLineEdit(self)
+        self.ticker = QLineEdit(self)
+        self.classcode = QLineEdit(self)
         self.load_all_btn = QPushButton('Load all', self)
-        self.output = QtWidgets.QTextBrowser(self)
+        self.output = QTextBrowser(self)
         self.user: User = None
 
         self.initUI()
@@ -254,28 +260,59 @@ class Window(QMainWindow):
         self.button.move(400, 20)
         self.button.resize(120, 40)
 
+        self.advanced.move(540, 20)
+        self.advanced.resize(120, 40)
+
         # connect button to function on_click
         self.button.clicked.connect(self.find_securities)
 
+        self.figi.move(540, 80)
+        self.figi.setPlaceholderText('Figi')
+        self.figi.setVisible(False)
+        self.name.move(540, 120)
+        self.name.setPlaceholderText('Security name')
+        self.name.setVisible(False)
+        self.ticker.move(540, 160)
+        self.ticker.setPlaceholderText('Ticker')
+        self.ticker.setVisible(False)
+        self.classcode.move(540, 200)
+        self.classcode.setPlaceholderText('Class code')
+        self.classcode.setVisible(False)
+
+        self.advanced.clicked.connect(self.switch_mode)
+
         # Create a button in the window
-        self.load_all_btn.move(540, 20)
+        self.load_all_btn.move(680, 20)
         self.load_all_btn.resize(120, 40)
 
         # connect button to function on_click
         self.load_all_btn.clicked.connect(self.load_all)
 
-        self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
+        # self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
         self.output.move(20, 80)
+        self.output.resize(500, 360)
+
+    def switch_mode(self):
+        if self.figi.isVisible():
+            self.figi.setVisible(False)
+            self.name.setVisible(False)
+            self.ticker.setVisible(False)
+            self.classcode.setVisible(False)
+        else:
+            self.figi.setVisible(True)
+            self.name.setVisible(True)
+            self.ticker.setVisible(True)
+            self.classcode.setVisible(True)
 
     def set_user(self, user):
         self.user = user
 
     def find_securities(self):
-        if len(self.textbox.text()) <= 2 or (
-                self.securities_thread is not None and
-                self.securities_thread.isRunning()):
-            return
+        # if len(self.textbox.text()) <= 2 or (
+        #         self.securities_thread is not None and
+        #         self.securities_thread.isRunning()):
+        #     return
 
         # if self.textbox.text() == "start":
         #     self.load_figis()
@@ -289,7 +326,15 @@ class Window(QMainWindow):
                     security_name=self.textbox.text(),
                     ticker=self.textbox.text(),
                     class_code=self.textbox.text()
-                ),
+                ) if not self.figi.isVisible() else
+                SecurityInfo(
+                    id=0,
+                    figi=self.figi.text(),
+                    security_name=self.name.text(),
+                    ticker=self.ticker.text(),
+                    class_code=self.classcode.text()
+                )
+                ,
                 ""
             ),
             self.after_search,
@@ -494,7 +539,7 @@ class CreateWindow:
     main_window: Window
     user: User
 
-    WIDTH = 720
+    WIDTH = 820
     HEIGHT = 480
 
     def __init__(self, app):
