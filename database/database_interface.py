@@ -68,7 +68,7 @@ class DatabaseInterface:
                     f"{self.info['name']}"
                 )
 
-            if self.version != self.info["version"]:
+            if self.version < self.info["version"]:
                 print("old db found")
                 self.clear_db()
 
