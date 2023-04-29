@@ -1,7 +1,8 @@
 from time import time
 
 import function
-from threading import Thread
+from PyQt5.QtCore import QThread as Thread, pyqtSignal
+
 from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
     Bond as tinkoffBond, InstrumentStatus
 
@@ -27,11 +28,12 @@ class LoadAllSecurities(Thread):
     # 404 - первые две одновременно, данных нет
     # 405 - ошибка неизвестного типа, просто что-то пошло не так
     status_code: int = 200
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, on_finish: function, token: str):
         super().__init__()
 
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
         self.__token = token
 
     # Тут все банально, запускаем все методы
@@ -51,11 +53,10 @@ class LoadAllSecurities(Thread):
             try:
                 self.insert_to_database()
             except Exception as e:
-                print(e)
+                print(str(e)[0:1000])
                 self.status_code = 301
 
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.securities)).start()
+        self.data_downloaded.emit((self.status_code, self.securities))
 
     def insert_to_database(self):
         # Подключаемся к базе данных
@@ -69,8 +70,9 @@ class LoadAllSecurities(Thread):
         self.securities.sort(key=lambda x: x.info.figi)
 
         # Получаем массив данных для добавления
-        securities = [value.get_as_dict_security()
-                      for value in self.securities]
+        securities = [
+            value.get_as_dict_security() for value in self.securities
+        ]
 
         # Добавляем
         db.add_unique_data(
@@ -78,17 +80,21 @@ class LoadAllSecurities(Thread):
             query=securities
         )
 
+        where = ", ".join([f"'{i[SecuritiesInfo.FIGI.value]}'" for i in
+                           securities])
+
         # Получаем id только что добавленных цб
         # Отсортированных по фиги, что позволяет нам установить
         # соответствие между id цб и ее индексом в списке всех цб
         all_id = db.get_data_by_sql(
             {table.get_name(): [SecuritiesInfo.ID]},
             table.get_name(),
-            sort_query=[f"{SecuritiesInfo.figi.value} ASC"]
+            where=f" WHERE {SecuritiesInfo.FIGI.value} IN (" + where + ") ",
+            sort_query=[f"{SecuritiesInfo.FIGI.value} ASC"]
         )
 
         # Ставим нужные id
-        for i in range(len(self.securities)):
+        for i in range(len(all_id)):
             self.securities[i].info.id = all_id[i][SecuritiesInfo.ID.value]
 
         # Парсим в массивы данные по конкретным видам цб
@@ -130,6 +136,7 @@ class LoadAllSecurities(Thread):
                             lot=loaded_instrument.lot,
                             currency=loaded_instrument.currency,
                             country=loaded_instrument.country_of_risk_name,
+                            country_code=loaded_instrument.country_of_risk,
                             sector=loaded_instrument.sector,
                             security_type=SecurityType.BOND,
                             security_id=0,
@@ -171,6 +178,7 @@ class LoadAllSecurities(Thread):
                             lot=loaded_instrument.lot,
                             currency=loaded_instrument.currency,
                             country=loaded_instrument.country_of_risk_name,
+                            country_code=loaded_instrument.country_of_risk,
                             sector=loaded_instrument.sector,
                             security_type=SecurityType.STOCK,
                             security_id=0,

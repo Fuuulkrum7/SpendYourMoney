@@ -1,0 +1,11 @@
+tinkoff-investments==0.2.0b50
+SQLAlchemy~=1.4.46
+SQLAlchemy-Utils==0.40.0
+function~=1.2.0
+cryptography==40.0.1
+pymysql==1.0.3
+PyQt5~=5.15.6
+tinkoff~=0.1.1
+numpy~=1.24.2
+matplotlib~=3.7.1
+keras~=2.12.0

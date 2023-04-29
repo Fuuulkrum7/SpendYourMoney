@@ -24,6 +24,7 @@ class DatabaseInterface:
     # Информация о базе данных
     info: dict
     library = "pymysql"
+    version: int = 1
 
     def __init__(self):
         sep = "\\" if system() == "Windows" else "/"
@@ -32,7 +33,7 @@ class DatabaseInterface:
         # Удаляем папку, где лежит файл, из пути
         folder.pop()
         # Сохраняем его
-        self.__path = "/".join(folder)
+        self.__path = sep.join(folder)
 
         # загружаем данные по бд общие
         info = FileLoader.get_json(self.__path +
@@ -43,6 +44,20 @@ class DatabaseInterface:
         # Сохраняем инфу
         self.info = info
 
+        try:
+            version = FileLoader.get_file(
+                self.__path + "/info/files/.db_version",
+                datatype=int
+            )
+
+            if version is not None:
+                version = int(version, 16)
+                self.version = int(version ** (1 / 8)) - 1
+            else:
+                print("pre-alpha db found")
+        except ValueError:
+            print("file changed")
+
     def connect_to_db(self):
         try:
             # Подключаемся к бд
@@ -51,6 +66,16 @@ class DatabaseInterface:
                     f"mysql+{self.library}://{self.info['username']}:"
                     f"{self.info['password']}@localhost/"
                     f"{self.info['name']}"
+                )
+
+            if self.version != self.info["version"]:
+                print("old db found")
+                self.clear_db()
+
+                version = (self.info["version"] + 1) ** 8
+                FileLoader.save_file(
+                    self.__path + "/info/files/.db_version",
+                    [hex(version).replace("0x", "")]
                 )
 
             # Если бд не существует, создаем
@@ -96,11 +121,12 @@ class DatabaseInterface:
             return
 
         # Если тело запроса не пустое, фильтруем на всякий случай
-        if query is None:
+        # С защитой от id
+        if query is None and ("UID" in values or "ID" in values):
             query = [dict(filter(
                 lambda x: not (x[0] in ["UID", "ID"]), values.items()
             ))]
-        else:
+        elif query and ("UID" in query[0] or "ID" in query[0]):
             query = [dict(filter(
                 lambda x: not (x[0] in ["UID", "ID"]), val.items()
             )) for val in query]

@@ -1,12 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from math import log10, ceil
-from threading import Thread
 from time import time
 
+
+from PyQt5.QtCore import QThread as Thread
+from PyQt5.QtCore import pyqtSignal
 from tinkoff.invest import CandleInterval, Client, RequestError, \
     HistoricCandle, MoneyValue, Quotation
 
-from api_requests.security_getter import SecurityGetter
 from database.database_info import SecuritiesHistory, SecuritiesHistoryTable
 from database.database_interface import DatabaseInterface
 from securities.securities import SecurityInfo
@@ -21,16 +22,27 @@ def convert_money_value(data: MoneyValue or Quotation or float):
     )
 
 
-class GetSecurityHistory(SecurityGetter):
+class GetSecurityHistory(Thread):
+    """
+    This class helps us to load info about securities price during period.
+    If you download securities for long period, remember protect program from
+    closing before data saving will be finished.
+    """
+    # history from db
     history: list[SecurityHistory] = []
+    # history from server
     insert_data: list[SecurityHistory] = []
     __token: str
+    # Временной период от и до
     _from: datetime
     to: datetime
+    # Интервал временной (тип)
     interval: CandleInterval
-    insert: bool
+    # Информация о цб
     info: SecurityInfo
+    # Статус-код
     status_code: int = 200
+    data_downloaded = pyqtSignal(object)
 
     def __init__(self, token: str = "", _from: datetime = None,
                  to: datetime = None,
@@ -44,120 +56,126 @@ class GetSecurityHistory(SecurityGetter):
         self.__token = token
         self.interval = interval
         self.info = info
-        self.on_finish = on_finish
+        self.data_downloaded.connect(on_finish)
 
     def run(self) -> None:
         t = time()
-        self.load_data()
+
+        # Ищем и удаленно, и в бд
+        self.get_from_bd()
+        print(time() - t)
+        self.get_from_api()
+
         print(time() - t)
 
-        if self.insert:
+        # Создаем поток для функции и отправляем курс
+
+        self.data_downloaded.emit((self.status_code, self.history))
+
+        # Попутно запускаем сохранение в бд
+        if self.insert_data:
             self.insert_to_database()
 
-        Thread(target=self.on_finish,
-               args=(self.status_code, self.history)).start()
-
-    def load_data(self):
-        self.get_from_bd()
-
-        if self.interval == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0]
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0] // 5
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            a = divmod((self.to - self._from).total_seconds(), 60)[0] // 15
-            self.insert = len(self.history) != a
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            a = divmod((self.to - self._from).total_seconds(), 360)[0]
-            self.insert = len(self.history) != a
-        else:
-            a = divmod((self.to - self._from).total_seconds(), 360)[0] // 24
-            self.insert = len(self.history) != a
-
-        if self.insert:
-            self.get_from_api()
-
     def insert_to_database(self):
+        # Подключаемся к бд
         db = DatabaseInterface()
         db.connect_to_db()
 
+        # Таблица, куда добавляем данные
         table = SecuritiesHistoryTable().get_table()
 
-        query = [val.get_as_dict() for val in self.insert_data]
+        # Массив данных для добавления
+        query = [val.get_as_dict_candle(self.interval)
+                 for val in self.insert_data]
 
+        # Добавляем (уникальные) данные
         db.add_unique_data(
             table,
             query=query
         )
 
+        # Закрываем подключение
         db.close_engine()
 
+    # Здесь мы ищем данные локально (по курсу цб)
     def get_from_bd(self):
-        # TODO fix bug with local data load
+        # Создаем подключение к бд
         db = DatabaseInterface()
         db.connect_to_db()
 
+        # Переводим время в нужный часовой пояс
+        self._from = self._from.replace(tzinfo=timezone.utc)
+        self.to = self.to.replace(tzinfo=timezone.utc)
+
+        # Таблица, откуда берем данные
         table = SecuritiesHistoryTable()
-        where = f"WHERE {SecuritiesHistory.security_id.value} = {self.info.id}"
-        where += f" AND {SecuritiesHistory.info_time.value} " \
-                 f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
-                 f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' " \
-                 f""
+        # Ищем данные с таким id ценной бумаги и в нужном временном промежутке
+        where = f"WHERE {SecuritiesHistory.security_id.value}={self.info.id}" \
+                f" AND {SecuritiesHistory.info_time.value} " \
+                f" BETWEEN '{self._from.strftime('%y-%m-%d %H:%M:%S')}'" \
+                f" AND '{self.to.strftime('%y-%m-%d %H:%M:%S')}' "
 
-        if self.interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            where += f" AND {SecuritiesHistory.info_time.value} % 5 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            where += f" AND {SecuritiesHistory.info_time.value} % 15 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-            where += f" AND {SecuritiesHistory.info_time.value} % 60 = 0"
-        elif self.interval == CandleInterval.CANDLE_INTERVAL_DAY:
-            where += f" AND {SecuritiesHistory.info_time.value} " \
-                     f"% 60 * 24 = 0"
+        # И тип временной свечи тот, который был запрошен
+        where += f" AND {SecuritiesHistory.CANDLE_INTERVAL.value} = " \
+                 f"{self.interval.value}"
 
+        # Получаем историю курса в порядке возрастания времени
         histories = db.get_data_by_sql(
-            {table.get_name(): list(SecuritiesHistory)},
+            {table.get_name(): [SecuritiesHistory.security_id,
+                                SecuritiesHistory.info_time,
+                                SecuritiesHistory.volume,
+                                SecuritiesHistory.price]},
             table.get_name(),
             where=where,
             sort_query=[f"{SecuritiesHistory.info_time.value} ASC"]
         )
 
-        for history in histories:
-            self.history.append(
-                SecurityHistory(
-                    info_time=history[SecuritiesHistory.info_time.value],
-                    security_id=self.info.id,
-                    price=history[SecuritiesHistory.price.value],
-                    volume=history[SecuritiesHistory.volume.value]
-                )
-            )
+        # Парсим данные
+        self.history = [SecurityHistory(**history) for history in histories]
 
         db.close_engine()
 
+    # Здесь обращаемся к серверу
     def get_from_api(self):
+        result = ()
+        # Создаем подключение
         with Client(self.__token) as client:
+            start = self._from
+            # if len(self.history) > 0:
+            #     start = self.history[-1].info_time
+
+            # Грузим все данные
             try:
-                result = client.get_all_candles(
+                result = tuple(client.get_all_candles(
                     figi=self.info.figi,
-                    from_=self._from,
+                    from_=start,
                     to=self.to,
                     interval=self.interval,
-                )
+                ))
+
             except RequestError as e:
                 print(e)
                 self.status_code = 400
 
+            print("data loaded")
+            # Парсим данные в классы
             result = list(map(self.get_from_candle, result))
+            print("data parsed")
 
-            result = list(filter(
-                lambda x: not (x in self.history),
-                result
-            ))
+            # Оставляем для добавления только те свечи, которые вы ещё не
+            # добавили в бд
+            self.insert_data = list(
+                set(result) - set(self.history)
+            )
 
-            self.history.extend(result)
-            self.insert_data = result
+            # Если какие-либо данные были получены, то ставим их, так как
+            # в таком случае у нас тут данные будут более полными, нежели
+            # данные из бд
+            if result:
+                self.history = result
+            self.insert_data.sort(key=lambda x: x.info_time)
 
+    # Парсим данные в класс
     def get_from_candle(self, candle: HistoricCandle) -> SecurityHistory:
         return SecurityHistory(
             price=convert_money_value(candle.close),

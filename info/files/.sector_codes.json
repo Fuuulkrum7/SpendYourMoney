@@ -1,0 +1,20 @@
+{
+    "consumer": 1,
+    "energy": 2,
+    "industrials": 3,
+    "financial": 4,
+    "telecom": 5,
+    "government": 6,
+    "materials": 7,
+    "other": 8,
+    "municipal": 9,
+    "it": 10,
+    "health_care": 11,
+    "utilities": 12,
+    "real_estate": 13,
+    "green_buildings": 14,
+    "nothing": 15,
+    "green_energy": 16,
+    "electrocars": 17,
+    "ecomaterials": 18
+}

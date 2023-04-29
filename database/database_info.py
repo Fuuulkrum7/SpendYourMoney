@@ -54,19 +54,21 @@ class SecuritiesHistory(Enum):
     price = "price"
     info_time = "info_time"
     volume = "volume"
+    CANDLE_INTERVAL = "candle_interval"
 
 
 class SecuritiesInfo(Enum):
     ID = "ID"
-    figi = "figi"
-    ticker = "ticker"
-    security_name = "security_name"
-    class_code = "class_code"
-    lot = "lot"
-    currency = "currency"
-    country = "country"
-    sector = "sector"
-    security_type = "security_type"
+    FIGI = "figi"
+    TICKER = "ticker"
+    SECURITY_NAME = "security_name"
+    CLASS_CODE = "class_code"
+    LOT = "lot"
+    CURRENCY = "currency"
+    COUNTRY = "country"
+    SECTOR = "sector"
+    SECURITY_TYPE = "security_type"
+    COUNTRY_CODE = "country_code"
 
 
 class StocksInfo(Enum):
@@ -149,6 +151,7 @@ class SecuritiesInfoTable(Base):
     country = sqlalchemy.Column("country", sqlalchemy.VARCHAR)
     sector = sqlalchemy.Column("sector", sqlalchemy.VARCHAR)
     security_type = sqlalchemy.Column("security_type", sqlalchemy.Integer)
+    country_code = sqlalchemy.Column("country_code", sqlalchemy.VARCHAR)
 
     __table__ = sqlalchemy.Table(
         __tablename__,
@@ -161,6 +164,7 @@ class SecuritiesInfoTable(Base):
         lot,
         currency,
         country,
+        country_code,
         sector,
         security_type
     )
@@ -318,12 +322,23 @@ class DividendInfoTable(Base):
 class SecuritiesHistoryTable(Base):
     __tablename__ = "securities_history"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    price = sqlalchemy.Column(DOUBLE)
-    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    volume = sqlalchemy.Column(sqlalchemy.Integer)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False,  primary_key=True)
+    price = sqlalchemy.Column("price", DOUBLE)
+    info_time = sqlalchemy.Column("info_time", sqlalchemy.DateTime,
+                                  nullable=False, primary_key=True)
+    volume = sqlalchemy.Column("volume", sqlalchemy.Integer)
+    candle_interval = sqlalchemy.Column("candle_interval", sqlalchemy.Integer)
+
+    __table__ = sqlalchemy.Table(
+        __tablename__,
+        Base.metadata,
+        security_id,
+        price,
+        info_time,
+        volume,
+        candle_interval
+    )
 
     def get_table(self):
         return self.__table__
@@ -335,12 +350,19 @@ class SecuritiesHistoryTable(Base):
 class HistoryOfPredictionsTable(Base):
     __tablename__ = "history_of_predictions"
 
-    ID = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    security_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    price = sqlalchemy.Column(DOUBLE)
-    info_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    volume = sqlalchemy.Column(sqlalchemy.Integer)
+    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
+                                    nullable=False, primary_key=True)
+    price = sqlalchemy.Column("price", DOUBLE)
+    info_time = sqlalchemy.Column("info_time", sqlalchemy.DateTime,
+                                  nullable=False, primary_key=True)
+
+    __table__ = sqlalchemy.Table(
+        __tablename__,
+        Base.metadata,
+        security_id,
+        price,
+        info_time
+    )
 
     def get_table(self):
         return self.__table__
