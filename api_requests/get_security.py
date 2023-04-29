@@ -1,5 +1,4 @@
-from threading import Thread
-from time import time, sleep
+from time import time
 
 import function
 import sqlalchemy
@@ -88,7 +87,7 @@ class GetSecurity(SecurityGetter):
         if not self.securities and not self.check_only_locally:
             self.get_from_api()
 
-        print(time() - t)
+        # print(time() - t)
 
     def insert_to_database(self):
         # Подключаемся к базе данных
@@ -259,6 +258,7 @@ class GetSecurity(SecurityGetter):
                 if stock.div_yield_flag and self.load_dividends:
                     # Берем по индексу цб
                     div = divs[stock.info.id]
+
                     if not div:
                         # Если мы ее не нашли, проверяем, а вдруг мы ее просто
                         # забыли скачать

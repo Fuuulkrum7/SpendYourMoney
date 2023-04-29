@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS dividend_info (
     last_buy_date DATE,
     yield_value DOUBLE,
     PRIMARY KEY(ID),
-    CONSTRAINT UC_div UNIQUE (security_id, payment_date)
+    CONSTRAINT UC_div UNIQUE (security_id, payment_date, div_value)
 );
 
 CREATE TABLE IF NOT EXISTS securities_history (
