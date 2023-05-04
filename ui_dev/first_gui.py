@@ -245,7 +245,7 @@ class Window(QMainWindow):
         self.ticker = QLineEdit(self)
         self.classcode = QLineEdit(self)
         self.load_all_btn = QPushButton('Load all', self)
-        self.output = QTextBrowser(self)
+        self.output = QListWidget(self)
         self.user: User = None
 
         self.initUI()
@@ -371,12 +371,12 @@ class Window(QMainWindow):
     #     self.load_sec()
 
     def on_predict_made(self, result):
-        self.output.append(str(result[1]))
+        self.output.addItem(str(result[1]))
 
     def predict_it(self, result):
         code, data = result
 
-        self.output.append(f"Stock name - {data[0].info.name}. "
+        self.output.addItem(f"Stock name - {data[0].info.name}. "
                            f"Prediction: ")
 
         self.predict_thread = PredictCourse(
@@ -388,7 +388,7 @@ class Window(QMainWindow):
         self.predict_thread.start()
 
     def show_course(self, result):
-        self.output.append(str(result))
+        self.output.addItem(str(result))
 
     def after_search(self, result):
         code, data = result
@@ -420,7 +420,7 @@ class Window(QMainWindow):
 
         data = [d.get_as_dict() for d in data]
         parsed = [str(i) for i in data]
-        self.output.append("\n".join(parsed))
+        self.output.addItems(parsed)
 
     def load_all(self):
         if self.all_securities_thread is not None \
@@ -432,13 +432,13 @@ class Window(QMainWindow):
             self.user.get_token()
         )
         self.all_securities_thread.start()
-        self.output.append("Load started")
+        self.output.addItem("Load started")
 
     def after_load(self, result):
         code, data = result
         print(code)
         parsed = [str(i) for i in data]
-        self.output.append("\n".join(parsed))
+        self.output.addItem("\n".join(parsed))
 
     def load_securities(self, info):
         self.res = GetSecurityHistory(
