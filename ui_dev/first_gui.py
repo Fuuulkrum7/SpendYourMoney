@@ -3,10 +3,10 @@ import sys
 from datetime import timedelta
 
 import PyQt5
-from PyQt5 import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QTextBrowser, QDialog, QListWidgetItem, QLabel, QWidget
+    QListWidgetItem, QLabel, QWidget
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
@@ -17,6 +17,7 @@ from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
+from database.database_info import SecuritiesInfo
 from info.file_loader import FileLoader
 from info.user import User
 from neural_network.predictor import PredictCourse
@@ -228,6 +229,7 @@ class Window(QMainWindow):
     all_securities_thread: LoadAllSecurities = None
     predict_thread: PredictCourse = None
     subscribe_thread = None
+    security_window = None
 
     figis = []
     data = {}
@@ -238,6 +240,7 @@ class Window(QMainWindow):
 
     def __init__(self):
         super(Window, self).__init__()
+        self.security = None
         self.setWindowTitle("SpendYourMoney")
         self.textbox = QLineEdit(self)
         self.button = QPushButton('Find security', self)
@@ -251,9 +254,9 @@ class Window(QMainWindow):
         self.user: User = None
         self.is_advanced = False
 
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         # Create textbox
         self.textbox.move(20, 20)
         self.textbox.resize(360, 40)
@@ -299,9 +302,11 @@ class Window(QMainWindow):
 
     def security_clicked(self, item):
         self.security = item.data(Qt.UserRole)
-        self.security_window = SecurityWindow(self.security, self.user)
-        print("1", self.user)
-        self.security_window.show()
+        if self.security_window is None or \
+                not self.security_window.get_securities_thread.isRunning():
+            self.security_window = SecurityWindow(self.security, self.user)
+            print("1", self.user)
+            self.security_window.show()
 
     def switch_mode(self):
         if self.figi.isVisible():
@@ -338,8 +343,7 @@ class Window(QMainWindow):
                     security_name=self.name.text(),
                     ticker=self.ticker.text(),
                     class_code=self.classcode.text()
-                )
-                ,
+                ),
                 "",
                 is_advanced=self.is_advanced
             ),
@@ -401,6 +405,7 @@ class Window(QMainWindow):
                 #
                 # self.subscribe_thread.start()
 
+        self.output.clear()
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
                    f"{security.info.figi}, Ticker={security.info.ticker}," \
@@ -430,8 +435,6 @@ class Window(QMainWindow):
     def after_load(self, result):
         code, data = result
         print(code)
-        parsed = [str(i) for i in data]
-        # self.output.addItem("\n".join(parsed))
 
     def load_securities(self, info):
         self.res = GetSecurityHistory(
@@ -505,8 +508,10 @@ class CreateWindow:
 
         self.reg.show()
 
+
 class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
+
     def __init__(self, item, user):
         super().__init__()
         self.user = user
@@ -522,21 +527,36 @@ class SecurityWindow(QMainWindow):
         )
         self.get_securities_thread.start()
 
-        self.left_name = QLabel("security name:")
-        self.right_name = QLabel(item.info.name)
-        self.right_lot = QLabel(str(item.lot))
-        self.left_currency = QLabel("currency:")
-        self.right_currency = QLabel(item.currency)
-        self.left_country = QLabel("country:")
-        self.right_country = QLabel(item.country)
-        self.left_countrycode = QLabel("country code:")
-        self.right_countrycode = QLabel(item.country_code)
-        self.left_sector = QLabel("sector:")
-        self.right_sector = QLabel(item.sector)
-        self.left_ticker = QLabel("ticker:")
-        self.right_ticker = QLabel(item.info.ticker)
-        self.left_classcode = QLabel("class code:")
-        self.right_classcode = QLabel(item.info.class_code)
+        self.left = []
+        self.right = []
+
+        dict_security: dict = item.get_as_dict_security()
+        dict_security.pop(SecuritiesInfo.ID.value)
+
+        dict_security.update(item.get_as_dict())
+
+        dict_security.pop("security_id")
+        dict_security.pop("ID")
+
+        for key, value in dict_security.items():
+            self.left.append(QLabel(key.replace("_", " ").capitalize()))
+            self.right.append(QLabel(str(value)))
+
+        # self.left_name = QLabel("security name:")
+        # self.right_name = QLabel(item.info.name)
+        # self.right_lot = QLabel(str(item.lot))
+        # self.left_currency = QLabel("currency:")
+        # self.right_currency = QLabel(item.currency)
+        # self.left_country = QLabel("country:")
+        # self.right_country = QLabel(item.country)
+        # self.left_countrycode = QLabel("country code:")
+        # self.right_countrycode = QLabel(item.country_code)
+        # self.left_sector = QLabel("sector:")
+        # self.right_sector = QLabel(item.sector)
+        # self.left_ticker = QLabel("ticker:")
+        # self.right_ticker = QLabel(item.info.ticker)
+        # self.left_classcode = QLabel("class code:")
+        # self.right_classcode = QLabel(item.info.class_code)
 
         widget = QWidget()
         self.setCentralWidget(widget)
@@ -546,7 +566,7 @@ class SecurityWindow(QMainWindow):
         left_widget = QWidget()
         layout.addWidget(left_widget)
         spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
-                                           QtWidgets.QSizePolicy.Minimum)
+                                       QtWidgets.QSizePolicy.Minimum)
         layout.addItem(spacer)
         right_widget = QWidget()
         layout.addWidget(right_widget)
@@ -557,25 +577,28 @@ class SecurityWindow(QMainWindow):
         left_widget.setLayout(left_vertical)
         right_widget.setLayout(right_vertical)
 
-        left_vertical.addWidget(self.left_name)
-        right_vertical.addWidget(self.right_name)
-        # left_vertical.addWidget(self.left_lot)
-        # right_vertical.addWidget(self.right_lot)
-        left_vertical.addWidget(self.left_currency)
-        right_vertical.addWidget(self.right_currency)
-        left_vertical.addWidget(self.left_country)
-        right_vertical.addWidget(self.right_country)
-        left_vertical.addWidget(self.left_countrycode)
-        right_vertical.addWidget(self.right_countrycode)
-        left_vertical.addWidget(self.left_sector)
-        right_vertical.addWidget(self.right_sector)
-        left_vertical.addWidget(self.left_ticker)
-        right_vertical.addWidget(self.right_ticker)
-        left_vertical.addWidget(self.left_classcode)
-        right_vertical.addWidget(self.right_classcode)
+        for l, r in zip(self.left, self.right):
+            left_vertical.addWidget(l)
+            right_vertical.addWidget(r)
+
+        # left_vertical.addWidget(self.left_name)
+        # right_vertical.addWidget(self.right_name)
+        # # left_vertical.addWidget(self.left_lot)
+        # # right_vertical.addWidget(self.right_lot)
+        # left_vertical.addWidget(self.left_currency)
+        # right_vertical.addWidget(self.right_currency)
+        # left_vertical.addWidget(self.left_country)
+        # right_vertical.addWidget(self.right_country)
+        # left_vertical.addWidget(self.left_countrycode)
+        # right_vertical.addWidget(self.right_countrycode)
+        # left_vertical.addWidget(self.left_sector)
+        # right_vertical.addWidget(self.right_sector)
+        # left_vertical.addWidget(self.left_ticker)
+        # right_vertical.addWidget(self.right_ticker)
+        # left_vertical.addWidget(self.left_classcode)
+        # right_vertical.addWidget(self.right_classcode)
 
     def after(self, result):
         code, data = result
         print(data)
         print(data[0].get_as_dict())
-        print(data[0].dividend)

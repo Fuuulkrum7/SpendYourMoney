@@ -212,16 +212,16 @@ class Security:
             )
 
     def get_as_dict(self) -> dict[str, object]:
-        values: dict[str, object] = {
+        values: dict[str, object] = self.info.get_as_dict()
+
+        values.update({
             SecuritiesInfo.LOT.value: self.lot,
             SecuritiesInfo.CURRENCY.value: self.currency,
             SecuritiesInfo.COUNTRY.value: self.country,
             SecuritiesInfo.SECTOR.value: self.sector,
             SecuritiesInfo.SECURITY_TYPE.value: self.security_type.value,
             SecuritiesInfo.COUNTRY_CODE.value: self.country_code
-        }
-
-        values.update(self.info.get_as_dict())
+        })
 
         return values
 
