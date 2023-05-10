@@ -11,6 +11,11 @@ from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
 
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+import matplotlib as plt
+plt.use("Qt5Agg")
+
+
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
@@ -23,6 +28,7 @@ from info.user import User
 from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
+from ui_dev.CoursePlot import MplCanvas
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
@@ -514,6 +520,7 @@ class SecurityWindow(QMainWindow):
 
     def __init__(self, item, user):
         super().__init__()
+        self.canvas = None
         self.user = user
         self.setGeometry(100, 100, 400, 300)
         self.setWindowTitle(item.info.name)
@@ -544,6 +551,14 @@ class SecurityWindow(QMainWindow):
         self.tabs.addTab(self.div_coup_tab, "Tab 2")
         self.tabs.addTab(self.course_tab, "Tab 3")
 
+        self.init_security_ui()
+        self.init_plot_ui()
+
+        self.layout.addWidget(self.tabs)
+        self.main_widget.setLayout(self.layout)
+        self.setCentralWidget(self.main_widget)
+
+    def init_security_ui(self):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
         self.security_tab.setLayout(self.security_tab.layout)
 
@@ -561,9 +576,16 @@ class SecurityWindow(QMainWindow):
         left_widget.setLayout(self.left_vertical)
         right_widget.setLayout(self.right_vertical)
 
-        self.layout.addWidget(self.tabs)
-        self.main_widget.setLayout(self.layout)
-        self.setCentralWidget(self.main_widget)
+    def init_plot_ui(self):
+        self.canvas = MplCanvas()
+        self.canvas.axes.plot([1,2,3,4], [1,4,2,3])
+
+        toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        self.course_tab.layout = QVBoxLayout()
+        self.course_tab.layout.addWidget(toolbar)
+        self.course_tab.layout.addWidget(self.canvas)
+        self.course_tab.setLayout(self.course_tab.layout)
 
     def after(self, result):
         code, data = result
