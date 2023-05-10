@@ -401,6 +401,7 @@ class Window(QMainWindow):
                 #
                 # self.subscribe_thread.start()
 
+        self.output.clear()
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
                    f"{security.info.figi}, Ticker={security.info.ticker}," \
@@ -578,4 +579,3 @@ class SecurityWindow(QMainWindow):
         code, data = result
         print(data)
         print(data[0].get_as_dict())
-        print(data[0].dividend)
