@@ -9,7 +9,7 @@ from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
 from api_requests.securities_api import GetDividends, GetCoupons
 from api_requests.security_getter import SecurityGetter, StandardQuery
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
-    StocksInfoTable, SecuritiesInfo, StocksInfo, BondsInfo, DividendInfoTable,\
+    StocksInfoTable, SecuritiesInfo, StocksInfo, BondsInfo, DividendInfoTable, \
     DividendInfo, CouponInfoTable, CouponInfo
 from database.database_interface import DatabaseInterface
 from securities.securiries_types import SecurityType, StockType
@@ -166,7 +166,7 @@ class GetSecurity(SecurityGetter):
         query = "WHERE "
         query += f"{SecuritiesInfo.FIGI.value} = '{self.query.get_figi()}' OR "
         query += f"{SecuritiesInfo.TICKER.value} = " \
-                 f"'{self.query.get_ticker()}'"\
+                 f"'{self.query.get_ticker()}'" \
                  f" OR {SecuritiesInfo.CLASS_CODE.value} = " \
                  f"'{self.query.get_class_code()}'"
         query += f" OR {SecuritiesInfo.SECURITY_NAME.value} LIKE :par"
@@ -285,18 +285,18 @@ class GetSecurity(SecurityGetter):
 
             # И облигации
             a = db.get_data_by_sql(
-                    {
-                        table: list(SecuritiesInfo),
-                        BondsInfoTable().get_name(): list(BondsInfo)
-                    },
-                    f"{table}",
-                    join=f"{BondsInfoTable().get_table()}",
-                    where=query + f"{BondsInfoTable().get_table()}."
-                                  f"{BondsInfo.security_id.value}"
-                                  f" AND {table}."
-                                  f"{SecuritiesInfo.SECURITY_TYPE.value} = 1",
-                    params={"par": f"%{self.query.get_name()}%"}
-                )
+                {
+                    table: list(SecuritiesInfo),
+                    BondsInfoTable().get_name(): list(BondsInfo)
+                },
+                f"{table}",
+                join=f"{BondsInfoTable().get_table()}",
+                where=query + f"{BondsInfoTable().get_table()}."
+                              f"{BondsInfo.security_id.value}"
+                              f" AND {table}."
+                              f"{SecuritiesInfo.SECURITY_TYPE.value} = 1",
+                params={"par": f"%{self.query.get_name()}%"}
+            )
             # Получаем все индексы для купонов
             indexes = [x["security_id"] for x in a]
 
@@ -382,6 +382,15 @@ class GetSecurity(SecurityGetter):
                 lambda x: x.instrument_type in ["share", "bond"], results
             ))
 
+            if self.query.is_advanced:
+                results = list(filter(
+                    lambda x: x.figi == self.query.get_figi() or
+                    x.ticker == self.query.get_ticker() or
+                    self.query.get_name() in x.name or
+                    x.class_code == self.query.get_class_code(),
+                    results
+                ))
+
             # Защита от пустого запроса
             if len(results) == 0:
                 self.status_code = 100
@@ -418,7 +427,7 @@ class GetSecurity(SecurityGetter):
                 elif result.instrument_type == "share":
                     try:
                         loaded_instrument: tinkoffShare = \
-                             client.instruments.share_by(
+                            client.instruments.share_by(
                                 id_type=InstrumentIdType.
                                 INSTRUMENT_ID_TYPE_FIGI,
                                 id=result.figi).instrument

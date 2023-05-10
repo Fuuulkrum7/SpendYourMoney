@@ -25,7 +25,7 @@ class StandardQuery:
         # В первую очередь проверяем фиги
         # потом тикер
         if self.security_info.figi:
-            return  self.security_info.figi
+            return self.security_info.figi
         if self.security_info.ticker:
             return self.security_info.ticker
         # потом имя
@@ -40,28 +40,28 @@ class StandardQuery:
         if self.is_advanced:
             if self.security_info.figi:
                 return self.security_info.figi
-            return  "@@@@@@@"
+            return "@@@@@@@"
         return self.get_query()
 
     def get_ticker(self):
         if self.is_advanced:
             if self.security_info.ticker:
                 return self.security_info.ticker
-            return  "@@@@@@@"
+            return "@@@@@@@"
         return self.get_query()
 
     def get_name(self):
         if self.is_advanced:
             if self.security_info.name:
                 return self.security_info.name
-            return  "@@@@@@@"
+            return "@@@@@@@"
         return self.get_query()
 
     def get_class_code(self):
         if self.is_advanced:
             if self.security_info.class_code:
                 return self.security_info.class_code
-            return  "@@@@@@@"
+            return "@@@@@@@"
         return self.get_query()
 
 
