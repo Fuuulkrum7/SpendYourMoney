@@ -24,7 +24,7 @@ class PredictCourse(QThread):
     stock: Stock
     data_downloaded = pyqtSignal(object)
     result: list = []
-    history: list
+    history: list = []
 
     def __init__(self, stock: Stock, on_finish, token):
         super().__init__()
@@ -70,13 +70,14 @@ class PredictCourse(QThread):
         if code == 500 or code == 300:
             self.status_code = 400
             return
-        if code == 400 and len(data) and data[-1].info_time.date() < \
-                self.to.date():
-            self.status_code = 250
 
         if len(data) < 120:
             self.status_code = 300
             return
+
+        if code == 400 and data[-1].info_time.date() < \
+                self.to.date():
+            self.status_code = 250
 
         self.history = data
 
