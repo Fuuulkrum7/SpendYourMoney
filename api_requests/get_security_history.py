@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from math import log10, ceil
-from time import time
 
 
 from PyQt5.QtCore import QThread as Thread
@@ -27,6 +26,11 @@ class GetSecurityHistory(Thread):
     This class helps us to load info about securities price during period.
     If you download securities for long period, remember protect program from
     closing before data saving will be finished.
+    Status codes:
+    200 - success
+    300 - locally error occurred
+    400 - locally ok, remotely error
+    500 - error locally and remotely
     """
     # history from db
     history: list[SecurityHistory] = []
@@ -154,8 +158,11 @@ class GetSecurityHistory(Thread):
                 ))
 
             except RequestError as e:
-                print(e)
+                print(e, self.status_code)
+                if self.status_code == 300:
+                    self.status_code = 500
                 self.status_code = 400
+                return
 
             # print("data loaded")
             # Парсим данные в классы

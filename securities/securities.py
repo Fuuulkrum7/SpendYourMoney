@@ -150,6 +150,18 @@ class Dividend:
 
         return values
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return other.div_value == self.div_value and \
+            other.payment_date == self.payment_date
+
+    # И работы с множествами
+    def __hash__(self):
+        return hash(
+            (self.payment_date, self.div_value)
+        )
+
 
 class Security:
     lot: int
