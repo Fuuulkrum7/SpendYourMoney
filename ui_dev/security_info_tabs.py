@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow
-from PyQt5.uic.properties import QtWidgets
+from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
     FigureCanvas
@@ -50,13 +50,14 @@ class SecurityWindow(QMainWindow):
         self.get_securities_thread.start()
 
         self.get_securities_hist_thread = GetSecurityHistory(
-            info=self.stock.info,
-            _from=now() - timedelta(days=1001),
-            to=self.to,
+            info=item.info,
+            _from=now() - timedelta(days=90),
+            to=now(),
             interval=CandleInterval.CANDLE_INTERVAL_DAY,
-            token=self.__token,
+            token=self.user.get_token(),
             on_finish=self.on_load
         )
+        self.get_securities_hist_thread.start()
 
         self.left = []
         self.right = []
@@ -150,7 +151,7 @@ class SecurityWindow(QMainWindow):
         code, data = result
 
         self.history = data
-        self.dates = [i.info_time for i in self.history]
-        self.prices = [i.price for i in self.history]
+        dates = [i.info_time for i in self.history]
+        prices = [i.price for i in self.history]
 
-        self.canvas.axes.plot_date(self.dates, self.prices)
+        self.canvas.axes.plot(dates, prices)

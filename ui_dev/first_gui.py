@@ -12,8 +12,8 @@ from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
 
 import matplotlib as plt
-plt.use("Qt5Agg")
 
+plt.use("Qt5Agg")
 
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
@@ -412,8 +412,8 @@ class Window(QMainWindow):
         self.output.clear()
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
-                   f"{security.info.figi}, Ticker={security.info.ticker}," \
-                   f"Class code={security.info.class_code}"
+                         f"{security.info.figi}, Ticker={security.info.ticker}," \
+                         f"Class code={security.info.class_code}"
             basic_info = f"{'*' * len(basic_info)}\n{basic_info}" \
                          f"\n{'*' * len(basic_info)}"
             item = QListWidgetItem(basic_info)
