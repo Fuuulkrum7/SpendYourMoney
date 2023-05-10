@@ -70,7 +70,8 @@ class PredictCourse(QThread):
         if code == 500 or code == 300:
             self.status_code = 400
             return
-        if code == 400 and data[-1].info_time.date() < self.to.date():
+        if code == 400 and len(data) and data[-1].info_time.date() < \
+                self.to.date():
             self.status_code = 250
 
         if len(data) < 120:

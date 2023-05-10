@@ -391,6 +391,8 @@ class GetSecurity(SecurityGetter):
                     results
                 ))
 
+            results.sort(key=lambda x: x.figi)
+
             # Защита от пустого запроса
             if len(results) == 0:
                 self.status_code = 100
