@@ -17,7 +17,7 @@ from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
-from database.database_info import SecuritiesInfo
+from database.database_info import SecuritiesInfo, StocksInfo, BondsInfo
 from info.file_loader import FileLoader
 from info.user import User
 from neural_network.predictor import PredictCourse
@@ -516,7 +516,7 @@ class SecurityWindow(QMainWindow):
         super().__init__()
         self.user = user
         self.setGeometry(100, 100, 400, 300)
-        self.setWindowTitle(item.info.figi)
+        self.setWindowTitle(item.info.name)
         self.get_securities_thread = GetSecurity(
             StandardQuery(
                 item.info,
@@ -529,34 +529,6 @@ class SecurityWindow(QMainWindow):
 
         self.left = []
         self.right = []
-
-        dict_security: dict = item.get_as_dict_security()
-        dict_security.pop(SecuritiesInfo.ID.value)
-
-        dict_security.update(item.get_as_dict())
-
-        dict_security.pop("security_id")
-        dict_security.pop("ID")
-
-        for key, value in dict_security.items():
-            self.left.append(QLabel(key.replace("_", " ").capitalize()))
-            self.right.append(QLabel(str(value)))
-
-        # self.left_name = QLabel("security name:")
-        # self.right_name = QLabel(item.info.name)
-        # self.right_lot = QLabel(str(item.lot))
-        # self.left_currency = QLabel("currency:")
-        # self.right_currency = QLabel(item.currency)
-        # self.left_country = QLabel("country:")
-        # self.right_country = QLabel(item.country)
-        # self.left_countrycode = QLabel("country code:")
-        # self.right_countrycode = QLabel(item.country_code)
-        # self.left_sector = QLabel("sector:")
-        # self.right_sector = QLabel(item.sector)
-        # self.left_ticker = QLabel("ticker:")
-        # self.right_ticker = QLabel(item.info.ticker)
-        # self.left_classcode = QLabel("class code:")
-        # self.right_classcode = QLabel(item.info.class_code)
 
         widget = QWidget()
         self.setCentralWidget(widget)
@@ -571,34 +543,48 @@ class SecurityWindow(QMainWindow):
         right_widget = QWidget()
         layout.addWidget(right_widget)
 
-        left_vertical = QtWidgets.QVBoxLayout()
-        right_vertical = QtWidgets.QVBoxLayout()
+        self.left_vertical = QtWidgets.QVBoxLayout()
+        self.right_vertical = QtWidgets.QVBoxLayout()
 
-        left_widget.setLayout(left_vertical)
-        right_widget.setLayout(right_vertical)
-
-        for l, r in zip(self.left, self.right):
-            left_vertical.addWidget(l)
-            right_vertical.addWidget(r)
-
-        # left_vertical.addWidget(self.left_name)
-        # right_vertical.addWidget(self.right_name)
-        # # left_vertical.addWidget(self.left_lot)
-        # # right_vertical.addWidget(self.right_lot)
-        # left_vertical.addWidget(self.left_currency)
-        # right_vertical.addWidget(self.right_currency)
-        # left_vertical.addWidget(self.left_country)
-        # right_vertical.addWidget(self.right_country)
-        # left_vertical.addWidget(self.left_countrycode)
-        # right_vertical.addWidget(self.right_countrycode)
-        # left_vertical.addWidget(self.left_sector)
-        # right_vertical.addWidget(self.right_sector)
-        # left_vertical.addWidget(self.left_ticker)
-        # right_vertical.addWidget(self.right_ticker)
-        # left_vertical.addWidget(self.left_classcode)
-        # right_vertical.addWidget(self.right_classcode)
+        left_widget.setLayout(self.left_vertical)
+        right_widget.setLayout(self.right_vertical)
 
     def after(self, result):
         code, data = result
-        print(data)
-        print(data[0].get_as_dict())
+
+        item = data[0]
+
+        dict_security: dict = item.get_as_dict_security()
+        dict_security.update(item.get_as_dict())
+
+        dict_security.pop(SecuritiesInfo.ID.value)
+
+        dict_security[SecuritiesInfo.SECTOR.value] = \
+            dict_security[SecuritiesInfo.SECTOR.value].upper()
+        dict_security[SecuritiesInfo.SECURITY_TYPE.value] = \
+            item.security_type.name.lower()
+
+        if item.security_type == SecurityType.STOCK:
+            dict_security[StocksInfo.stock_type.value] = \
+                item.stock_type.name.replace("_", " ").lower().capitalize()
+            dict_security[StocksInfo.otc_flag.value] = bool(item.otc_flag)
+            dict_security[StocksInfo.div_yield_flag.value] = \
+                bool(item.div_yield_flag)
+        else:
+            dict_security[BondsInfo.amortization_flag.value] = \
+                bool(item.amortization)
+            dict_security[BondsInfo.floating_coupon_flag.value] = \
+                bool(item.floating_coupon)
+            dict_security[BondsInfo.perpetual_flag.value] = \
+                bool(item.perpetual)
+
+        print(dict_security)
+        dict_security.pop("security_id")
+
+        for key, value in dict_security.items():
+            self.left.append(QLabel(key.replace("_", " ").capitalize()))
+            self.right.append(QLabel(str(value)))
+
+        for l, r in zip(self.left, self.right):
+            self.left_vertical.addWidget(l)
+            self.right_vertical.addWidget(r)
