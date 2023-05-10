@@ -249,7 +249,7 @@ class Window(QMainWindow):
         self.load_all_btn = QPushButton('Load all', self)
         self.output = QListWidget(self)
         self.user: User = None
-        self.isadvanced = False
+        self.is_advanced = False
 
         self.initUI()
 
@@ -309,13 +309,13 @@ class Window(QMainWindow):
             self.name.setVisible(False)
             self.ticker.setVisible(False)
             self.classcode.setVisible(False)
-            self.isadvanced = False
+            self.is_advanced = False
         else:
             self.figi.setVisible(True)
             self.name.setVisible(True)
             self.ticker.setVisible(True)
             self.classcode.setVisible(True)
-            self.isadvanced = True
+            self.is_advanced = True
 
     def set_user(self, user):
         self.user = user
@@ -337,7 +337,7 @@ class Window(QMainWindow):
                     security_name=self.textbox.text(),
                     ticker=self.textbox.text(),
                     class_code=self.textbox.text()
-                ) if not self.isadvanced else
+                ) if not self.is_advanced else
                 SecurityInfo(
                     figi=self.figi.text(),
                     security_name=self.name.text(),
@@ -345,7 +345,8 @@ class Window(QMainWindow):
                     class_code=self.classcode.text()
                 )
                 ,
-                ""
+                "",
+                is_advanced=self.is_advanced
             ),
             self.after_search,
             self.user.get_token(),
@@ -386,7 +387,8 @@ class Window(QMainWindow):
                 self.securities_thread = GetSecurity(
                     StandardQuery(
                         data[0].info,
-                        ""
+                        "",
+                        is_advanced=self.is_advanced
                     ),
                     self.predict_it,
                     self.user.get_token(),

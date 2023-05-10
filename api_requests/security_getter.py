@@ -14,7 +14,9 @@ class StandardQuery:
     security_info: SecurityInfo
     query_text: str
 
-    def __init__(self, info: SecurityInfo, query_text: str, is_advanced: bool):
+    def __init__(self, info: SecurityInfo,
+                 query_text: str,
+                 is_advanced = False):
         self.security_info = info
         self.query_text = query_text
         self.is_advanced = is_advanced
