@@ -160,16 +160,15 @@ class GetSecurity(SecurityGetter):
         db = DatabaseInterface()
         db.connect_to_db()
 
-        # Получаем текст запроса
-        query_text = self.query.get_query()
-
         # Формируем строку WHERE. Ищем по полям фиги, тикер, класс-код
         # И потом будет ещё поиск по имени, но там надо использовать
         # LIKE %query_text%, а питон ругается на наличие процентов в строке
         query = "WHERE "
-        query += f"{SecuritiesInfo.FIGI.value} = '{query_text}' OR "
-        query += f"{SecuritiesInfo.TICKER.value} = '{query_text}' OR "
-        query += f"{SecuritiesInfo.CLASS_CODE.value} = '{query_text}'"
+        query += f"{SecuritiesInfo.FIGI.value} = '{self.query.get_figi()}' OR "
+        query += f"{SecuritiesInfo.TICKER.value} = " \
+                 f"'{self.query.get_ticker()}'"\
+                 f" OR {SecuritiesInfo.CLASS_CODE.value} = " \
+                 f"'{self.query.get_class_code()}'"
         query += f" OR {SecuritiesInfo.SECURITY_NAME.value} LIKE :par"
 
         # Получаем имя таблицы
@@ -183,7 +182,7 @@ class GetSecurity(SecurityGetter):
                 {table: list(SecuritiesInfo)},
                 table,
                 where=query,
-                params={"par": f"%{query_text}%"}
+                params={"par": f"%{self.query.get_name()}%"}
             )
 
             # Перебираем массив полученных данных
@@ -197,13 +196,13 @@ class GetSecurity(SecurityGetter):
             # индекса таблицы всех цб и конкретной
             query = "ON "
             query += f"({table}.{SecuritiesInfo.FIGI.value}" \
-                     f" = '{query_text}' OR "
+                     f" = '{self.query.get_figi()}' OR "
             query += f"{table}.{SecuritiesInfo.SECURITY_NAME.value} " \
                      f"LIKE :par OR "
             query += f"{table}.{SecuritiesInfo.TICKER.value}" \
-                     f" = '{query_text}' OR "
+                     f" = '{self.query.get_ticker()}' OR "
             query += f"{table}.{SecuritiesInfo.CLASS_CODE.value}" \
-                     f" = '{query_text}') " \
+                     f" = '{self.query.get_class_code()}') " \
                      f"AND {table}.{SecuritiesInfo.ID.value} = "
 
             # Получаем все из таблицы с акциями
@@ -219,7 +218,7 @@ class GetSecurity(SecurityGetter):
                               f" AND {table}."
                               f"{SecuritiesInfo.SECURITY_TYPE.value} = 0",
                 sort_query=[f"{StocksInfo.security_id.value} ASC"],
-                params={"par": f"%{query_text}%"}
+                params={"par": f"%{self.query.get_name()}%"}
             )
             # Получаем массив индексов цб
             indexes = [x["security_id"] for x in a]
@@ -296,7 +295,7 @@ class GetSecurity(SecurityGetter):
                                   f"{BondsInfo.security_id.value}"
                                   f" AND {table}."
                                   f"{SecuritiesInfo.SECURITY_TYPE.value} = 1",
-                    params={"par": f"%{query_text}%"}
+                    params={"par": f"%{self.query.get_name()}%"}
                 )
             # Получаем все индексы для купонов
             indexes = [x["security_id"] for x in a]
