@@ -6,7 +6,7 @@ import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QListWidgetItem, QLabel, QWidget
+    QListWidgetItem, QLabel, QWidget, QVBoxLayout, QTabWidget
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
@@ -509,6 +509,33 @@ class CreateWindow:
         self.reg.show()
 
 
+class TableWidget(QWidget):
+    def __init__(self, parent):
+        super(QWidget, self).__init__(parent)
+        self.layout = QVBoxLayout(self)
+
+        # Initialize tab screen
+        self.tabs = QTabWidget()
+        self.tab1 = QWidget()
+        self.tab2 = QWidget()
+        self.tabs.resize(300, 200)
+
+        # Add tabs
+        self.tabs.addTab(self.tab1, "Tab 1")
+        self.tabs.addTab(self.tab2, "Tab 2")
+
+        # Create first tab
+        # self.tab1.layout = QVBoxLayout(self)
+        # self.pushButton1 = QPushButton("PyQt5 button")
+        # self.tab1.layout.addWidget(self.pushButton1)
+        # self.tab1.setLayout(self.tab1.layout)
+
+
+        # Add tabs to widget
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
+
+
 class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
 
@@ -517,6 +544,10 @@ class SecurityWindow(QMainWindow):
         self.user = user
         self.setGeometry(100, 100, 400, 300)
         self.setWindowTitle(item.info.name)
+
+        self.layout = QVBoxLayout(self)
+        self.main_widget = QWidget()
+
         self.get_securities_thread = GetSecurity(
             StandardQuery(
                 item.info,
@@ -530,24 +561,36 @@ class SecurityWindow(QMainWindow):
         self.left = []
         self.right = []
 
-        widget = QWidget()
-        self.setCentralWidget(widget)
-        layout = QtWidgets.QHBoxLayout()
-        widget.setLayout(layout)
+        self.tabs = QTabWidget()
+
+        self.security_tab = QWidget()
+        self.div_coup_tab = QWidget()
+        self.course_tab = QWidget()
+
+        self.tabs.addTab(self.security_tab, "Tab 1")
+        self.tabs.addTab(self.div_coup_tab, "Tab 2")
+        self.tabs.addTab(self.course_tab, "Tab 3")
+
+        self.security_tab.layout = QtWidgets.QHBoxLayout()
+        self.security_tab.setLayout(self.security_tab.layout)
 
         left_widget = QWidget()
-        layout.addWidget(left_widget)
+        self.security_tab.layout.addWidget(left_widget)
         spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
                                        QtWidgets.QSizePolicy.Minimum)
-        layout.addItem(spacer)
+        self.security_tab.layout.addItem(spacer)
         right_widget = QWidget()
-        layout.addWidget(right_widget)
+        self.security_tab.layout.addWidget(right_widget)
 
         self.left_vertical = QtWidgets.QVBoxLayout()
         self.right_vertical = QtWidgets.QVBoxLayout()
 
         left_widget.setLayout(self.left_vertical)
         right_widget.setLayout(self.right_vertical)
+
+        self.layout.addWidget(self.tabs)
+        self.main_widget.setLayout(self.layout)
+        self.setCentralWidget(self.main_widget)
 
     def after(self, result):
         code, data = result
