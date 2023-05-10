@@ -51,7 +51,7 @@ class SecurityWindow(QMainWindow):
 
         self.get_securities_hist_thread = GetSecurityHistory(
             info=item.info,
-            _from=now() - timedelta(days=90),
+            _from=now() - timedelta(days=100),
             to=now(),
             interval=CandleInterval.CANDLE_INTERVAL_DAY,
             token=self.user.get_token(),

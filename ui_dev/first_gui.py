@@ -1,12 +1,13 @@
 import os
 import sys
+import time
 from datetime import timedelta
 
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QListWidgetItem
+    QListWidgetItem, QApplication
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
@@ -104,7 +105,7 @@ class LoginWindow(QtWidgets.QDialog):
         elif code == 100:
             QMessageBox.warning(self, 'Error', 'Bad user or password')
         elif code == 250:
-            QMessageBox.warning(self, 'Error', "User doesn't exists")
+            QMessageBox.warning(self, 'Error', "User doesn't exist")
         elif code == 300:
             QMessageBox.warning(self, 'Error', 'Something went wrong')
         elif code in (400, 500):
@@ -132,6 +133,10 @@ class LoginWindow(QtWidgets.QDialog):
         evnt.ignore()
         quit(0)
 
+    def keyPressEvent(self, evnt):
+        if evnt.key() == Qt.Key_Escape:
+            quit(0)
+
 
 class RegisterWindow(QtWidgets.QDialog):
     """
@@ -155,6 +160,7 @@ class RegisterWindow(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() | PyQt5.QtCore.Qt.Window)
         self.setParent(parent)
         self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
+
 
     def setup_register_ui(self):
         """
@@ -224,6 +230,10 @@ class RegisterWindow(QtWidgets.QDialog):
         evnt.ignore()
         quit(0)
 
+    def keyPressEvent(self, evnt):
+        if evnt.key() == Qt.Key_Escape:
+            quit(0)
+
 
 class Window(QMainWindow):
     """
@@ -234,6 +244,7 @@ class Window(QMainWindow):
     predict_thread: PredictCourse = None
     subscribe_thread = None
     security_window = None
+    loading = None
 
     figis = []
     data = {}
@@ -263,37 +274,37 @@ class Window(QMainWindow):
     def init_ui(self):
         # Create textbox
         self.textbox.move(20, 20)
-        self.textbox.resize(360, 40)
+        self.textbox.resize(460, 40)
         self.textbox.setPlaceholderText("Security name (more than 2 symbols)")
 
         # Create a button in the window
-        self.button.move(400, 20)
+        self.button.move(500, 20)
         self.button.resize(120, 40)
 
-        self.advanced.move(540, 20)
+        self.advanced.move(640, 20)
         self.advanced.resize(120, 40)
 
         # connect button to function on_click
         self.button.clicked.connect(self.find_securities)
 
-        self.figi.move(540, 80)
+        self.figi.move(650, 80)
         self.figi.setPlaceholderText('Figi')
         self.figi.setVisible(False)
-        self.name.move(540, 120)
+        self.name.move(650, 120)
         self.name.setPlaceholderText('Security name')
         self.name.setVisible(False)
-        self.ticker.move(540, 160)
+        self.ticker.move(650, 160)
         self.ticker.setPlaceholderText('Ticker')
         self.ticker.setVisible(False)
-        self.classcode.move(540, 200)
+        self.classcode.move(650, 200)
         self.classcode.setPlaceholderText('Class code')
         self.classcode.setVisible(False)
 
         self.advanced.clicked.connect(self.switch_mode)
 
         # Create a button in the window
-        self.load_all_btn.move(680, 20)
-        self.load_all_btn.resize(120, 40)
+        self.load_all_btn.move(650, 480)
+        self.load_all_btn.resize(180, 40)
 
         # connect button to function on_click
         self.load_all_btn.clicked.connect(self.load_all)
@@ -301,7 +312,7 @@ class Window(QMainWindow):
         # self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
         self.output.move(20, 80)
-        self.output.resize(500, 360)
+        self.output.resize(600, 440)
         self.output.itemClicked.connect(self.security_clicked)
 
     def security_clicked(self, item):
@@ -413,7 +424,7 @@ class Window(QMainWindow):
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
                          f"{security.info.figi}, Ticker={security.info.ticker}," \
-                         f"Class code={security.info.class_code}"
+                         f" Class code={security.info.class_code}"
             basic_info = f"{'*' * len(basic_info)}\n{basic_info}" \
                          f"\n{'*' * len(basic_info)}"
             item = QListWidgetItem(basic_info)
@@ -424,7 +435,13 @@ class Window(QMainWindow):
             # parsed = [str(i) for i in data]
             # self.output.addItem(parsed)
 
+    def start_loading(self):
+        self.loading = LoadingDialog()
+        self.loading.show()
+
+
     def load_all(self):
+        self.start_loading()
         if self.all_securities_thread is not None \
                 and self.all_securities_thread.isRunning():
             return
@@ -434,11 +451,15 @@ class Window(QMainWindow):
             self.user.get_token()
         )
         self.all_securities_thread.start()
-        # self.output.addItem("Load started")
 
     def after_load(self, result):
         code, data = result
         print(code)
+        self.loading.loadingLabel.setText("Done")
+        self.loading.pbar.setMaximum(100)
+        self.loading.pbar.setValue(100)
+        time.sleep(1)
+        self.loading.close()
 
     def load_securities(self, info):
         self.res = GetSecurityHistory(
@@ -466,8 +487,8 @@ class CreateWindow:
     main_window: Window
     user: User
 
-    WIDTH = 820
-    HEIGHT = 480
+    WIDTH = 860
+    HEIGHT = 540
 
     def __init__(self, app):
         self.app = app
@@ -511,3 +532,21 @@ class CreateWindow:
             self.login = None
 
         self.reg.show()
+
+
+class LoadingDialog(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setFixedSize(200, 200)
+
+        self.loadingLabel = QtWidgets.QLabel('Loading...', self)
+        self.loadingLabel.setGeometry(75, 30, 100, 20)
+
+        self.pbar = QtWidgets.QProgressBar(self)
+        self.pbar.setMinimum(0)
+        self.pbar.setMaximum(0)
+        self.pbar.setValue(0)
+        self.pbar.setGeometry(30, 75, 140, 20)
