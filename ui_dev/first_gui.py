@@ -321,14 +321,9 @@ class Window(QMainWindow):
         self.user = user
 
     def find_securities(self):
-        # if len(self.textbox.text()) <= 2 or (
-        #         self.securities_thread is not None and
-        #         self.securities_thread.isRunning()):
-        #     return
-
-        # if self.textbox.text() == "start":
-        #     self.load_figis()
-        #     return
+        if not (self.securities_thread is None) \
+                and self.securities_thread.isRunning():
+            return
 
         self.securities_thread = GetSecurity(
             StandardQuery(
@@ -357,8 +352,7 @@ class Window(QMainWindow):
         self.securities_thread.start()
 
     def on_predict_made(self, result):
-        ...
-        # self.output.addItem(str(result[1]))
+        print(result)
 
     def predict_it(self, result):
         code, data = result

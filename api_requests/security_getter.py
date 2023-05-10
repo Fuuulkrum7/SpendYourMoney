@@ -38,22 +38,30 @@ class StandardQuery:
 
     def get_figi(self):
         if self.is_advanced:
-            return self.security_info.figi
+            if self.security_info.figi:
+                return self.security_info.figi
+            return  "@@@@@@@"
         return self.get_query()
 
     def get_ticker(self):
         if self.is_advanced:
-            return self.security_info.ticker
+            if self.security_info.ticker:
+                return self.security_info.ticker
+            return  "@@@@@@@"
         return self.get_query()
 
     def get_name(self):
         if self.is_advanced:
-            return self.security_info.name
+            if self.security_info.name:
+                return self.security_info.name
+            return  "@@@@@@@"
         return self.get_query()
 
     def get_class_code(self):
         if self.is_advanced:
-            return self.security_info.class_code
+            if self.security_info.class_code:
+                return self.security_info.class_code
+            return  "@@@@@@@"
         return self.get_query()
 
 
