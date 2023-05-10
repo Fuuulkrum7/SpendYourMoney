@@ -5,24 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19dc91ad-e9dd-470c-ac92-da21f1ab96e5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/SpendYourMoney.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_03_2023,_18_08_[Changes]/shelved.patch" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_03_2023,_18_08_[Changes]1/shelved.patch" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_03_2023__18_08__Changes_.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/figis.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parsed_data.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parsed_data_old.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parsed_test_data.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parsed_test_data_old.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_figi.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api_requests/securities_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/api_requests/securities_api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/securities/securities.py" beforeDir="false" afterPath="$PROJECT_DIR$/securities/securities.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/database_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/database_interface.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
