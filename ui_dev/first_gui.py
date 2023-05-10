@@ -249,6 +249,7 @@ class Window(QMainWindow):
         self.load_all_btn = QPushButton('Load all', self)
         self.output = QListWidget(self)
         self.user: User = None
+        self.isadvanced = False
 
         self.initUI()
 
@@ -308,11 +309,13 @@ class Window(QMainWindow):
             self.name.setVisible(False)
             self.ticker.setVisible(False)
             self.classcode.setVisible(False)
+            self.isadvanced = False
         else:
             self.figi.setVisible(True)
             self.name.setVisible(True)
             self.ticker.setVisible(True)
             self.classcode.setVisible(True)
+            self.isadvanced = True
 
     def set_user(self, user):
         self.user = user
@@ -334,7 +337,7 @@ class Window(QMainWindow):
                     security_name=self.textbox.text(),
                     ticker=self.textbox.text(),
                     class_code=self.textbox.text()
-                ) if not self.figi.isVisible() else
+                ) if not self.isadvanced else
                 SecurityInfo(
                     figi=self.figi.text(),
                     security_name=self.name.text(),
@@ -351,31 +354,6 @@ class Window(QMainWindow):
             load_full_info=False
         )
         self.securities_thread.start()
-
-    # def load_figis(self):
-    #     with open("figis.txt") as f:
-    #         a = f.read().split("\n")
-    #         a.pop()
-    #
-    #         self.figis = a
-    #         self.idx = 0
-    #
-    #         f.close()
-    #
-    #     key = 0
-    #     self.data = FileLoader.get_json("parsed_data.json")
-    #     if self.data is None:
-    #         self.data = {}
-    #     else:
-    #         key = list(self.data.keys())[-1]
-    #         key = self.figis.index(key)
-    #         print(key)
-    #         if len(self.figis) - key < 100:
-    #             self.output.append("load is finishing")
-    #
-    #     self.figis = self.figis[key: key + 101]
-    #
-    #     self.load_sec()
 
     def on_predict_made(self, result):
         ...
@@ -419,13 +397,13 @@ class Window(QMainWindow):
 
                 self.securities_thread.start()
 
-                self.subscribe_thread = SubscribeOnMarket(
-                    data[0],
-                    self.user.get_token(),
-                    self.show_course
-                )
-
-                self.subscribe_thread.start()
+                # self.subscribe_thread = SubscribeOnMarket(
+                #     data[0],
+                #     self.user.get_token(),
+                #     self.show_course
+                # )
+                #
+                # self.subscribe_thread.start()
 
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
@@ -477,79 +455,6 @@ class Window(QMainWindow):
             len(y),
             sep='\n'
         )
-
-    # def after_histr_load(self, data):
-    #     x, y = data
-    #
-    #     for_load = []
-    #     for i in y:
-    #         for_load.append(i.get_as_dict())
-    #         for_load[-1].pop("security_id")
-    #         for_load[-1]["info_time"] = str(for_load[-1]["info_time"])
-    #
-    #     self.data[self.current_sec.info.figi]["history"] = for_load
-    #
-    #     self.load_sec()
-    #
-    # def load_histr(self, data):
-    #     code, sec = data
-    #
-    #     if len(sec) and sec[0].security_type == SecurityType.STOCK:
-    #         self.current_sec = sec[0]
-    #         sec.clear()
-    #
-    #         sec = self.current_sec.get_as_dict_security()
-    #         sec.update(self.current_sec.get_as_dict())
-    #
-    #         sec.pop('country')
-    #         sec.pop('security_type')
-    #         sec.pop('ID')
-    #         sec.pop('security_id')
-    #         sec.pop('figi')
-    #         sec["ipo_date"] = str(sec["ipo_date"])
-    #
-    #         for_load = []
-    #
-    #         sec['history'] = for_load
-    #
-    #         self.data[self.current_sec.info.figi] = sec
-    #
-    #         self.res = GetSecurityHistory(
-    #             info=self.current_sec.info,
-    #             _from=now() - timedelta(days=1001),
-    #             to=now() - timedelta(days=1),
-    #             interval=CandleInterval.CANDLE_INTERVAL_DAY,
-    #             token=self.user.get_token(),
-    #             on_finish=self.after_histr_load
-    #         )
-    #
-    #         self.res.start()
-    #     else:
-    #         self.load_sec()
-    #
-    # def load_sec(self):
-    #     if self.idx < len(self.figis):
-    #         self.securities_thread = GetSecurity(
-    #             StandardQuery(
-    #                 SecurityInfo(
-    #                     id=0,
-    #                     figi=self.figis[self.idx],
-    #                 ),
-    #                 ""
-    #             ),
-    #             self.load_histr,
-    #             self.user.get_token(),
-    #             load_coupons=False,
-    #             load_dividends=False,
-    #             insert_to_db=False
-    #         )
-    #         print(self.figis[self.idx])
-    #         self.idx += 1
-    #
-    #         self.securities_thread.start()
-    #     else:
-    #         print("finish")
-    #         FileLoader.save_json(f"parsed_data.json", self.data)
 
 
 class CreateWindow:

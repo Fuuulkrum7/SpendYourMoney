@@ -14,22 +14,45 @@ class StandardQuery:
     security_info: SecurityInfo
     query_text: str
 
-    def __init__(self, info: SecurityInfo, query_text: str):
+    def __init__(self, info: SecurityInfo, query_text: str, is_advanced: bool):
         self.security_info = info
         self.query_text = query_text
+        self.is_advanced = is_advanced
 
     def get_query(self) -> str:
         # В первую очередь проверяем фиги
-        if self.security_info.figi:
-            return self.security_info.figi
         # потом тикер
+        if self.security_info.figi:
+            return  self.security_info.figi
         if self.security_info.ticker:
             return self.security_info.ticker
         # потом имя
         if self.security_info.name:
             return self.security_info.name
+        if self.security_info.class_code:
+            return self.security_info.class_code
         # и в самом худшем случае текст
         return self.query_text
+
+    def get_figi(self):
+        if self.is_advanced:
+            return self.security_info.figi
+        return self.get_query()
+
+    def get_ticker(self):
+        if self.is_advanced:
+            return self.security_info.ticker
+        return self.get_query()
+
+    def get_name(self):
+        if self.is_advanced:
+            return self.security_info.name
+        return self.get_query()
+
+    def get_class_code(self):
+        if self.is_advanced:
+            return self.security_info.class_code
+        return self.get_query()
 
 
 class SecurityGetter(Thread):
