@@ -227,6 +227,7 @@ class GetDividends(SecurityGetter):
     но при этом сильно усложнит структуру программы
     """
     dividend: list[Dividend] = []
+    insert: list = []
     status_code: int = 200
     data_downloaded = pyqtSignal(object)
 
@@ -264,7 +265,7 @@ class GetDividends(SecurityGetter):
             print(e)
             self.status_code = 310
 
-        if not self.dividend and not self.check_only_locally:
+        if not self.check_only_locally:
             self.get_from_api()
 
     # И даже тут!
@@ -279,7 +280,7 @@ class GetDividends(SecurityGetter):
 
         query = []
 
-        for values in self.dividend:
+        for values in self.insert:
             query.append(values.get_as_dict())
 
         db.add_unique_data(
@@ -340,7 +341,7 @@ class GetDividends(SecurityGetter):
             try:
                 sub_data = client.instruments.get_dividends(
                     figi=figi,
-                    from_=datetime(year=1990, month=1, day=1),
+                    from_=datetime(year=1980, month=1, day=1),
                     to=datetime(year=2100, month=1, day=1)
                 ).dividends
             except RequestError as e:
@@ -348,7 +349,7 @@ class GetDividends(SecurityGetter):
                 self.status_code = 410
                 return
 
-        self.dividend = [
+        self.insert = [
             Dividend(
                 div_value=div.dividend_net,
                 payment_date=div.payment_date,
@@ -360,6 +361,13 @@ class GetDividends(SecurityGetter):
                 security_id=self.query.security_info.id)
             for div in sub_data
         ]
+
+        self.insert = list(set(self.insert) - set(self.dividend))
+
+        self.dividend += self.insert
+
+        self.dividend.sort(key=lambda x: x.payment_date)
+        self.insert.sort(key=lambda x: x.payment_date)
 
     def get_data(self):
         return self.dividend
