@@ -6,12 +6,11 @@ import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QListWidgetItem, QLabel, QWidget, QVBoxLayout, QTabWidget
+    QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
 
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib as plt
 plt.use("Qt5Agg")
 
@@ -22,13 +21,12 @@ from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
-from database.database_info import SecuritiesInfo, StocksInfo, BondsInfo
 from info.file_loader import FileLoader
 from info.user import User
 from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
-from ui_dev.CoursePlot import MplCanvas
+from ui_dev.security_info_tabs import SecurityWindow
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
@@ -513,116 +511,3 @@ class CreateWindow:
             self.login = None
 
         self.reg.show()
-
-
-class SecurityWindow(QMainWindow):
-    get_securities_thread: GetSecurity = None
-
-    def __init__(self, item, user):
-        super().__init__()
-        self.canvas = None
-        self.user = user
-        self.setGeometry(100, 100, 400, 300)
-        self.setWindowTitle(item.info.name)
-
-        self.layout = QVBoxLayout(self)
-        self.main_widget = QWidget()
-
-        self.get_securities_thread = GetSecurity(
-            StandardQuery(
-                item.info,
-                ""
-            ),
-            self.after,
-            self.user.get_token()
-        )
-        self.get_securities_thread.start()
-
-        self.left = []
-        self.right = []
-
-        self.tabs = QTabWidget()
-
-        self.security_tab = QWidget()
-        self.div_coup_tab = QWidget()
-        self.course_tab = QWidget()
-
-        self.tabs.addTab(self.security_tab, "Tab 1")
-        self.tabs.addTab(self.div_coup_tab, "Tab 2")
-        self.tabs.addTab(self.course_tab, "Tab 3")
-
-        self.init_security_ui()
-        self.init_plot_ui()
-
-        self.layout.addWidget(self.tabs)
-        self.main_widget.setLayout(self.layout)
-        self.setCentralWidget(self.main_widget)
-
-    def init_security_ui(self):
-        self.security_tab.layout = QtWidgets.QHBoxLayout()
-        self.security_tab.setLayout(self.security_tab.layout)
-
-        left_widget = QWidget()
-        self.security_tab.layout.addWidget(left_widget)
-        spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
-                                       QtWidgets.QSizePolicy.Minimum)
-        self.security_tab.layout.addItem(spacer)
-        right_widget = QWidget()
-        self.security_tab.layout.addWidget(right_widget)
-
-        self.left_vertical = QtWidgets.QVBoxLayout()
-        self.right_vertical = QtWidgets.QVBoxLayout()
-
-        left_widget.setLayout(self.left_vertical)
-        right_widget.setLayout(self.right_vertical)
-
-    def init_plot_ui(self):
-        self.canvas = MplCanvas()
-        self.canvas.axes.plot([1,2,3,4], [1,4,2,3])
-
-        toolbar = NavigationToolbar2QT(self.canvas, self)
-
-        self.course_tab.layout = QVBoxLayout()
-        self.course_tab.layout.addWidget(toolbar)
-        self.course_tab.layout.addWidget(self.canvas)
-        self.course_tab.setLayout(self.course_tab.layout)
-
-    def after(self, result):
-        code, data = result
-
-        item = data[0]
-
-        dict_security: dict = item.get_as_dict_security()
-        dict_security.update(item.get_as_dict())
-
-        dict_security.pop(SecuritiesInfo.ID.value)
-
-        dict_security[SecuritiesInfo.SECTOR.value] = \
-            dict_security[SecuritiesInfo.SECTOR.value].upper()
-        dict_security[SecuritiesInfo.SECURITY_TYPE.value] = \
-            item.security_type.name.lower()
-
-        if item.security_type == SecurityType.STOCK:
-            dict_security[StocksInfo.stock_type.value] = \
-                item.stock_type.name.replace("_", " ").lower().capitalize()
-            dict_security[StocksInfo.otc_flag.value] = bool(item.otc_flag)
-            dict_security[StocksInfo.div_yield_flag.value] = \
-                bool(item.div_yield_flag)
-        else:
-            dict_security[BondsInfo.amortization_flag.value] = \
-                bool(item.amortization)
-            dict_security[BondsInfo.floating_coupon_flag.value] = \
-                bool(item.floating_coupon)
-            dict_security[BondsInfo.perpetual_flag.value] = \
-                bool(item.perpetual)
-
-        print(dict_security)
-        dict_security.pop("security_id")
-
-        for key, value in dict_security.items():
-            self.left.append(QLabel(key.replace("_", " ").capitalize()))
-            self.right.append(QLabel(str(value)))
-
-        for l, r in zip(self.left, self.right):
-            self.left_vertical.addWidget(l)
-            self.right_vertical.addWidget(r)

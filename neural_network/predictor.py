@@ -66,7 +66,6 @@ class PredictCourse(QThread):
     def on_load(self, result):
         code, data = result
 
-        print(code, len(data))
         if code == 500 or code == 300:
             self.status_code = 400
             return
