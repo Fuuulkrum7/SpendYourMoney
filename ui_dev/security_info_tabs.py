@@ -1,11 +1,8 @@
-import sys
 from datetime import timedelta
 
-from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow
 from PyQt5 import QtWidgets
-from PyQt5.uic.properties import QtCore
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
     FigureCanvas
@@ -28,25 +25,17 @@ class MplCanvas(FigureCanvas):
 
 
 class SecurityWindow(QMainWindow):
-    WIDTH = 600
-    HEIGHT = 450
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
     def __init__(self, item, user):
         super().__init__()
-        app = QtWidgets.QApplication(sys.argv)
-        self.screen = app.primaryScreen().size()
-
         self.right_vertical = None
         self.left_vertical = None
         self.canvas = None
         self.user = user
         self.history = []
-        self.setGeometry((self.screen.width() - self.WIDTH) // 2,
-                         (self.screen.height() - self.HEIGHT) // 2,
-                         self.WIDTH, self.HEIGHT)
-        self.setFixedSize(self.WIDTH, self.HEIGHT)
+        self.showMaximized()
         self.setWindowTitle(item.info.name)
 
         self.layout = QVBoxLayout(self)
@@ -76,7 +65,6 @@ class SecurityWindow(QMainWindow):
         self.right = []
 
         self.tabs = QTabWidget()
-        self.tabs.tabBarClicked.connect(self.tab_changed)
 
         self.security_tab = QWidget()
         self.div_coup_tab = QWidget()
@@ -97,14 +85,13 @@ class SecurityWindow(QMainWindow):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
         self.security_tab.setLayout(self.security_tab.layout)
 
+        left_widget = QWidget()
+        self.security_tab.layout.addWidget(left_widget)
         spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
                                        QtWidgets.QSizePolicy.Minimum)
         self.security_tab.layout.addItem(spacer)
-        left_widget = QWidget()
-        self.security_tab.layout.addWidget(left_widget)
         right_widget = QWidget()
         self.security_tab.layout.addWidget(right_widget)
-        self.security_tab.layout.addItem(spacer)
 
         self.left_vertical = QtWidgets.QVBoxLayout()
         self.right_vertical = QtWidgets.QVBoxLayout()
@@ -121,19 +108,6 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout.addWidget(toolbar)
         self.course_tab.layout.addWidget(self.canvas)
         self.course_tab.setLayout(self.course_tab.layout)
-
-    def tab_changed(self, index):
-        if index == 2:
-            self.setGeometry(0, 0,
-                             self.screen.width(), self.screen.height())
-            self.setFixedSize(self.screen.width(), self.screen.height())
-        else:
-            self.setGeometry((self.screen.width() - self.WIDTH) // 2,
-                             (self.screen.height() - self.HEIGHT) // 2,
-                             self.WIDTH, self.HEIGHT)
-
-            self.setFixedSize(self.WIDTH, self.HEIGHT)
-        self.showMaximized()
 
     def after(self, result):
         code, data = result
