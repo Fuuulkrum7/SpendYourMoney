@@ -124,18 +124,16 @@ class SecurityWindow(QMainWindow):
 
     def tab_changed(self, index):
         if index == 2:
-            self.setGeometry((self.screen.width() - self.WIDTH) // 2,
-                             (self.screen.height() - self.HEIGHT) // 2,
+            self.setGeometry(0, 0,
                              self.screen.width(), self.screen.height())
             self.setFixedSize(self.screen.width(), self.screen.height())
-            self.showFullScreen()
         else:
             self.setGeometry((self.screen.width() - self.WIDTH) // 2,
                              (self.screen.height() - self.HEIGHT) // 2,
                              self.WIDTH, self.HEIGHT)
 
             self.setFixedSize(self.WIDTH, self.HEIGHT)
-            self.showMaximized()
+        self.showMaximized()
 
     def after(self, result):
         code, data = result
