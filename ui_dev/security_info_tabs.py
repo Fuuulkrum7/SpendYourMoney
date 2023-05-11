@@ -1,3 +1,4 @@
+import sys
 from datetime import timedelta
 
 from PyQt5.QtCore import pyqtSlot
@@ -34,16 +35,17 @@ class SecurityWindow(QMainWindow):
 
     def __init__(self, item, user):
         super().__init__()
-        screen = self.app.desktop().screenGeometry()
+        app = QtWidgets.QApplication(sys.argv)
+        self.screen = app.primaryScreen().size()
 
         self.right_vertical = None
         self.left_vertical = None
         self.canvas = None
         self.user = user
         self.history = []
-        self.main_window.setGeometry((screen.width() - self.WIDTH) // 2,
-                                     (screen.height() - self.HEIGHT) // 2,
-                                     self.WIDTH, self.HEIGHT)
+        self.setGeometry((self.screen.width() - self.WIDTH) // 2,
+                         (self.screen.height() - self.HEIGHT) // 2,
+                         self.WIDTH, self.HEIGHT)
         self.setFixedSize(self.WIDTH, self.HEIGHT)
         self.setWindowTitle(item.info.name)
 
@@ -74,7 +76,7 @@ class SecurityWindow(QMainWindow):
         self.right = []
 
         self.tabs = QTabWidget()
-        self.tabs.tabBarClicked.connect(self.tabChanged)
+        self.tabs.tabBarClicked.connect(self.tab_changed)
 
         self.security_tab = QWidget()
         self.div_coup_tab = QWidget()
@@ -120,10 +122,19 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout.addWidget(self.canvas)
         self.course_tab.setLayout(self.course_tab.layout)
 
-    def tabChanged(self, index):
+    def tab_changed(self, index):
         if index == 2:
+            self.setGeometry((self.screen.width() - self.WIDTH) // 2,
+                             (self.screen.height() - self.HEIGHT) // 2,
+                             self.screen.width(), self.screen.height())
+            self.setFixedSize(self.screen.width(), self.screen.height())
             self.showFullScreen()
         else:
+            self.setGeometry((self.screen.width() - self.WIDTH) // 2,
+                             (self.screen.height() - self.HEIGHT) // 2,
+                             self.WIDTH, self.HEIGHT)
+
+            self.setFixedSize(self.WIDTH, self.HEIGHT)
             self.showMaximized()
 
     def after(self, result):
