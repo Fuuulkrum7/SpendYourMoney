@@ -30,6 +30,8 @@ class SecurityWindow(QMainWindow):
 
     def __init__(self, item, user):
         super().__init__()
+        self.right_vertical = None
+        self.left_vertical = None
         self.canvas = None
         self.user = user
         self.history = []

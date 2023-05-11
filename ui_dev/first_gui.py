@@ -14,8 +14,6 @@ from tinkoff.invest.utils import now
 
 import matplotlib as plt
 
-plt.use("Qt5Agg")
-
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
@@ -31,6 +29,8 @@ from ui_dev.security_info_tabs import SecurityWindow
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
+
+plt.use("Qt5Agg")
 
 
 class LoginWindow(QtWidgets.QDialog):
@@ -537,9 +537,6 @@ class CreateWindow:
 class LoadingDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
-        self.initUI()
-
-    def initUI(self):
         self.setFixedSize(200, 200)
 
         self.loadingLabel = QtWidgets.QLabel('Loading...', self)
