@@ -35,7 +35,7 @@ class SecurityWindow(QMainWindow):
         self.canvas = None
         self.user = user
         self.history = []
-        self.showMaximized()
+        self.setFixedSize(1080, 720)
         self.setWindowTitle(item.info.name)
 
         self.layout = QVBoxLayout(self)
