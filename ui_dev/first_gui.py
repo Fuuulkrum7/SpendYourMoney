@@ -282,7 +282,7 @@ class Window(QMainWindow):
         self.button.resize(120, 40)
 
         self.advanced.move(640, 20)
-        self.advanced.resize(120, 40)
+        self.advanced.resize(160, 40)
 
         # connect button to function on_click
         self.button.clicked.connect(self.find_securities)
@@ -345,30 +345,34 @@ class Window(QMainWindow):
                 and self.securities_thread.isRunning():
             return
 
-        self.securities_thread = GetSecurity(
-            StandardQuery(
-                SecurityInfo(
-                    figi=self.textbox.text(),
-                    security_name=self.textbox.text(),
-                    ticker=self.textbox.text(),
-                    class_code=self.textbox.text()
-                ) if not self.is_advanced else
-                SecurityInfo(
-                    figi=self.figi.text(),
-                    security_name=self.name.text(),
-                    ticker=self.ticker.text(),
-                    class_code=self.classcode.text()
+        if not self.is_advanced and self.textbox.text() or self.is_advanced and \
+            self.figi.text() and self.name.text() and \
+            self.ticker.text() and self.classcode.text():
+
+            self.securities_thread = GetSecurity(
+                StandardQuery(
+                    SecurityInfo(
+                        figi=self.textbox.text(),
+                        security_name=self.textbox.text(),
+                        ticker=self.textbox.text(),
+                        class_code=self.textbox.text()
+                    ) if not self.is_advanced else
+                    SecurityInfo(
+                        figi=self.figi.text(),
+                        security_name=self.name.text(),
+                        ticker=self.ticker.text(),
+                        class_code=self.classcode.text()
+                    ),
+                    "",
+                    is_advanced=self.is_advanced
                 ),
-                "",
-                is_advanced=self.is_advanced
-            ),
-            self.after_search,
-            self.user.get_token(),
-            load_coupons=False,
-            load_dividends=False,
-            load_full_info=False
-        )
-        self.securities_thread.start()
+                self.after_search,
+                self.user.get_token(),
+                load_coupons=False,
+                load_dividends=False,
+                load_full_info=False
+            )
+            self.securities_thread.start()
 
     def on_predict_made(self, result):
         print(result)
