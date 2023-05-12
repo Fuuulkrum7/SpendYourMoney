@@ -70,12 +70,12 @@ class DatabaseInterface:
 
             if self.version != self.info["version"]:
                 print("old db found")
-                self.clear_db()
+                self.migrate()
 
                 version = (self.info["version"] + 1) ** 8
                 FileLoader.save_file(
                     self.__path + "/info/files/.db_version",
-                    [hex(version).replace("0x", "")]
+                    [hex(version)[2:]]
                 )
 
             # Если бд не существует, создаем
@@ -222,9 +222,76 @@ class DatabaseInterface:
             conn.close()
             return values
 
+    def migrate(self):
+        if self.version < 4:
+            self.clear_db()
+        elif self.version == 4:
+            try:
+                self.__engine.execute(
+                    text(
+                        f"ALTER TABLE {SecuritiesInfoTable.__tablename__} "
+                        f"ADD {SecuritiesInfo.PRIORITY.value} "
+                        f"TINYINT DEFAULT 0"
+                    )
+                )
+            except Exception as e:
+                print(e)
+                return
+
+            table = SecuritiesInfoTable().get_name()
+            data = self.get_data_by_sql(
+                {
+                    table: [
+                        SecuritiesInfo.FIGI, SecuritiesInfo.ID
+                    ]
+                },
+                table
+            )
+            if not data:
+                return
+
+            figis = FileLoader.get_file(self.__path +
+                                        "/info/files.priority_figis.txt")
+
+            query = f"UPDATE {SecuritiesInfoTable.__tablename__} " \
+                    f"SET {SecuritiesInfo.PRIORITY.value} = CASE \n"
+
+            for val in data:
+                query += f"WHEN {SecuritiesInfo.ID.value} = "
+                query += f" {val[SecuritiesInfo.ID.value]} THEN "
+                query += f"{int(val[SecuritiesInfo.FIGI.value] in figis)}\n"
+
+            query += "ELSE 0\n END;"
+
+            self.execute_sql(query)
+        else:
+            pass
+
     def clear_db(self):
         try:
-            self.__engine.execute("DROP DATABASE " + self.info["name"] + ";")
+            if self.version >= 3:
+                scripts = FileLoader.get_file(
+                    self.__path + "/info/files/delete.sql",
+                    datatype=str
+                ).replace("\n", "").split(";")
+
+                scripts = list(filter(len, scripts))
+
+                create = FileLoader.get_file(
+                    self.__path + "/info/files/init.sql",
+                    datatype=str)
+                create = list(
+                    filter(len, create.replace("\n", "").split(";")))
+                create.pop(0)
+                create.pop()
+
+                for deleter in scripts:
+                    self.__engine.execute(text(deleter))
+                for creater in create:
+                    self.__engine.execute(text(creater))
+
+            else:
+                self.__engine.execute(f"DROP DATABASE {self.info['name']};")
         except Exception as e:
             print(e)
             self.connected = -2
@@ -252,7 +319,7 @@ class DatabaseInterface:
             conn.execute("USE " + self.info["name"])
 
             for script in scripts:
-                conn.execute(script)
+                conn.execute(text(script))
 
             conn.close()
 

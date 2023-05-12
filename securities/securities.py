@@ -171,6 +171,7 @@ class Security:
     sector: str
     security_type: SecurityType
     info: SecurityInfo
+    priority: int
 
     def __init__(
             self,
@@ -180,6 +181,7 @@ class Security:
             country_code: str = None,
             sector: str = None,
             security_type: SecurityType = SecurityType.DEFAULT,
+            priority: int = 0,
             info: SecurityInfo = None,
             id: int = -1,
             ID: int = -1,
@@ -196,6 +198,7 @@ class Security:
         self.country = country
         self.country_code = country_code
         self.sector = sector
+        self.priority = priority
         self.security_type = security_type if isinstance(security_type,
                                                          SecurityType) \
             else SecurityType(security_type)
@@ -220,7 +223,8 @@ class Security:
             SecuritiesInfo.COUNTRY.value: self.country,
             SecuritiesInfo.SECTOR.value: self.sector,
             SecuritiesInfo.SECURITY_TYPE.value: self.security_type.value,
-            SecuritiesInfo.COUNTRY_CODE.value: self.country_code
+            SecuritiesInfo.COUNTRY_CODE.value: self.country_code,
+            SecuritiesInfo.PRIORITY.value: self.priority,
         })
 
         return values
@@ -268,6 +272,7 @@ class Bond(Security):
             currency: str = None,
             country: str = None,
             country_code: str = None,
+            priority: int = 0,
             sector: str = None,
             security_type: SecurityType = SecurityType.BOND,
             info: SecurityInfo = None,
@@ -293,6 +298,7 @@ class Bond(Security):
                 class_code=class_code,
                 figi=figi,
                 ticker=ticker,
+                priority=priority,
                 security_name=security_name
             )
 
@@ -367,6 +373,7 @@ class Stock(Security):
             currency: str = None,
             country: str = None,
             country_code: str = None,
+            priority: int = 0,
             sector: str = None,
             security_type: SecurityType = SecurityType.STOCK,
             info: SecurityInfo = None,
@@ -386,6 +393,7 @@ class Stock(Security):
                 country_code=country_code,
                 sector=sector,
                 security_type=security_type,
+                priority=priority,
                 info=info,
                 id=security_id,
                 class_code=class_code,
