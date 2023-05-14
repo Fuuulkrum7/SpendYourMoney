@@ -163,13 +163,38 @@ class GetSecurity(SecurityGetter):
         # Формируем строку WHERE. Ищем по полям фиги, тикер, класс-код
         # И потом будет ещё поиск по имени, но там надо использовать
         # LIKE %query_text%, а питон ругается на наличие процентов в строке
+
         query = "WHERE "
-        query += f"{SecuritiesInfo.FIGI.value} = '{self.query.get_figi()}' OR "
-        query += f"{SecuritiesInfo.TICKER.value} = " \
-                 f"'{self.query.get_ticker()}'" \
-                 f" OR {SecuritiesInfo.CLASS_CODE.value} = " \
-                 f"'{self.query.get_class_code()}'"
-        query += f" OR {SecuritiesInfo.SECURITY_NAME.value} LIKE :par"
+
+        if self.query.is_advanced:
+            q = []
+            params = {}
+            if self.query.get_figi() != self.query.stop:
+                q.append(f"{SecuritiesInfo.FIGI.value} = "
+                         f"'{self.query.get_figi()}'")
+            if self.query.get_ticker() != self.query.stop:
+                q.append(f"{SecuritiesInfo.TICKER.value} = "
+                         f"'{self.query.get_ticker()}'")
+            if self.query.get_class_code() != self.query.stop:
+                q.append(f"{SecuritiesInfo.CLASS_CODE.value} = "
+                         f"'{self.query.get_class_code()}'")
+            if self.query.get_name() != self.query.stop:
+                q.append(f"{SecuritiesInfo.SECURITY_NAME.value} LIKE :par")
+                params = {"par": f"%{self.query.get_name()}%"}
+
+            if q:
+                query += " AND ".join(q)
+            else:
+                query += "1;"
+        else:
+            query += f"{SecuritiesInfo.FIGI.value} = " \
+                     f"'{self.query.get_figi()}' OR"
+            query += f" {SecuritiesInfo.TICKER.value} = " \
+                     f"'{self.query.get_ticker()}' OR"
+            query += f" {SecuritiesInfo.CLASS_CODE.value} = " \
+                     f"'{self.query.get_class_code()}' OR"
+            query += f" {SecuritiesInfo.SECURITY_NAME.value} LIKE :par"
+            params = {"par": f"%{self.query.get_name()}%"}
 
         # Получаем имя таблицы
         table = SecuritiesInfoTable().get_name()
@@ -182,7 +207,8 @@ class GetSecurity(SecurityGetter):
                 {table: list(SecuritiesInfo)},
                 table,
                 where=query,
-                params={"par": f"%{self.query.get_name()}%"}
+                sort_query=[f"{SecuritiesInfo.PRIORITY.value} DESC"],
+                params=params
             )
 
             # Перебираем массив полученных данных

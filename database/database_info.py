@@ -69,6 +69,7 @@ class SecuritiesInfo(Enum):
     SECTOR = "sector"
     SECURITY_TYPE = "security_type"
     COUNTRY_CODE = "country_code"
+    PRIORITY = "priority"
 
 
 class StocksInfo(Enum):
@@ -152,6 +153,7 @@ class SecuritiesInfoTable(Base):
     sector = sqlalchemy.Column("sector", sqlalchemy.VARCHAR)
     security_type = sqlalchemy.Column("security_type", sqlalchemy.Integer)
     country_code = sqlalchemy.Column("country_code", sqlalchemy.VARCHAR)
+    priority = sqlalchemy.Column("priority", sqlalchemy.Integer)
 
     __table__ = sqlalchemy.Table(
         __tablename__,
@@ -166,7 +168,8 @@ class SecuritiesInfoTable(Base):
         country,
         country_code,
         sector,
-        security_type
+        security_type,
+        priority
     )
 
     def get_table(self):

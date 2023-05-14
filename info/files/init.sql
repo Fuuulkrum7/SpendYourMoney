@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS securities_info (
     country_code VARCHAR(8),
     sector VARCHAR(30),
     security_type TINYINT,
+    priority TINYINT DEFAULT 0,
     PRIMARY KEY(ID),
     UNIQUE (figi)
 );

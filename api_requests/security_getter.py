@@ -13,10 +13,11 @@ class StandardQuery:
     """
     security_info: SecurityInfo
     query_text: str
+    stop = "@@@@@@@"
 
     def __init__(self, info: SecurityInfo,
                  query_text: str,
-                 is_advanced = False):
+                 is_advanced=False):
         self.security_info = info
         self.query_text = query_text
         self.is_advanced = is_advanced
@@ -40,28 +41,28 @@ class StandardQuery:
         if self.is_advanced:
             if self.security_info.figi:
                 return self.security_info.figi
-            return "@@@@@@@"
+            return self.stop
         return self.get_query()
 
     def get_ticker(self):
         if self.is_advanced:
             if self.security_info.ticker:
                 return self.security_info.ticker
-            return "@@@@@@@"
+            return self.stop
         return self.get_query()
 
     def get_name(self):
         if self.is_advanced:
             if self.security_info.name:
                 return self.security_info.name
-            return "@@@@@@@"
+            return self.stop
         return self.get_query()
 
     def get_class_code(self):
         if self.is_advanced:
             if self.security_info.class_code:
                 return self.security_info.class_code
-            return "@@@@@@@"
+            return self.stop
         return self.get_query()
 
 

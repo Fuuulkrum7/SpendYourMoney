@@ -282,7 +282,7 @@ class Window(QMainWindow):
         self.button.resize(120, 40)
 
         self.advanced.move(640, 20)
-        self.advanced.resize(120, 40)
+        self.advanced.resize(160, 40)
 
         # connect button to function on_click
         self.button.clicked.connect(self.find_securities)
@@ -316,6 +316,8 @@ class Window(QMainWindow):
         self.output.itemClicked.connect(self.security_clicked)
 
     def security_clicked(self, item):
+        if item.text() == "No results":
+            return
         self.security = item.data(Qt.UserRole)
         if self.security_window is None or \
                 not self.security_window.get_securities_thread.isRunning():
@@ -345,30 +347,34 @@ class Window(QMainWindow):
                 and self.securities_thread.isRunning():
             return
 
-        self.securities_thread = GetSecurity(
-            StandardQuery(
-                SecurityInfo(
-                    figi=self.textbox.text(),
-                    security_name=self.textbox.text(),
-                    ticker=self.textbox.text(),
-                    class_code=self.textbox.text()
-                ) if not self.is_advanced else
-                SecurityInfo(
-                    figi=self.figi.text(),
-                    security_name=self.name.text(),
-                    ticker=self.ticker.text(),
-                    class_code=self.classcode.text()
+        if not self.is_advanced and self.textbox.text() or self.is_advanced \
+                and (self.figi.text() or self.name.text() or
+                 self.ticker.text() or self.classcode.text()):
+
+            self.securities_thread = GetSecurity(
+                StandardQuery(
+                    SecurityInfo(
+                        figi=self.textbox.text(),
+                        security_name=self.textbox.text(),
+                        ticker=self.textbox.text(),
+                        class_code=self.textbox.text()
+                    ) if not self.is_advanced else
+                    SecurityInfo(
+                        figi=self.figi.text(),
+                        security_name=self.name.text(),
+                        ticker=self.ticker.text(),
+                        class_code=self.classcode.text()
+                    ),
+                    "",
+                    is_advanced=self.is_advanced
                 ),
-                "",
-                is_advanced=self.is_advanced
-            ),
-            self.after_search,
-            self.user.get_token(),
-            load_coupons=False,
-            load_dividends=False,
-            load_full_info=False
-        )
-        self.securities_thread.start()
+                self.after_search,
+                self.user.get_token(),
+                load_coupons=False,
+                load_dividends=False,
+                load_full_info=False
+            )
+            self.securities_thread.start()
 
     def on_predict_made(self, result):
         print(result)
@@ -394,23 +400,26 @@ class Window(QMainWindow):
     def after_search(self, result):
         code, data = result
 
-        if data:
-            self.load_securities(data[0].info)
-            if data[0].security_type == SecurityType.STOCK:
-                self.securities_thread = GetSecurity(
-                    StandardQuery(
-                        data[0].info,
-                        "",
-                        is_advanced=self.is_advanced
-                    ),
-                    self.predict_it,
-                    self.user.get_token(),
-                    load_dividends=False,
-                    load_coupons=False,
-                    insert_to_db=False
-                )
-
-                self.securities_thread.start()
+        self.output.clear()
+        if not data:
+            self.output.addItem("No results")
+            return
+            # self.load_securities(data[0].info)
+            # if data[0].security_type == SecurityType.STOCK:
+            #     self.securities_thread = GetSecurity(
+            #         StandardQuery(
+            #             data[0].info,
+            #             "",
+            #             is_advanced=self.is_advanced
+            #         ),
+            #         self.predict_it,
+            #         self.user.get_token(),
+            #         load_dividends=False,
+            #         load_coupons=False,
+            #         insert_to_db=False
+            #     )
+            #
+            #     self.securities_thread.start()
 
                 # self.subscribe_thread = SubscribeOnMarket(
                 #     data[0],
@@ -420,7 +429,6 @@ class Window(QMainWindow):
                 #
                 # self.subscribe_thread.start()
 
-        self.output.clear()
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
                          f"{security.info.figi}, Ticker={security.info.ticker}," \

@@ -1,3 +1,5 @@
+import os
+from platform import system
 from time import time
 
 import function
@@ -9,6 +11,7 @@ from tinkoff.invest import Client, RequestError, Share as tinkoffShare, \
 from database.database_info import SecuritiesInfoTable, BondsInfoTable, \
     StocksInfoTable, SecuritiesInfo
 from database.database_interface import DatabaseInterface
+from info.file_loader import FileLoader
 from securities.securiries_types import SecurityType, StockType
 from securities.securities import Bond, Stock
 
@@ -120,6 +123,16 @@ class LoadAllSecurities(Thread):
         db.close_engine()
 
     def get_from_api(self):
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder = os.path.abspath("database_interface.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder.pop()
+        # Сохраняем его
+        path = sep.join(folder) + "/info/files/priority_figis.txt"
+
+        values = FileLoader.get_file(path)
+
         # Устанавливаем соединение
         with Client(self.__token) as client:
             try:
@@ -137,6 +150,7 @@ class LoadAllSecurities(Thread):
                             currency=loaded_instrument.currency,
                             country=loaded_instrument.country_of_risk_name,
                             country_code=loaded_instrument.country_of_risk,
+                            priority=int(loaded_instrument.figi in values),
                             sector=loaded_instrument.sector,
                             security_type=SecurityType.BOND,
                             security_id=0,
@@ -179,6 +193,7 @@ class LoadAllSecurities(Thread):
                             currency=loaded_instrument.currency,
                             country=loaded_instrument.country_of_risk_name,
                             country_code=loaded_instrument.country_of_risk,
+                            priority=int(loaded_instrument.figi in values),
                             sector=loaded_instrument.sector,
                             security_type=SecurityType.STOCK,
                             security_id=0,
