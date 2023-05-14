@@ -8,9 +8,13 @@ from securities.securities import SecurityInfo
 
 
 class RSI(Thread):
+    status_code: int = 200
     get_sec: GetSecurityHistory
     rsi_step: int
     num_candl: int
+    start_date: datetime
+    info: SecurityInfo
+    candle_interval: CandleInterval
     data_downloaded = pyqtSignal(object)
 
     def __init__(self, set_number_of_candl: int, token, start_date: datetime,
@@ -21,52 +25,71 @@ class RSI(Thread):
         self.num_candl = set_number_of_candl
         self.__token = token
         self.data_downloaded.connect(on_finish)
-        # Работа с GetSecurityHistory
+        self.info = info
+        self.candle_interval = candle_interval
+        self.start_date = start_date
         self.to = start_date + self.rsi_step
         self.to = self.to.replace(tzinfo=datetime.timezone.utc)
 
-        self.get_sec = GetSecurityHistory(
-            info=info,
-            _from=start_date,
-            to=self.to,
-            interval=candle_interval,
-            token=self.__token,
-            on_finish=1 + 1
-        )
-
-        self.get_sec.start()
-
     def run(self) -> None:
+        self.load_history()
+        self.get_sec.wait()
         self.get_rsi_in_point()
 
     def get_rsi_in_point(self):
         output: list = []
-        target_candle = 1
-        while target_candle < self.num_candl:
-            up_sum = 0
-            up_num = 0
-            down_sum = 0
-            down_num = 0
-            prev_candle = 0
-            skiped_candle = 0
-            rsi_num = 0
-            for candle in self.get_sec.history:
-                if skiped_candle < target_candle - 1:
-                    skiped_candle += 1
-                else:
-                    if rsi_num < self.rsi_step:
-                        if prev_candle == 0:
-                            prev_candle = candle.price
+        if self.status_code < 300:
+            try:
+                target_candle = 1
+                while target_candle < self.num_candl:
+                    up_sum = 0
+                    up_num = 0
+                    down_sum = 0
+                    down_num = 0
+                    prev_candle = 0
+                    skiped_candle = 0
+                    rsi_num = 0
+                    for candle in self.get_sec.history:
+                        if skiped_candle < target_candle - 1:
+                            skiped_candle += 1
                         else:
-                            if prev_candle >= candle.price:
-                                down_sum = down_sum + candle.price
-                                down_num = down_num + 1
+                            if rsi_num < self.rsi_step:
+                                if prev_candle == 0:
+                                    prev_candle = candle.price
+                                else:
+                                    if prev_candle >= candle.price:
+                                        down_sum = down_sum + candle.price
+                                        down_num = down_num + 1
+                                    else:
+                                        up_sum = up_sum + candle.price
+                                        up_num = up_num + 1
+                                rsi_num += 1
                             else:
-                                up_sum = up_sum + candle.price
-                                up_num = up_num + 1
-                        rsi_num += 1
-                    else:
-                        break
-            output.append(100 - 100 / ((up_sum / up_num) / (down_sum / down_num)))
-            target_candle += 1
-        self.data_downloaded.emit(output)
+                                break
+                    output.append(100 - 100 / ((up_sum / up_num) / (down_sum / down_num)))
+                    target_candle += 1
+            except Exception as e:
+                print(e)
+                self.status_code = 500
+        self.data_downloaded.emit((self.status_code, output))
+
+    def on_load(self, output):
+        code, result = output
+
+        if code == 500 or code == 300:
+            self.status_code = 400
+            return
+
+        if len(output) < self.rsi_step:
+            self.status_code = 300
+
+    def load_history(self):
+        self.get_sec = GetSecurityHistory(
+            info=self.info,
+            _from=self.start_date,
+            to=self.to,
+            interval=self.candle_interval,
+            token=self.__token,
+            on_finish=self.on_load
+        )
+        self.get_sec.start()
