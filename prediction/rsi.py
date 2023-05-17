@@ -80,7 +80,7 @@ class RSI(Thread):
             self.status_code = 400
             return
 
-        if len(output) < self.rsi_step:
+        if len(result) < self.rsi_step:
             self.status_code = 300
 
     def load_history(self):
