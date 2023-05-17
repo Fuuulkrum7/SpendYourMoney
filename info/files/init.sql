@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS coupon_info (
     pay_one_bond DOUBLE,
     coupon_type INT,
     PRIMARY KEY(ID),
-    CONSTRAINT UC_div UNIQUE (security_id, fix_date)
+    CONSTRAINT UC_coup UNIQUE (security_id, coupon_date)
 );
 
 CREATE TABLE IF NOT EXISTS stocks_info (
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS dividend_info (
     last_buy_date DATE,
     yield_value DOUBLE,
     PRIMARY KEY(ID),
-    CONSTRAINT UC_div UNIQUE (security_id, payment_date, div_value)
+    CONSTRAINT UC_div UNIQUE (security_id, declared_date, div_value)
 );
 
 CREATE TABLE IF NOT EXISTS securities_history (

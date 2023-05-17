@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
-    QMainWindow
+    QMainWindow, QListWidgetItem, QListWidget
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
@@ -13,7 +13,8 @@ from tinkoff.invest.utils import now
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.security_getter import StandardQuery
-from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo
+from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo, \
+    CouponInfo
 from securities.securiries_types import SecurityType
 
 
@@ -28,6 +29,10 @@ class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
+    WIDTH = 1080
+    HEIGHT = 720
+    no_result = "Nothing found"
+
     def __init__(self, item, user):
         super().__init__()
         self.right_vertical = None
@@ -35,7 +40,7 @@ class SecurityWindow(QMainWindow):
         self.canvas = None
         self.user = user
         self.history = []
-        self.setFixedSize(1080, 720)
+        self.setFixedSize(self.WIDTH, self.HEIGHT)
         self.setWindowTitle(item.info.name)
 
         self.layout = QVBoxLayout(self)
@@ -70,11 +75,14 @@ class SecurityWindow(QMainWindow):
         self.div_coup_tab = QWidget()
         self.course_tab = QWidget()
 
-        self.tabs.addTab(self.security_tab, "Tab 1")
-        self.tabs.addTab(self.div_coup_tab, "Tab 2")
-        self.tabs.addTab(self.course_tab, "Tab 3")
+        self.tabs.addTab(self.security_tab, "Main info")
+        self.tabs.addTab(self.div_coup_tab, "Subdata")
+        self.tabs.addTab(self.course_tab, "Course")
+
+        self.divs_and_coupons = QListWidget(self)
 
         self.init_security_ui()
+        self.init_divs_ui()
         self.init_plot_ui()
 
         self.layout.addWidget(self.tabs)
@@ -98,6 +106,36 @@ class SecurityWindow(QMainWindow):
 
         left_widget.setLayout(self.left_vertical)
         right_widget.setLayout(self.right_vertical)
+
+    def init_divs_ui(self):
+        self.div_coup_tab.layout = QtWidgets.QHBoxLayout()
+        self.div_coup_tab.setLayout(self.div_coup_tab.layout)
+
+        self.div_coup_tab.layout.addWidget(self.divs_and_coupons)
+        self.divs_and_coupons.setObjectName("divs_and_coupons")
+        self.divs_and_coupons.move(20, 20)
+        self.divs_and_coupons.resize(self.WIDTH - 40, self.HEIGHT - 40)
+
+    def after_divs_load(self, data, flag):
+        if not data:
+            self.divs_and_coupons.addItem(self.no_result)
+            return
+        for sub in data:
+            sub_dict: dict = sub.get_as_dict()
+            sub_dict.pop("security_id")
+            sub_dict.pop("ID")
+
+            if flag == SecurityType.BOND:
+                sub_dict[CouponInfo.coupon_type.value] = sub.coupon_type
+
+            parsed = ""
+            for key, value in sub_dict.items():
+                key = key.replace("_", " ") + ": "
+                parsed += key + str(value) + "; "
+            parsed = parsed[:-2]
+            divider = len(parsed) * "*"
+
+            self.divs_and_coupons.addItem(f"{divider}\n{parsed}\n{divider}")
 
     def init_plot_ui(self):
         self.canvas = MplCanvas()
@@ -148,6 +186,8 @@ class SecurityWindow(QMainWindow):
         for l, r in zip(self.left, self.right):
             self.left_vertical.addWidget(l)
             self.right_vertical.addWidget(r)
+
+        self.after_divs_load(item.get_sub_data(), item.security_type)
 
     def on_load(self, result):
         code, data = result

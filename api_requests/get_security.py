@@ -251,14 +251,15 @@ class GetSecurity(SecurityGetter):
             sub_data = []
 
             # Если цб есть
-            if len(indexes):
+            if len(indexes) > 1:
                 # Ищем по ним дивиденды в локальной базе данных
                 sub_data = db.get_data_by_sql(
                     {DividendInfoTable().get_name(): list(DividendInfo)},
                     DividendInfoTable().get_name(),
                     where=f"WHERE {DividendInfo.security_id.value} "
                           f"IN ({', '.join(map(str, indexes))})",
-                    sort_query=[f"{DividendInfo.security_id.value} ASC"]
+                    sort_query=[f"{DividendInfo.security_id.value} ASC",
+                                f"{DividendInfo.declared_date.value} DESC"]
                 )
 
             # Здесь лежат дивиденды, распределенные по индексам
@@ -293,9 +294,7 @@ class GetSecurity(SecurityGetter):
                         dividends = GetDividends(
                             self.query,
                             lambda x, y: x,
-                            self.__token,
-                            check_locally=False,
-                            check_only_locally=self.check_only_locally
+                            self.__token
                         )
                         dividends.start()
                         dividends.wait()
@@ -326,14 +325,15 @@ class GetSecurity(SecurityGetter):
             # Получаем все индексы для купонов
             indexes = [x["security_id"] for x in a]
 
-            if len(indexes):
+            if len(indexes) > 1:
                 # Получаем купоны
                 sub_data = db.get_data_by_sql(
                     {CouponInfoTable().get_name(): list(CouponInfo)},
                     CouponInfoTable().get_name(),
                     where=f"WHERE {CouponInfo.security_id.value} "
                           f"IN ({', '.join(map(str, indexes))})",
-                    sort_query=[f"{CouponInfo.security_id.value} ASC"]
+                    sort_query=[f"{CouponInfo.security_id.value} ASC",
+                                f"{CouponInfo.coupon_date.value} DESC"]
                 )
 
             # Создаем из них словарь, чтобы по индексу цб получать сразу все
@@ -364,9 +364,7 @@ class GetSecurity(SecurityGetter):
                         coup = GetCoupons(
                             self.query,
                             lambda x, y: x,
-                            self.__token,
-                            check_locally=False,
-                            check_only_locally=self.check_only_locally
+                            self.__token
                         )
                         coup.start()
                         # Ждем, пока поток закончит работу

@@ -264,6 +264,31 @@ class DatabaseInterface:
             query += "ELSE 0\n END;"
 
             self.execute_sql(query)
+        elif self.version == 5:
+            try:
+                # Delete old constraint keys
+                self.__engine.execute(
+                    text(f"ALTER TABLE {DividendInfoTable.__tablename__} "
+                         f"DROP CONSTRAINT UC_div")
+                )
+                self.__engine.execute(
+                    text(f"ALTER TABLE {CouponInfoTable.__tablename__} "
+                         f"DROP CONSTRAINT UC_div")
+                )
+
+                # Create new constraint keys
+                self.__engine.execute(
+                    text(f"ALTER TABLE {CouponInfoTable.__tablename__} "
+                         f"ADD CONSTRAINT UC_coup "
+                         f"UNIQUE(security_id, coupon_date)")
+                )
+                self.__engine.execute(
+                    text(f"ALTER TABLE {DividendInfoTable.__tablename__} "
+                         f"ADD CONSTRAINT UC_div "
+                         f"UNIQUE (security_id, declared_date, div_value)")
+                )
+            except Exception as e:
+                print(e)
         else:
             pass
 

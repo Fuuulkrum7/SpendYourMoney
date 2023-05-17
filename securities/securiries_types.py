@@ -32,6 +32,9 @@ class CouponType(Enum):
     COUPON_TYPE_VARIABLE = 6
     COUPON_TYPE_OTHER = 7
 
+    def __str__(self):
+        return self.name.replace("_", " ").capitalize()
+
 
 class SecurityType(Enum):
     """

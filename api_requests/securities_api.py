@@ -42,7 +42,8 @@ class GetCoupons(SecurityGetter):
     иначе тормозится основной, где работает интерфейс
     """
     # Заготовка под купоны
-    coupon: list[Coupon] = []
+    coupon: list[Coupon]
+    insert: list
     # Статус-код, все банально
     status_code: int = 200
     data_downloaded = pyqtSignal(object)
@@ -58,6 +59,9 @@ class GetCoupons(SecurityGetter):
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
         self.check_only_locally = check_only_locally
+
+        self.insert = []
+        self.coupon = []
 
     def run(self) -> None:
         # запускаем загрузку данных
@@ -87,7 +91,7 @@ class GetCoupons(SecurityGetter):
 
         # Если мы данные все ещё не загрузили,
         # лезем в апи
-        if not self.coupon and not self.check_only_locally:
+        if not self.check_only_locally:
             self.get_from_api()
 
     def insert_to_database(self):
@@ -145,7 +149,6 @@ class GetCoupons(SecurityGetter):
         # парсим данные в купоны
         self.coupon = [Coupon(**i) for i in a]
         # обновляем, надо ли нам добавлять данные в бд
-        self.insert_to_db = not len(self.coupon)
 
         db.close_engine()
 
@@ -198,17 +201,24 @@ class GetCoupons(SecurityGetter):
                 return
 
         # парсим их в класс
-        self.coupon = [
+        self.insert = [
             Coupon(
                 coupon_id=-2,
                 security_id=self.query.security_info.id,
-                coupon_date=coupon.coupon_date,
-                fix_date=coupon.fix_date,
+                coupon_date=coupon.coupon_date.date(),
+                fix_date=coupon.fix_date.date(),
                 coupon_type=coupon.coupon_type,
                 pay_one_bond=coupon.pay_one_bond,
                 coupon_number=coupon.coupon_number
             ) for coupon in sub_data
         ]
+
+        self.insert = list(set(self.insert) - set(self.coupon))
+
+        self.coupon += self.insert
+
+        self.coupon.sort(key=lambda x: x.coupon_date, reverse=True)
+        self.insert.sort(key=lambda x: x.coupon_date, reverse=True)
 
     def get_data(self):
         return self.coupon
@@ -226,8 +236,8 @@ class GetDividends(SecurityGetter):
      имеет смысл, так как код это хоть и сократит,
     но при этом сильно усложнит структуру программы
     """
-    dividend: list[Dividend] = []
-    insert: list = []
+    dividend: list[Dividend]
+    insert: list
     status_code: int = 200
     data_downloaded = pyqtSignal(object)
 
@@ -242,6 +252,8 @@ class GetDividends(SecurityGetter):
         self.check_locally = check_locally
         self.insert_to_db = insert_to_db
         self.check_only_locally = check_only_locally
+        self.dividend = []
+        self.insert = []
 
     # и тут тоже все так же, как в предыдущем классе
     def run(self) -> None:
@@ -307,9 +319,9 @@ class GetDividends(SecurityGetter):
         )
 
         # Разве что тут мы вместо купонов создаем
-        # дивиденты, но как бы и так это понятно
+        # дивиденды, но как бы и так это понятно
         self.dividend = [Dividend(**i) for i in a]
-        self.insert_to_db = not len(self.dividend)
+
         db.close_engine()
 
     # А тут просто отличается класс, который мы создаем
@@ -352,10 +364,10 @@ class GetDividends(SecurityGetter):
         self.insert = [
             Dividend(
                 div_value=div.dividend_net,
-                payment_date=div.payment_date,
-                declared_date=div.declared_date,
-                record_date=div.record_date,
-                last_buy_date=div.last_buy_date,
+                payment_date=div.payment_date.date(),
+                declared_date=div.declared_date.date(),
+                record_date=div.record_date.date(),
+                last_buy_date=div.last_buy_date.date(),
                 yield_value=div.yield_value,
                 div_id=-2,
                 security_id=self.query.security_info.id)
@@ -366,8 +378,8 @@ class GetDividends(SecurityGetter):
 
         self.dividend += self.insert
 
-        self.dividend.sort(key=lambda x: x.payment_date)
-        self.insert.sort(key=lambda x: x.payment_date)
+        self.dividend.sort(key=lambda x: x.declared_date, reverse=True)
+        self.insert.sort(key=lambda x: x.declared_date, reverse=True)
 
     def get_data(self):
         return self.dividend
