@@ -4,6 +4,11 @@ from tinkoff.invest import CandleInterval
 
 from securities.securities import SecurityInfo
 
+delta: list = [datetime.timedelta(minutes=1), datetime.timedelta(minutes=2), datetime.timedelta(minutes=3),
+               datetime.timedelta(minutes=5), datetime.timedelta(minutes=10), datetime.timedelta(minutes=15),
+               datetime.timedelta(minutes=30), datetime.timedelta(hours=1), datetime.timedelta(hours=2),
+               datetime.timedelta(hours=4), datetime.timedelta(days=1), datetime.timedelta(weeks=1)]
+
 
 class AutoTrader(Thread):
     status_code: int = 200
@@ -13,49 +18,15 @@ class AutoTrader(Thread):
     start_date: datetime
     end_date: datetime
 
-    def __init__(self, info: SecurityInfo, candl_interval: CandleInterval, token, period: int, end_date: datetime = datetime.datetime.today()):
+    def __init__(self, info: SecurityInfo, candl_interval: CandleInterval, token, period: int,
+                 end_date: datetime = datetime.datetime.today()):
         super().__init__()
         self.info = info
         self.candle_interval = candl_interval
         self.__token = token
         self.period = period
         self.end_date = end_date
-        if candl_interval == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            self.start_date = end_date - datetime.timedelta(minutes=period)
+        if 0 <= candl_interval.value - 1 < 12:
+            self.start_date = end_date - delta[candl_interval.value - 1] * period
         else:
-            if candl_interval == CandleInterval.CANDLE_INTERVAL_2_MIN:
-                self.start_date = end_date - datetime.timedelta(minutes=period*2)
-            else:
-                if candl_interval == CandleInterval.CANDLE_INTERVAL_3_MIN:
-                    self.start_date = end_date - datetime.timedelta(minutes=period*3)
-                else:
-                    if candl_interval == CandleInterval.CANDLE_INTERVAL_5_MIN:
-                        self.start_date = end_date - datetime.timedelta(minutes=period*5)
-                    else:
-                        if candl_interval == CandleInterval.CANDLE_INTERVAL_10_MIN:
-                            self.start_date = end_date - datetime.timedelta(minutes=period*10)
-                        else:
-                            if candl_interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-                                self.start_date = end_date - datetime.timedelta(minutes=period*15)
-                            else:
-                                if candl_interval == CandleInterval.CANDLE_INTERVAL_30_MIN:
-                                    self.start_date = end_date - datetime.timedelta(minutes=period*30)
-                                else:
-                                    if candl_interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-                                        self.start_date = end_date - datetime.timedelta(hours=period)
-                                    else:
-                                        if candl_interval == CandleInterval.CANDLE_INTERVAL_2_HOUR:
-                                            self.start_date = end_date - datetime.timedelta(hours=period*2)
-                                        else:
-                                            if candl_interval == CandleInterval.CANDLE_INTERVAL_4_HOUR:
-                                                self.start_date = end_date - datetime.timedelta(hours=period*4)
-                                            else:
-                                                if candl_interval == CandleInterval.CANDLE_INTERVAL_DAY:
-                                                    self.start_date = end_date - datetime.timedelta(days=period)
-                                                else:
-                                                    if candl_interval == CandleInterval.CANDLE_INTERVAL_WEEK:
-                                                        self.start_date = end_date - datetime.timedelta(weeks=period)
-                                                    else:
-                                                        if candl_interval == CandleInterval.CANDLE_INTERVAL_MONTH:
-                                                            self.start_date = end_date - datetime.timedelta(
-                                                                days=30*period)
+            self.status_code = 500  # Incorrect CandleInterval
