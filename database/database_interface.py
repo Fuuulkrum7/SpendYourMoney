@@ -225,7 +225,8 @@ class DatabaseInterface:
     def migrate(self):
         if self.version < 4:
             self.clear_db()
-        elif self.version == 4:
+            return
+        if self.version == 4:
             try:
                 self.__engine.execute(
                     text(
@@ -264,7 +265,7 @@ class DatabaseInterface:
             query += "ELSE 0\n END;"
 
             self.execute_sql(query)
-        elif self.version == 5:
+        if self.version <= 5:
             try:
                 # Delete old constraint keys
                 self.__engine.execute(
@@ -289,8 +290,6 @@ class DatabaseInterface:
                 )
             except Exception as e:
                 print(e)
-        else:
-            pass
 
     def clear_db(self):
         try:
