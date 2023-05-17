@@ -290,6 +290,7 @@ class DatabaseInterface:
                 )
             except Exception as e:
                 print(e)
+                return
 
     def clear_db(self):
         try:
