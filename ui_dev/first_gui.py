@@ -343,7 +343,7 @@ class Window(QMainWindow):
         if self.security_window is None or \
                 not self.security_window.get_securities_thread.isRunning():
             self.security_window = SecurityWindow(
-                self.security, self.user, self.settings
+                self.security, self.user, self.settings, self.__path
             )
             print("1", self.user)
             self.security_window.show()

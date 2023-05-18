@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS securities_history (
     security_id INT NOT NULL,
     price DOUBLE,
     info_time DATETIME NOT NULL,
-    volume INT,
+    volume BIGINT,
     candle_interval INT NOT NULL,
     CONSTRAINT UC_history PRIMARY KEY (security_id, info_time, candle_interval)
 );

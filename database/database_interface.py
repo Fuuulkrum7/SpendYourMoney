@@ -303,6 +303,11 @@ class DatabaseInterface:
             except Exception as e:
                 print(e)
                 return
+        if self.version <= 6:
+            self.__engine.execute(
+                text(f"ALTER TABLE {SecuritiesHistoryTable.__tablename__} "
+                     f"MODIFY {SecuritiesHistory.volume.name} BIGINT")
+            )
 
     def clear_db(self):
         try:

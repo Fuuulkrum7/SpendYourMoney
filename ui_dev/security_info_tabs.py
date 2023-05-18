@@ -4,7 +4,8 @@ from datetime import timedelta
 from platform import system
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
-    QMainWindow, QListWidgetItem, QListWidget, QComboBox, QHBoxLayout
+    QMainWindow, QListWidgetItem, QListWidget, QComboBox, QHBoxLayout, \
+    QMessageBox
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
@@ -24,6 +25,16 @@ from securities.securiries_types import SecurityType
 from securities.securities import Security
 
 
+candles_dict = {
+    "One minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
+    "Five minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
+    "Fifteen Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
+    "One hour": CandleInterval.CANDLE_INTERVAL_HOUR,
+    "One day": CandleInterval.CANDLE_INTERVAL_DAY,
+    "Whole history": CandleInterval.CANDLE_INTERVAL_MONTH
+}
+
+
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
@@ -39,9 +50,14 @@ class SecurityWindow(QMainWindow):
     HEIGHT = 720
     no_result = "Nothing found"
     item: Security = None
+    just_created = 0
 
-    def __init__(self, item, user, settings):
+    def __init__(self, item, user, settings, path):
         super().__init__()
+
+        self.__path = path
+        self.select_candle = None
+        self.horizontal = None
         self.predict_thread = None
         self.neural_network = None
         self.right_vertical = None
@@ -74,11 +90,17 @@ class SecurityWindow(QMainWindow):
 
         self.settings = settings
 
-        self.candle = CandleInterval(settings["candle"])
+        if 0 <= settings["candle"] <= 5 or settings["candle"] == \
+                CandleInterval.CANDLE_INTERVAL_MONTH.value:
+            self.candle = CandleInterval(settings["candle"])
+        else:
+            self.candle = CandleInterval.CANDLE_INTERVAL_DAY
 
         self.init_security_ui()
         self.init_divs_ui()
         self.init_plot_ui()
+
+        self.tabs.tabBarClicked.connect(self.tab_changed)
 
         self.layout.addWidget(self.tabs)
         self.main_widget.setLayout(self.layout)
@@ -142,6 +164,19 @@ class SecurityWindow(QMainWindow):
 
             self.divs_and_coupons.addItem(f"{divider}\n{parsed}\n{divider}")
 
+    def tab_changed(self, index):
+        if index == 2 and self.just_created == 1:
+            self.just_created = 2
+
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+
+            msg.setText("Data to display not found")
+            msg.setWindowTitle("Critical MessageBox")
+            msg.setStandardButtons(QMessageBox.Ok)
+
+            retval = msg.exec_()
+
     def init_plot_ui(self):
         self.course_tab.layout = QVBoxLayout()
 
@@ -155,13 +190,23 @@ class SecurityWindow(QMainWindow):
         # self.course_tab.layout.addWidget(toolbar)
 
         self.select_candle = QComboBox()
+        self.select_candle.addItems(list(candles_dict.keys()))
+        self.select_candle.setCurrentIndex(list(candles_dict.values()).index(
+            self.candle
+        ))
+        self.select_candle.currentIndexChanged.connect(self.on_candle_change)
+
         self.horizontal.addWidget(self.select_candle)
         self.course_tab.layout.addLayout(self.horizontal)
         self.canvas = MplCanvas()
         self.course_tab.layout.addWidget(self.canvas)
 
-
         self.course_tab.setLayout(self.course_tab.layout)
+
+        self.load_plot()
+
+    def on_candle_change(self, val):
+        self.candle = list(candles_dict.values())[val]
 
         self.load_plot()
 
@@ -219,7 +264,6 @@ class SecurityWindow(QMainWindow):
             dict_security[BondsInfo.perpetual_flag.value] = \
                 bool(item.perpetual)
 
-        print(dict_security)
         dict_security.pop("security_id")
 
         for key, value in dict_security.items():
@@ -252,8 +296,28 @@ class SecurityWindow(QMainWindow):
     def on_load(self, result):
         code, data = result
 
+        self.save_data()
+
         self.history = data
         dates = [i.info_time for i in self.history]
         prices = [i.price for i in self.history]
 
+        cleared = self.just_created
+        self.just_created = 2 if len(data) > 1 else 1
+
+        if self.canvas:
+            self.canvas.axes.clear()
+
         self.canvas.axes.plot(dates, prices)
+        self.canvas.draw()
+
+        if cleared:
+            self.tab_changed(2)
+
+    def save_data(self):
+        self.settings["candle"] = self.candle.value
+
+        FileLoader.save_json(
+            self.__path + "/info/files/.current_settings",
+            self.settings
+        )
