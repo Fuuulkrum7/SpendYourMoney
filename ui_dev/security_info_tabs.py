@@ -19,7 +19,9 @@ from api_requests.security_getter import StandardQuery
 from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo, \
     CouponInfo
 from info.file_loader import FileLoader
+from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
+from securities.securities import Security
 
 
 class MplCanvas(FigureCanvas):
@@ -36,10 +38,12 @@ class SecurityWindow(QMainWindow):
     WIDTH = 1080
     HEIGHT = 720
     no_result = "Nothing found"
-    item = None
+    item: Security = None
 
     def __init__(self, item, user, settings):
         super().__init__()
+        self.predict_thread = None
+        self.neural_network = None
         self.right_vertical = None
         self.left_vertical = None
         self.canvas = None
@@ -70,7 +74,7 @@ class SecurityWindow(QMainWindow):
 
         self.settings = settings
 
-        self.candle = CandleInterval(self.candle_index)
+        self.candle = CandleInterval(settings["candle"])
 
         self.init_security_ui()
         self.init_divs_ui()
@@ -140,33 +144,37 @@ class SecurityWindow(QMainWindow):
 
     def init_plot_ui(self):
         self.canvas = MplCanvas()
-
-        toolbar = NavigationToolbar2QT(self.canvas, self)
-
         self.course_tab.layout = QVBoxLayout()
-        self.course_tab.layout.addWidget(toolbar)
-        self.course_tab.layout.addWidget(self.canvas)
         self.course_tab.setLayout(self.course_tab.layout)
+
+        self.neural_network = QLabel()
+        self.course_tab.layout.addWidget(self.neural_network)
+        self.neural_network.move(200, 5)
+
+        # toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        # self.course_tab.layout.addWidget(toolbar)
+        self.course_tab.layout.addWidget(self.canvas)
 
         self.load_plot()
 
     def load_plot(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            self.delta = now() - timedelta(minutes=90)
+            delta = now() - timedelta(minutes=90)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            self.delta = now() - timedelta(minutes=450)
+            delta = now() - timedelta(minutes=450)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            self.delta = now() - timedelta(minutes=1350)
+            delta = now() - timedelta(minutes=1350)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
-            self.delta = now() - timedelta(hours=90)
+            delta = now() - timedelta(hours=90)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
-            self.delta = datetime.datetime(year=1970, month=1, day=2)
+            delta = datetime.datetime(year=1970, month=1, day=2)
         else:
-            self.delta = now() - timedelta(days=90)
+            delta = now() - timedelta(days=90)
 
         self.get_securities_hist_thread = GetSecurityHistory(
             info=self.item.info,
-            _from= self.delta,
+            _from=delta,
             to=now(),
             interval=self.candle,
             token=self.user.get_token(),
@@ -218,6 +226,21 @@ class SecurityWindow(QMainWindow):
         self.item = item
 
         self.after_divs_load(item.get_sub_data(), item.security_type)
+
+        if self.item.security_type == SecurityType.STOCK:
+            self.predict_thread = PredictCourse(
+                self.item,
+                self.on_predict_made,
+                self.user.get_token()
+            )
+
+            self.predict_thread.start()
+        else:
+            self.neural_network.setText("Not allowed to make a prediction")
+
+    def on_predict_made(self, result):
+        code, data = result
+        self.neural_network.setText(str(data))
 
     def on_load(self, result):
         code, data = result

@@ -3,6 +3,8 @@ import math
 from datetime import datetime
 import numpy as np
 
+from info.file_loader import FileLoader
+
 
 def norm_word(word) -> int:
     parsed = 0
@@ -13,7 +15,7 @@ def norm_word(word) -> int:
 
 
 def normalize_data(data) -> np.array:
-    codes = get_json("info/files/.sector_codes.json")
+    codes = FileLoader.get_json("info/files/.sector_codes.json")
     securities_history = []
     coefs = []
 
