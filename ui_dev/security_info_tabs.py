@@ -4,7 +4,7 @@ from datetime import timedelta
 from platform import system
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
-    QMainWindow, QListWidgetItem, QListWidget
+    QMainWindow, QListWidgetItem, QListWidget, QComboBox, QHBoxLayout
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
@@ -143,18 +143,25 @@ class SecurityWindow(QMainWindow):
             self.divs_and_coupons.addItem(f"{divider}\n{parsed}\n{divider}")
 
     def init_plot_ui(self):
-        self.canvas = MplCanvas()
         self.course_tab.layout = QVBoxLayout()
-        self.course_tab.setLayout(self.course_tab.layout)
 
+        self.horizontal = QHBoxLayout()
         self.neural_network = QLabel()
-        self.course_tab.layout.addWidget(self.neural_network)
-        self.neural_network.move(200, 5)
+        self.horizontal.addWidget(self.neural_network)
+        # self.neural_network.move(200, 5)
 
         # toolbar = NavigationToolbar2QT(self.canvas, self)
 
         # self.course_tab.layout.addWidget(toolbar)
+
+        self.select_candle = QComboBox()
+        self.horizontal.addWidget(self.select_candle)
+        self.course_tab.layout.addLayout(self.horizontal)
+        self.canvas = MplCanvas()
         self.course_tab.layout.addWidget(self.canvas)
+
+
+        self.course_tab.setLayout(self.course_tab.layout)
 
         self.load_plot()
 
