@@ -318,6 +318,6 @@ class SecurityWindow(QMainWindow):
         self.settings["candle"] = self.candle.value
 
         FileLoader.save_json(
-            self.__path + "/info/files/.current_settings",
+            self.__path + "/info/files/.current_settings.json",
             self.settings
         )
