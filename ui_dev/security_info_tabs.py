@@ -1,3 +1,4 @@
+import datetime
 import os
 from datetime import timedelta
 from platform import system
@@ -35,6 +36,7 @@ class SecurityWindow(QMainWindow):
     WIDTH = 1080
     HEIGHT = 720
     no_result = "Nothing found"
+    item = None
 
     def __init__(self, item, user, settings):
         super().__init__()
@@ -48,6 +50,8 @@ class SecurityWindow(QMainWindow):
 
         self.layout = QVBoxLayout(self)
         self.main_widget = QWidget()
+
+        self.item = item
 
         self.left = []
         self.right = []
@@ -66,17 +70,17 @@ class SecurityWindow(QMainWindow):
 
         self.settings = settings
 
-        self.candle = CandleInterval(settings["candle"])
+        self.candle = CandleInterval(self.candle_index)
 
-        self.init_security_ui(item)
+        self.init_security_ui()
         self.init_divs_ui()
-        self.init_plot_ui(item)
+        self.init_plot_ui()
 
         self.layout.addWidget(self.tabs)
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
 
-    def init_security_ui(self, item):
+    def init_security_ui(self):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
         self.security_tab.setLayout(self.security_tab.layout)
 
@@ -96,7 +100,7 @@ class SecurityWindow(QMainWindow):
 
         self.get_securities_thread = GetSecurity(
             StandardQuery(
-                item.info,
+                self.item.info,
                 ""
             ),
             self.after,
@@ -134,7 +138,7 @@ class SecurityWindow(QMainWindow):
 
             self.divs_and_coupons.addItem(f"{divider}\n{parsed}\n{divider}")
 
-    def init_plot_ui(self, item):
+    def init_plot_ui(self):
         self.canvas = MplCanvas()
 
         toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -144,9 +148,25 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout.addWidget(self.canvas)
         self.course_tab.setLayout(self.course_tab.layout)
 
+        self.load_plot()
+
+    def load_plot(self):
+        if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.delta = now() - timedelta(minutes=90)
+        elif self.candle == CandleInterval.CANDLE_INTERVAL_5_MIN:
+            self.delta = now() - timedelta(minutes=450)
+        elif self.candle == CandleInterval.CANDLE_INTERVAL_15_MIN:
+            self.delta = now() - timedelta(minutes=1350)
+        elif self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
+            self.delta = now() - timedelta(hours=90)
+        elif self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.delta = datetime.datetime(year=1970, month=1, day=2)
+        else:
+            self.delta = now() - timedelta(days=90)
+
         self.get_securities_hist_thread = GetSecurityHistory(
-            info=item.info,
-            _from=now() - timedelta(days=100),
+            info=self.item.info,
+            _from= self.delta,
             to=now(),
             interval=self.candle,
             token=self.user.get_token(),
@@ -194,6 +214,8 @@ class SecurityWindow(QMainWindow):
         for l, r in zip(self.left, self.right):
             self.left_vertical.addWidget(l)
             self.right_vertical.addWidget(r)
+
+        self.item = item
 
         self.after_divs_load(item.get_sub_data(), item.security_type)
 
