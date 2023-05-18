@@ -1,4 +1,6 @@
+import os
 from datetime import timedelta
+from platform import system
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow, QListWidgetItem, QListWidget
@@ -15,6 +17,7 @@ from api_requests.get_security_history import GetSecurityHistory
 from api_requests.security_getter import StandardQuery
 from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo, \
     CouponInfo
+from info.file_loader import FileLoader
 from securities.securiries_types import SecurityType
 
 
@@ -46,26 +49,6 @@ class SecurityWindow(QMainWindow):
         self.layout = QVBoxLayout(self)
         self.main_widget = QWidget()
 
-        self.get_securities_thread = GetSecurity(
-            StandardQuery(
-                item.info,
-                ""
-            ),
-            self.after,
-            self.user.get_token()
-        )
-        self.get_securities_thread.start()
-
-        self.get_securities_hist_thread = GetSecurityHistory(
-            info=item.info,
-            _from=now() - timedelta(days=100),
-            to=now(),
-            interval=CandleInterval.CANDLE_INTERVAL_DAY,
-            token=self.user.get_token(),
-            on_finish=self.on_load
-        )
-        self.get_securities_hist_thread.start()
-
         self.left = []
         self.right = []
 
@@ -81,15 +64,15 @@ class SecurityWindow(QMainWindow):
 
         self.divs_and_coupons = QListWidget(self)
 
-        self.init_security_ui()
+        self.init_security_ui(item)
         self.init_divs_ui()
-        self.init_plot_ui()
+        self.init_plot_ui(item)
 
         self.layout.addWidget(self.tabs)
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
 
-    def init_security_ui(self):
+    def init_security_ui(self, item):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
         self.security_tab.setLayout(self.security_tab.layout)
 
@@ -106,6 +89,33 @@ class SecurityWindow(QMainWindow):
 
         left_widget.setLayout(self.left_vertical)
         right_widget.setLayout(self.right_vertical)
+
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder = os.path.abspath("security_info_tabs.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder.pop()
+        # Сохраняем его
+        self.__path = sep.join(folder)
+        settings = FileLoader.get_json(
+            self.__path + "/info/files/.current_settings.json"
+        )
+        if settings is None:
+            settings = FileLoader.get_json(
+                self.__path + "/info/files/.default_setting.json"
+            )
+
+        self.candle = CandleInterval(settings["candle"])
+
+        self.get_securities_thread = GetSecurity(
+            StandardQuery(
+                item.info,
+                ""
+            ),
+            self.after,
+            self.user.get_token()
+        )
+        self.get_securities_thread.start()
 
     def init_divs_ui(self):
         self.div_coup_tab.layout = QtWidgets.QHBoxLayout()
@@ -137,7 +147,7 @@ class SecurityWindow(QMainWindow):
 
             self.divs_and_coupons.addItem(f"{divider}\n{parsed}\n{divider}")
 
-    def init_plot_ui(self):
+    def init_plot_ui(self, item):
         self.canvas = MplCanvas()
 
         toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -146,6 +156,16 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout.addWidget(toolbar)
         self.course_tab.layout.addWidget(self.canvas)
         self.course_tab.setLayout(self.course_tab.layout)
+
+        self.get_securities_hist_thread = GetSecurityHistory(
+            info=item.info,
+            _from=now() - timedelta(days=100),
+            to=now(),
+            interval=self.candle,
+            token=self.user.get_token(),
+            on_finish=self.on_load
+        )
+        self.get_securities_hist_thread.start()
 
     def after(self, result):
         code, data = result
@@ -156,6 +176,7 @@ class SecurityWindow(QMainWindow):
         dict_security.update(item.get_as_dict())
 
         dict_security.pop(SecuritiesInfo.ID.value)
+        dict_security.pop(SecuritiesInfo.PRIORITY.value)
 
         dict_security[SecuritiesInfo.SECTOR.value] = \
             dict_security[SecuritiesInfo.SECTOR.value].upper()
