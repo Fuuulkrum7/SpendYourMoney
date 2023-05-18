@@ -19,8 +19,11 @@ class SubscribeOnMarket(QThread):
     500 - we don't know, what have happened, but we've got an error
     """
     status_code: int = 200
+    # Вид подписки
     subscription: SubscriptionAction
+    # Интервал подписки
     interval: SubscriptionInterval
+    # ЦБ
     security: Security
 
     data_downloaded = pyqtSignal(object)
@@ -42,6 +45,7 @@ class SubscribeOnMarket(QThread):
 
     def run(self) -> None:
         def request_iterator():
+            # Генератор, который делает запросы на рынок с задержкой 1 секунду
             yield MarketDataRequest(
                 subscribe_candles_request=SubscribeCandlesRequest(
                     waiting_close=True,
@@ -57,11 +61,17 @@ class SubscribeOnMarket(QThread):
             while True:
                 time.sleep(1)
         try:
+            # Создаем подключение
             with Client(self.__token) as client:
+                # Теперь перебираем генератор
                 for marketdata in client.market_data_stream.market_data_stream(
                         request_iterator()
                 ):
+                    # Получаем свечу
                     candle = marketdata.candle
+                    # Если она есть (торги были за выбранный временной
+                    # промежуток), то создаем свечу
+                    # и отправляем ее в функцию
                     if candle is not None:
                         history = SecurityHistory(
                             info_time=candle.time,
@@ -72,11 +82,14 @@ class SubscribeOnMarket(QThread):
 
                         self.data_downloaded.emit((history, self.status_code))
         except RequestError as e:
+            # Ошибка подключения
             print("Error in request\n", e)
             self.status_code = 400
         except Exception as e:
+            # Рандомная бяка
             print("Error unknown\n", e)
             self.status_code = 500
 
     def stop(self):
+        # Останавливаем таким образом генератор
         self.subscription = SubscriptionAction.SUBSCRIPTION_ACTION_UNSUBSCRIBE
