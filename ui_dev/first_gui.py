@@ -2,6 +2,7 @@ import os
 import sys
 import time
 from datetime import timedelta
+from platform import system
 
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
@@ -269,6 +270,26 @@ class Window(QMainWindow):
         self.user: User = None
         self.is_advanced = False
 
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder = os.path.abspath("security_info_tabs.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder.pop()
+        # Сохраняем его
+        self.__path = sep.join(folder)
+        self.settings = FileLoader.get_json(
+            self.__path + "/info/files/.current_settings.json"
+        )
+        if self.settings is None:
+            self.settings = FileLoader.get_json(
+                self.__path + "/info/files/.default_settings.json"
+            )
+
+            FileLoader.save_json(
+                self.__path + "/info/files/.current_settings.json",
+                self.settings
+            )
+
         self.init_ui()
 
     def init_ui(self):
@@ -321,7 +342,9 @@ class Window(QMainWindow):
         self.security = item.data(Qt.UserRole)
         if self.security_window is None or \
                 not self.security_window.get_securities_thread.isRunning():
-            self.security_window = SecurityWindow(self.security, self.user)
+            self.security_window = SecurityWindow(
+                self.security, self.user, self.settings
+            )
             print("1", self.user)
             self.security_window.show()
 
@@ -446,7 +469,6 @@ class Window(QMainWindow):
     def start_loading(self):
         self.loading = LoadingDialog()
         self.loading.show()
-
 
     def load_all(self):
         self.start_loading()

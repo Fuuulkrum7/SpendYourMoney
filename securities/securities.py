@@ -16,7 +16,7 @@ def get_data_from_value(value: str or date) -> date:
 
 def convert_money_value(data: MoneyValue or Quotation or float):
     if isinstance(data, float):
-        return data
+        return round(data, 4)
     return round(data.units + data.nano / 10 ** ceil(
         log10(data.nano if data.nano > 0 else 1)
     ), 4)

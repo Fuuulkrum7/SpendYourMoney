@@ -36,7 +36,7 @@ class SecurityWindow(QMainWindow):
     HEIGHT = 720
     no_result = "Nothing found"
 
-    def __init__(self, item, user):
+    def __init__(self, item, user, settings):
         super().__init__()
         self.right_vertical = None
         self.left_vertical = None
@@ -64,20 +64,7 @@ class SecurityWindow(QMainWindow):
 
         self.divs_and_coupons = QListWidget(self)
 
-        sep = "\\" if system() == "Windows" else "/"
-        # Получаем путь до папки, где лежит файл
-        folder = os.path.abspath("security_info_tabs.py").split(sep)
-        # Удаляем папку, где лежит файл, из пути
-        folder.pop()
-        # Сохраняем его
-        self.__path = sep.join(folder)
-        settings = FileLoader.get_json(
-            self.__path + "/info/files/.current_settings.json"
-        )
-        if settings is None:
-            settings = FileLoader.get_json(
-                self.__path + "/info/files/.default_settings.json"
-            )
+        self.settings = settings
 
         self.candle = CandleInterval(settings["candle"])
 
