@@ -64,6 +64,23 @@ class SecurityWindow(QMainWindow):
 
         self.divs_and_coupons = QListWidget(self)
 
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder = os.path.abspath("security_info_tabs.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder.pop()
+        # Сохраняем его
+        self.__path = sep.join(folder)
+        settings = FileLoader.get_json(
+            self.__path + "/info/files/.current_settings.json"
+        )
+        if settings is None:
+            settings = FileLoader.get_json(
+                self.__path + "/info/files/.default_settings.json"
+            )
+
+        self.candle = CandleInterval(settings["candle"])
+
         self.init_security_ui(item)
         self.init_divs_ui()
         self.init_plot_ui(item)
@@ -89,23 +106,6 @@ class SecurityWindow(QMainWindow):
 
         left_widget.setLayout(self.left_vertical)
         right_widget.setLayout(self.right_vertical)
-
-        sep = "\\" if system() == "Windows" else "/"
-        # Получаем путь до папки, где лежит файл
-        folder = os.path.abspath("security_info_tabs.py").split(sep)
-        # Удаляем папку, где лежит файл, из пути
-        folder.pop()
-        # Сохраняем его
-        self.__path = sep.join(folder)
-        settings = FileLoader.get_json(
-            self.__path + "/info/files/.current_settings.json"
-        )
-        if settings is None:
-            settings = FileLoader.get_json(
-                self.__path + "/info/files/.default_setting.json"
-            )
-
-        self.candle = CandleInterval(settings["candle"])
 
         self.get_securities_thread = GetSecurity(
             StandardQuery(

@@ -24,7 +24,7 @@ def convert_money_value(data: MoneyValue or Quotation or float):
 
 class SecurityInfo:
     """
-    Общая информация о цб. Содержит id, название, фиги и тикер
+    Главная информация о цб. Содержит id, название, фиги класс-код и тикер
     """
     # Сколько аргументов надо для инициализации
     required_args = 5
@@ -59,6 +59,10 @@ class SecurityInfo:
 
 
 class Coupon:
+    """
+    Класс, содержащий имеющуюся информацию о купоне по облигации.
+    Есть реализация всего для множеств
+    """
     coupon_id: int = 0
     coupon_date: date
     coupon_number: int
@@ -100,6 +104,7 @@ class Coupon:
 
         return values
 
+    # Для сравнения купонов
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
@@ -114,6 +119,10 @@ class Coupon:
 
 
 class Dividend:
+    """
+    Класс, содержащий основную информацию о дивидендах по акции.
+    Реализованы множества
+    """
     div_value: float
     payment_date: date
     declared_date: date
@@ -177,6 +186,9 @@ class Dividend:
 
 
 class Security:
+    """
+    Общая для всех цб информация
+    """
     lot: int
     currency: str
     country: str
@@ -256,6 +268,10 @@ class Security:
 
 
 class Bond(Security):
+    """
+    Класс, содержащий информацию об облигации. Также содержит в себе общую
+    информацию о цб, так как является наследником класса Security
+    """
     coupon_quantity_per_year: int
     nominal: float
     amortization: bool
@@ -368,6 +384,10 @@ class Bond(Security):
 
 
 class Stock(Security):
+    """
+    Класс, содержащий в себе информацию об акции, содержит также и общую
+    информацию, так как наследник класса Security
+    """
     stock_id: int
     ipo_date: date
     issue_size: int
