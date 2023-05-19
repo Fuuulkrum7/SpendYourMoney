@@ -30,6 +30,7 @@ candles_dict = {
     "15 Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
     "1 hour": CandleInterval.CANDLE_INTERVAL_HOUR,
     "1 day": CandleInterval.CANDLE_INTERVAL_DAY,
+    "1 week": CandleInterval.CANDLE_INTERVAL_WEEK,
     "Whole history": CandleInterval.CANDLE_INTERVAL_MONTH
 }
 
@@ -89,8 +90,9 @@ class SecurityWindow(QMainWindow):
 
         self.settings = settings
 
-        if 0 <= settings["candle"] <= 5 or settings["candle"] == \
-                CandleInterval.CANDLE_INTERVAL_MONTH.value:
+        if 0 <= settings["candle"] <= 5 or settings["candle"] in \
+                [CandleInterval.CANDLE_INTERVAL_MONTH.value,
+                 CandleInterval.CANDLE_INTERVAL_WEEK.value]:
             self.candle = CandleInterval(settings["candle"])
         else:
             self.candle = CandleInterval.CANDLE_INTERVAL_DAY
@@ -226,6 +228,8 @@ class SecurityWindow(QMainWindow):
             delta = now() - timedelta(minutes=1350)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
             delta = now() - timedelta(hours=90)
+        elif self.candle == CandleInterval.CANDLE_INTERVAL_WEEK:
+            delta = now() - timedelta(days=630)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
             delta = datetime.datetime(year=1970, month=1, day=2)
         else:
