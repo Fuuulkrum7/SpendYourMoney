@@ -1,11 +1,8 @@
 import datetime
-import os
-import time
 from datetime import timedelta
-from platform import system
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
-    QMainWindow, QListWidgetItem, QListWidget, QComboBox, QHBoxLayout, \
+    QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
     QMessageBox
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
@@ -209,17 +206,12 @@ class SecurityWindow(QMainWindow):
         self.loading.start_loading()
         self.load_plot()
 
-
     def on_candle_change(self, val):
         self.candle = list(candles_dict.values())[val]
         self.loading = LoadingDialog()
         self.loading.start_loading()
 
         self.load_plot()
-
-    def start_loading(self):
-        self.loading = LoadingDialog()
-        self.loading.show()
 
     def load_plot(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
@@ -326,7 +318,6 @@ class SecurityWindow(QMainWindow):
 
         if cleared:
             self.tab_changed(2)
-
 
     def save_data(self):
         self.settings["candle"] = self.candle.value

@@ -207,7 +207,8 @@ class GetSecurity(SecurityGetter):
                 {table: list(SecuritiesInfo)},
                 table,
                 where=query,
-                sort_query=[f"{SecuritiesInfo.PRIORITY.value} DESC"],
+                sort_query=[f"{SecuritiesInfo.SECURITY_TYPE.value} ASC",
+                            f"{SecuritiesInfo.PRIORITY.value} DESC"],
                 params=params
             )
 
