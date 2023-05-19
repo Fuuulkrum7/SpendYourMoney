@@ -59,7 +59,6 @@ class SecurityWindow(QMainWindow):
         self.select_candle = None
         self.horizontal = None
         self.predict_thread = None
-        self.neural_network = None
         self.right_vertical = None
         self.left_vertical = None
         self.canvas = None
@@ -181,8 +180,8 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout = QVBoxLayout()
 
         self.horizontal = QHBoxLayout()
-        self.neural_network = QLabel()
-        self.horizontal.addWidget(self.neural_network)
+        self.neural_layout = QVBoxLayout()
+        self.horizontal.addLayout(self.neural_layout)
 
         self.select_candle = QComboBox()
         self.select_candle.addItems(list(candles_dict.keys()))
@@ -290,11 +289,21 @@ class SecurityWindow(QMainWindow):
 
             self.predict_thread.start()
         else:
-            self.neural_network.setText("Not allowed to make a prediction")
+            label1 = QLabel("Not allowed to make a prediction")
+            self.neural_layout.addWidget(label1)
 
     def on_predict_made(self, result):
         code, data = result
-        self.neural_network.setText(str(data))
+        if data:
+            label1 = QLabel(f'Growth probability: {data[0]}')
+            label2 = QLabel(f'Flat probability: {data[1]}')
+            label3 = QLabel(f'Fall probability: {data[2]}')
+            self.neural_layout.addWidget(label1)
+            self.neural_layout.addWidget(label2)
+            self.neural_layout.addWidget(label3)
+        else:
+            label1 = QLabel("No data")
+            self.neural_layout.addWidget(label1)
 
     def on_load(self, result):
         code, data = result
