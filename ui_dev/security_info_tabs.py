@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 from datetime import timedelta
 from platform import system
 
@@ -26,11 +27,11 @@ from securities.securities import Security
 
 
 candles_dict = {
-    "One minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
-    "Five minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
-    "Fifteen Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
-    "One hour": CandleInterval.CANDLE_INTERVAL_HOUR,
-    "One day": CandleInterval.CANDLE_INTERVAL_DAY,
+    "1 minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
+    "5 minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
+    "15 Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
+    "1 hour": CandleInterval.CANDLE_INTERVAL_HOUR,
+    "1 day": CandleInterval.CANDLE_INTERVAL_DAY,
     "Whole history": CandleInterval.CANDLE_INTERVAL_MONTH
 }
 
@@ -51,6 +52,7 @@ class SecurityWindow(QMainWindow):
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
+    loading = None
 
     def __init__(self, item, user, settings, path):
         super().__init__()
@@ -183,11 +185,6 @@ class SecurityWindow(QMainWindow):
         self.horizontal = QHBoxLayout()
         self.neural_network = QLabel()
         self.horizontal.addWidget(self.neural_network)
-        # self.neural_network.move(200, 5)
-
-        # toolbar = NavigationToolbar2QT(self.canvas, self)
-
-        # self.course_tab.layout.addWidget(toolbar)
 
         self.select_candle = QComboBox()
         self.select_candle.addItems(list(candles_dict.keys()))
@@ -198,17 +195,35 @@ class SecurityWindow(QMainWindow):
 
         self.horizontal.addWidget(self.select_candle)
         self.course_tab.layout.addLayout(self.horizontal)
+
         self.canvas = MplCanvas()
+        toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        self.course_tab.layout.addWidget(toolbar)
         self.course_tab.layout.addWidget(self.canvas)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
+        self.start_loading()
         self.load_plot()
+
 
     def on_candle_change(self, val):
         self.candle = list(candles_dict.values())[val]
+        self.start_loading()
 
         self.load_plot()
+
+    def start_loading(self):
+        self.loading = LoadingDialog()
+        self.loading.show()
+
+    def after_load(self):
+        self.loading.loadingLabel.setText("Done")
+        self.loading.pbar.setMaximum(100)
+        self.loading.pbar.setValue(100)
+        time.sleep(1)
+        self.loading.close()
 
     def load_plot(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
@@ -311,8 +326,11 @@ class SecurityWindow(QMainWindow):
         self.canvas.axes.plot(dates, prices)
         self.canvas.draw()
 
+        self.after_load()
+
         if cleared:
             self.tab_changed(2)
+
 
     def save_data(self):
         self.settings["candle"] = self.candle.value
@@ -321,3 +339,17 @@ class SecurityWindow(QMainWindow):
             self.__path + "/info/files/.current_settings.json",
             self.settings
         )
+
+class LoadingDialog(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(200, 200)
+
+        self.loadingLabel = QtWidgets.QLabel('Loading...', self)
+        self.loadingLabel.setGeometry(75, 30, 100, 20)
+
+        self.pbar = QtWidgets.QProgressBar(self)
+        self.pbar.setMinimum(0)
+        self.pbar.setMaximum(0)
+        self.pbar.setValue(0)
+        self.pbar.setGeometry(30, 75, 140, 20)
