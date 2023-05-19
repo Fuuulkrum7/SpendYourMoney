@@ -27,6 +27,7 @@ from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
 from ui_dev.security_info_tabs import SecurityWindow
+from ui_dev.loading import LoadingDialog
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
@@ -462,34 +463,18 @@ class Window(QMainWindow):
             item.setData(Qt.UserRole, security)
             self.output.addItem(item)
 
-            # data = [d.get_as_dict() for d in data]
-            # parsed = [str(i) for i in data]
-            # self.output.addItem(parsed)
-
-    def start_loading(self):
-        self.loading = LoadingDialog()
-        self.loading.show()
-
     def load_all(self):
-        self.start_loading()
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
         if self.all_securities_thread is not None \
                 and self.all_securities_thread.isRunning():
             return
 
         self.all_securities_thread = LoadAllSecurities(
-            self.after_load,
+            self.loading.after_load,
             self.user.get_token()
         )
         self.all_securities_thread.start()
-
-    def after_load(self, result):
-        code, data = result
-        print(code)
-        self.loading.loadingLabel.setText("Done")
-        self.loading.pbar.setMaximum(100)
-        self.loading.pbar.setValue(100)
-        time.sleep(1)
-        self.loading.close()
 
     def load_securities(self, info):
         self.res = GetSecurityHistory(
@@ -562,18 +547,3 @@ class CreateWindow:
             self.login = None
 
         self.reg.show()
-
-
-class LoadingDialog(QtWidgets.QDialog):
-    def __init__(self):
-        super().__init__()
-        self.setFixedSize(200, 200)
-
-        self.loadingLabel = QtWidgets.QLabel('Loading...', self)
-        self.loadingLabel.setGeometry(75, 30, 100, 20)
-
-        self.pbar = QtWidgets.QProgressBar(self)
-        self.pbar.setMinimum(0)
-        self.pbar.setMaximum(0)
-        self.pbar.setValue(0)
-        self.pbar.setGeometry(30, 75, 140, 20)

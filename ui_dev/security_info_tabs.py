@@ -1,10 +1,8 @@
 import datetime
-import os
 from datetime import timedelta
-from platform import system
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
-    QMainWindow, QListWidgetItem, QListWidget, QComboBox, QHBoxLayout, \
+    QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
     QMessageBox
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
@@ -23,14 +21,15 @@ from info.file_loader import FileLoader
 from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import Security
+from ui_dev.loading import LoadingDialog
 
 
 candles_dict = {
-    "One minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
-    "Five minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
-    "Fifteen Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
-    "One hour": CandleInterval.CANDLE_INTERVAL_HOUR,
-    "One day": CandleInterval.CANDLE_INTERVAL_DAY,
+    "1 minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
+    "5 minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
+    "15 Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
+    "1 hour": CandleInterval.CANDLE_INTERVAL_HOUR,
+    "1 day": CandleInterval.CANDLE_INTERVAL_DAY,
     "Whole history": CandleInterval.CANDLE_INTERVAL_MONTH
 }
 
@@ -51,6 +50,7 @@ class SecurityWindow(QMainWindow):
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
+    loading = None
 
     def __init__(self, item, user, settings, path):
         super().__init__()
@@ -59,7 +59,6 @@ class SecurityWindow(QMainWindow):
         self.select_candle = None
         self.horizontal = None
         self.predict_thread = None
-        self.neural_network = None
         self.right_vertical = None
         self.left_vertical = None
         self.canvas = None
@@ -181,13 +180,8 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout = QVBoxLayout()
 
         self.horizontal = QHBoxLayout()
-        self.neural_network = QLabel()
-        self.horizontal.addWidget(self.neural_network)
-        # self.neural_network.move(200, 5)
-
-        # toolbar = NavigationToolbar2QT(self.canvas, self)
-
-        # self.course_tab.layout.addWidget(toolbar)
+        self.neural_layout = QVBoxLayout()
+        self.horizontal.addLayout(self.neural_layout)
 
         self.select_candle = QComboBox()
         self.select_candle.addItems(list(candles_dict.keys()))
@@ -198,15 +192,23 @@ class SecurityWindow(QMainWindow):
 
         self.horizontal.addWidget(self.select_candle)
         self.course_tab.layout.addLayout(self.horizontal)
+
         self.canvas = MplCanvas()
+        toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        self.course_tab.layout.addWidget(toolbar)
         self.course_tab.layout.addWidget(self.canvas)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
         self.load_plot()
 
     def on_candle_change(self, val):
         self.candle = list(candles_dict.values())[val]
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
 
         self.load_plot()
 
@@ -287,11 +289,21 @@ class SecurityWindow(QMainWindow):
 
             self.predict_thread.start()
         else:
-            self.neural_network.setText("Not allowed to make a prediction")
+            label1 = QLabel("Not allowed to make a prediction")
+            self.neural_layout.addWidget(label1)
 
     def on_predict_made(self, result):
         code, data = result
-        self.neural_network.setText(str(data))
+        if data:
+            label1 = QLabel(f'Growth probability: {data[0]}')
+            label2 = QLabel(f'Flat probability: {data[1]}')
+            label3 = QLabel(f'Fall probability: {data[2]}')
+            self.neural_layout.addWidget(label1)
+            self.neural_layout.addWidget(label2)
+            self.neural_layout.addWidget(label3)
+        else:
+            label1 = QLabel("No data")
+            self.neural_layout.addWidget(label1)
 
     def on_load(self, result):
         code, data = result
@@ -310,6 +322,8 @@ class SecurityWindow(QMainWindow):
 
         self.canvas.axes.plot(dates, prices)
         self.canvas.draw()
+
+        self.loading.after_load()
 
         if cleared:
             self.tab_changed(2)
