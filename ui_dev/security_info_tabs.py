@@ -183,7 +183,12 @@ class SecurityWindow(QMainWindow):
         self.neural_layout = QVBoxLayout()
         self.horizontal.addLayout(self.neural_layout)
 
+        spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
+                                       QtWidgets.QSizePolicy.Minimum)
+        self.horizontal.addItem(spacer)
+
         self.select_candle = QComboBox()
+        self.select_candle.resize(80, 40)
         self.select_candle.addItems(list(candles_dict.keys()))
         self.select_candle.setCurrentIndex(list(candles_dict.values()).index(
             self.candle
