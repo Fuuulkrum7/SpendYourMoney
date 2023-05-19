@@ -7,6 +7,7 @@ class LoadingDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
         self.setFixedSize(200, 200)
+        self.setWindowTitle("SpendYourMoney")
 
         self.loadingLabel = QtWidgets.QLabel('Loading...', self)
         self.loadingLabel.setGeometry(75, 30, 100, 20)
