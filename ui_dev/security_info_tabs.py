@@ -24,6 +24,7 @@ from info.file_loader import FileLoader
 from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import Security
+from ui_dev.loading import LoadingDialog
 
 
 candles_dict = {
@@ -204,26 +205,21 @@ class SecurityWindow(QMainWindow):
 
         self.course_tab.setLayout(self.course_tab.layout)
 
-        self.start_loading()
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
         self.load_plot()
 
 
     def on_candle_change(self, val):
         self.candle = list(candles_dict.values())[val]
-        self.start_loading()
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
 
         self.load_plot()
 
     def start_loading(self):
         self.loading = LoadingDialog()
         self.loading.show()
-
-    def after_load(self):
-        self.loading.loadingLabel.setText("Done")
-        self.loading.pbar.setMaximum(100)
-        self.loading.pbar.setValue(100)
-        time.sleep(1)
-        self.loading.close()
 
     def load_plot(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
@@ -326,7 +322,7 @@ class SecurityWindow(QMainWindow):
         self.canvas.axes.plot(dates, prices)
         self.canvas.draw()
 
-        self.after_load()
+        self.loading.after_load()
 
         if cleared:
             self.tab_changed(2)
@@ -339,17 +335,3 @@ class SecurityWindow(QMainWindow):
             self.__path + "/info/files/.current_settings.json",
             self.settings
         )
-
-class LoadingDialog(QtWidgets.QDialog):
-    def __init__(self):
-        super().__init__()
-        self.setFixedSize(200, 200)
-
-        self.loadingLabel = QtWidgets.QLabel('Loading...', self)
-        self.loadingLabel.setGeometry(75, 30, 100, 20)
-
-        self.pbar = QtWidgets.QProgressBar(self)
-        self.pbar.setMinimum(0)
-        self.pbar.setMaximum(0)
-        self.pbar.setValue(0)
-        self.pbar.setGeometry(30, 75, 140, 20)
