@@ -295,9 +295,11 @@ class SecurityWindow(QMainWindow):
     def on_predict_made(self, result):
         code, data = result
         if data:
-            label1 = QLabel(f'Growth probability: {data[0]}')
-            label2 = QLabel(f'Flat probability: {data[1]}')
-            label3 = QLabel(f'Fall probability: {data[2]}')
+            # Такой перевод данных в строку нужен для их корректного
+            # отображения
+            label1 = QLabel(f'Growth probability: {str(data[2])} %')
+            label2 = QLabel(f'Flat probability: {str(data[1])} %')
+            label3 = QLabel(f'Fall probability: {str(data[0])} %')
             self.neural_layout.addWidget(label1)
             self.neural_layout.addWidget(label2)
             self.neural_layout.addWidget(label3)

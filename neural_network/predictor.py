@@ -68,7 +68,7 @@ class PredictCourse(QThread):
                 self.result = model.predict(norm[:, -120:])[0] * 100
 
                 # Округляем результат
-                self.result = list(np.around(self.result, decimals=5))
+                self.result = list(np.around(self.result, decimals=2))
             except Exception as e:
                 print(e)
                 self.status_code = 500
