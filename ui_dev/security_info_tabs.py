@@ -183,7 +183,12 @@ class SecurityWindow(QMainWindow):
         self.neural_layout = QVBoxLayout()
         self.horizontal.addLayout(self.neural_layout)
 
+        spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
+                                       QtWidgets.QSizePolicy.Minimum)
+        self.horizontal.addItem(spacer)
+
         self.select_candle = QComboBox()
+        self.select_candle.resize(80, 40)
         self.select_candle.addItems(list(candles_dict.keys()))
         self.select_candle.setCurrentIndex(list(candles_dict.values()).index(
             self.candle
@@ -295,9 +300,9 @@ class SecurityWindow(QMainWindow):
     def on_predict_made(self, result):
         code, data = result
         if data:
-            label1 = QLabel(f'Growth probability: {data[0]}')
+            label1 = QLabel(f'Fall probability: {data[0]}')
             label2 = QLabel(f'Flat probability: {data[1]}')
-            label3 = QLabel(f'Fall probability: {data[2]}')
+            label3 = QLabel(f'Growth probability: {data[2]}')
             self.neural_layout.addWidget(label1)
             self.neural_layout.addWidget(label2)
             self.neural_layout.addWidget(label3)
