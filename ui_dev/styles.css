@@ -40,7 +40,7 @@ QLineEdit {
     border: 1px solid #777777;
 }
 
-QListWidget {
+QListWidget, QWidget {
     background-color: #323232;
     selection-background-color: #191919;
 }
