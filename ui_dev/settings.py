@@ -1,7 +1,3 @@
-import os
-from platform import system
-
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout
 
 from info.file_loader import FileLoader
@@ -10,6 +6,7 @@ from info.file_loader import FileLoader
 class Settings(QWidget):
     def __init__(self, app, settings, path):
         super().__init__()
+        self.content = None
         self.app = app
         self.settings = settings
         self.__path = path
@@ -27,8 +24,6 @@ class Settings(QWidget):
             self.theme_list.index(self.selected_theme.capitalize()))
         self.theme_combo.currentIndexChanged.connect(self.on_theme_change)
 
-
-
         self.font_label = QLabel("Font:")
         self.font_combo = QComboBox()
         self.font_list = ["Default (system)", "Papyrus", "Comic Sans MS"]
@@ -36,7 +31,6 @@ class Settings(QWidget):
         self.font_combo.setCurrentIndex(
             self.font_list.index(self.selected_font))
         self.font_combo.currentIndexChanged.connect(self.on_font_change)
-
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.theme_label)
@@ -57,12 +51,11 @@ class Settings(QWidget):
         return css_theme + css_font
 
     def on_theme_change(self, index):
-        self.selected_theme = self.theme_list[index]
+        self.selected_theme = self.theme_list[index].lower()
         self.save_data()
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
         print(self.content, "from theme")
-
 
     def on_font_change(self, index):
         self.selected_font = self.font_list[index]
@@ -72,13 +65,14 @@ class Settings(QWidget):
         print(self.content, "from font")
 
     def save_data(self):
-        self.settings["theme"] = self.selected_theme
+        self.settings["theme"] = self.selected_theme.lower()
         self.settings["font"] = self.selected_font
 
         FileLoader.save_json(
             self.__path + "/info/files/.current_settings.json",
             self.settings
         )
+
 
 def set_theme_and_font(app, settings):
     selected_theme = settings["theme"]
