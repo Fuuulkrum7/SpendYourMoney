@@ -45,45 +45,31 @@ class Settings(QWidget):
         self.layout.addWidget(self.font_combo)
         self.setLayout(self.layout)
 
-        # sep = "\\" if system() == "Windows" else "/"
-        # # Получаем путь до папки, где лежит файл
-        # folder = os.path.abspath("security_info_tabs.py").split(sep)
-        # # Удаляем папку, где лежит файл, из пути
-        # folder.pop()
-        # # Сохраняем его
-        # self.__path = sep.join(folder)
-        # self.settings = FileLoader.get_json(
-        #     self.__path + "/info/files/.current_settings.json"
-        # )
-        # if self.settings is None:
-        #     self.settings = FileLoader.get_json(
-        #         self.__path + "/info/files/.default_settings.json"
-        #     )
-        #
-        #     FileLoader.save_json(
-        #         self.__path + "/info/files/.current_settings.json",
-        #         self.settings
-        #     )
+    def get_css_content(self):
+        with open(f"ui_dev/visual_settings/{self.selected_theme}.css",
+                  "r") as theme:
+            css_theme = theme.read()
+
+        if self.selected_font != "Default (system)":
+            css_font = f'* {{font-family: "{self.selected_font}";}}'
+        else:
+            css_font = ''
+        return css_theme + css_font
 
     def on_theme_change(self, index):
-        self.selected_theme = self.theme_list[index].lower()
-        with open(f"ui_dev/{self.selected_theme}.css",
-                  "r") as theme:
-            self.app.setStyleSheet(theme.read())
-
+        self.selected_theme = self.theme_list[index]
         self.save_data()
-        print(self.settings, "from theme")
+        self.content = self.get_css_content()
+        self.app.setStyleSheet(self.content)
+        print(self.content, "from theme")
+
 
     def on_font_change(self, index):
         self.selected_font = self.font_list[index]
-        if index:
-            self.qfont = QFont(self.selected_font)
-        else:
-            self.qfont = QFont()
-        self.app.setFont(self.qfont)
-
         self.save_data()
-        print(self.settings, "from font")
+        self.content = self.get_css_content()
+        self.app.setStyleSheet(self.content)
+        print(self.content, "from font")
 
     def save_data(self):
         self.settings["theme"] = self.selected_theme
@@ -97,13 +83,13 @@ class Settings(QWidget):
 def set_theme_and_font(app, settings):
     selected_theme = settings["theme"]
     selected_font = settings["font"]
-    with open(f"ui_dev/{selected_theme}.css",
+    with open(f"ui_dev/visual_settings/{selected_theme}.css",
               "r") as theme:
-        app.setStyleSheet(theme.read())
+        css_theme = theme.read()
 
     if selected_font != "Default (system)":
-        qfont = QFont(selected_font)
+        css_font = f'* {{font-family: "{selected_font}";}}'
     else:
-        qfont = QFont()
-    app.setFont(qfont)
-    print(settings, "from set")
+        css_font = ''
+    app.setStyleSheet(css_theme + css_font)
+    print(css_theme + css_font, "from set")
