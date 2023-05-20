@@ -28,6 +28,7 @@ from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
 from ui_dev.security_info_tabs import SecurityWindow
 from ui_dev.loading import LoadingDialog
+from ui_dev.settings import Settings
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
@@ -246,6 +247,7 @@ class Window(QMainWindow):
     predict_thread: PredictCourse = None
     subscribe_thread = None
     security_window = None
+    settings_window = None
     loading = None
 
     figis = []
@@ -255,8 +257,9 @@ class Window(QMainWindow):
     res = None
     delta = 0
 
-    def __init__(self):
+    def __init__(self, app):
         super(Window, self).__init__()
+        self.app = app
         self.security = None
         self.setWindowTitle("SpendYourMoney")
         self.textbox = QLineEdit(self)
@@ -268,6 +271,7 @@ class Window(QMainWindow):
         self.classcode = QLineEdit(self)
         self.load_all_btn = QPushButton('Load all', self)
         self.output = QListWidget(self)
+        self.settings_btn = QPushButton('Settings', self)
         self.user: User = None
         self.is_advanced = False
 
@@ -328,14 +332,22 @@ class Window(QMainWindow):
         self.load_all_btn.move(650, 480)
         self.load_all_btn.resize(180, 40)
 
+        self.settings_btn.move(650, 400)
+        self.settings_btn.resize(180, 40)
+
         # connect button to function on_click
         self.load_all_btn.clicked.connect(self.load_all)
+        self.settings_btn.clicked.connect(self.open_settings)
 
         # self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
         self.output.move(20, 80)
         self.output.resize(600, 440)
         self.output.itemClicked.connect(self.security_clicked)
+
+    def open_settings(self):
+        self.settings_window = Settings(self.app)
+        self.settings_window.show()
 
     def security_clicked(self, item):
         if item.text() == "No results":
@@ -508,10 +520,10 @@ class CreateWindow:
     def __init__(self, app):
         self.app = app
 
-    def create_main(self):
+    def create_main(self, app):
         screen = self.app.desktop().screenGeometry()
 
-        self.main_window = Window()
+        self.main_window = Window(app)
         self.main_window.setGeometry((screen.width() - self.WIDTH) // 2,
                                      (screen.height() - self.HEIGHT) // 2,
                                      self.WIDTH, self.HEIGHT)
