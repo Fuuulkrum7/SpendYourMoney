@@ -28,7 +28,7 @@ from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
 from ui_dev.security_info_tabs import SecurityWindow
 from ui_dev.loading import LoadingDialog
-from ui_dev.settings import Settings
+from ui_dev.settings import Settings, set_theme_and_font
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
@@ -523,6 +523,8 @@ class CreateWindow:
                 target
             )
             self.settings = target
+        else:
+            set_theme_and_font(app, self.settings)
 
     def create_main(self):
         screen = self.app.desktop().screenGeometry()
