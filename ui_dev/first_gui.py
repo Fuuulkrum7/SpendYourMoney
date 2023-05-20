@@ -1,33 +1,28 @@
 import os
 import sys
-import time
 from datetime import timedelta
 from platform import system
 
 import PyQt5
+import matplotlib as plt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QListWidgetItem, QApplication
+    QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
-
-import matplotlib as plt
 
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
-from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
 from info.file_loader import FileLoader
 from info.user import User
-from neural_network.predictor import PredictCourse
-from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
-from ui_dev.security_info_tabs import SecurityWindow
 from ui_dev.loading import LoadingDialog
+from ui_dev.security_info_tabs import SecurityWindow
 from ui_dev.settings import Settings, set_theme_and_font
 
 folder = 'platforms'
@@ -243,7 +238,6 @@ class Window(QMainWindow):
     """
     securities_thread: GetSecurity = None
     all_securities_thread: LoadAllSecurities = None
-    predict_thread: PredictCourse = None
     subscribe_thread = None
     security_window = None
     settings_window = None
@@ -256,7 +250,7 @@ class Window(QMainWindow):
     res = None
     delta = 0
 
-    def __init__(self, app, settings, path):
+    def __init__(self, app):
         super(Window, self).__init__()
         self.app = app
         self.security = None
@@ -274,8 +268,30 @@ class Window(QMainWindow):
         self.user: User = None
         self.is_advanced = False
 
-        self.__path = path
-        self.settings = settings
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder_path = os.path.abspath("first_gui.py.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder_path.pop()
+        # Сохраняем его
+        self.__path = sep.join(folder_path)
+        self.settings: dict = FileLoader.get_json(
+            self.__path + "/info/files/.current_settings.json"
+        )
+
+        target = FileLoader.get_json(
+            self.__path + "/info/files/.default_settings.json"
+        )
+
+        if self.settings is None or not ("version" in self.settings) or \
+                self.settings["version"] != target["version"]:
+            FileLoader.save_json(
+                self.__path + "/info/files/.current_settings.json",
+                target
+            )
+            self.settings = target
+        else:
+            set_theme_and_font(app, self.settings)
 
         self.init_ui()
 
@@ -393,27 +409,6 @@ class Window(QMainWindow):
             )
             self.securities_thread.start()
 
-    def on_predict_made(self, result):
-        print(result)
-
-    def predict_it(self, result):
-        code, data = result
-
-        # self.output.addItem(f"Stock name - {data[0].info.name}. "
-        #                    f"Prediction: ")
-
-        self.predict_thread = PredictCourse(
-            data[0],
-            self.on_predict_made,
-            self.user.get_token()
-        )
-
-        self.predict_thread.start()
-
-    def show_course(self, result):
-        ...
-        # self.output.addItem(str(result))
-
     def after_search(self, result):
         code, data = result
 
@@ -421,22 +416,6 @@ class Window(QMainWindow):
         if not data:
             self.output.addItem("No results")
             return
-            # self.load_securities(data[0].info)
-            # if data[0].security_type == SecurityType.STOCK:
-            #     self.securities_thread = GetSecurity(
-            #         StandardQuery(
-            #             data[0].info,
-            #             "",
-            #             is_advanced=self.is_advanced
-            #         ),
-            #         self.predict_it,
-            #         self.user.get_token(),
-            #         load_dividends=False,
-            #         load_coupons=False,
-            #         insert_to_db=False
-            #     )
-            #
-            #     self.securities_thread.start()
 
             # self.subscribe_thread = SubscribeOnMarket(
             #     data[0],
@@ -469,25 +448,6 @@ class Window(QMainWindow):
         )
         self.all_securities_thread.start()
 
-    def load_securities(self, info):
-        self.res = GetSecurityHistory(
-            info=info,
-            _from=now() - timedelta(days=1000),
-            to=now(),
-            interval=CandleInterval.CANDLE_INTERVAL_DAY,
-            token=self.user.get_token(),
-            on_finish=self.on_load
-        )
-
-        self.res.start()
-
-    def on_load(self, data):
-        x, y = data
-        print(
-            len(y),
-            sep='\n'
-        )
-
 
 class CreateWindow:
     login: LoginWindow = None
@@ -501,35 +461,10 @@ class CreateWindow:
     def __init__(self, app):
         self.app = app
 
-        sep = "\\" if system() == "Windows" else "/"
-        # Получаем путь до папки, где лежит файл
-        folder_path = os.path.abspath("first_gui.py.py").split(sep)
-        # Удаляем папку, где лежит файл, из пути
-        folder_path.pop()
-        # Сохраняем его
-        self.__path = sep.join(folder_path)
-        self.settings: dict = FileLoader.get_json(
-            self.__path + "/info/files/.current_settings.json"
-        )
-
-        target = FileLoader.get_json(
-            self.__path + "/info/files/.default_settings.json"
-        )
-
-        if self.settings is None or not ("version" in self.settings) or \
-                self.settings["version"] != target["version"]:
-            FileLoader.save_json(
-                self.__path + "/info/files/.current_settings.json",
-                target
-            )
-            self.settings = target
-        else:
-            set_theme_and_font(app, self.settings)
-
     def create_main(self):
         screen = self.app.desktop().screenGeometry()
 
-        self.main_window = Window(self.app, self.settings, self.__path)
+        self.main_window = Window(self.app)
         self.main_window.setGeometry((screen.width() - self.WIDTH) // 2,
                                      (screen.height() - self.HEIGHT) // 2,
                                      self.WIDTH, self.HEIGHT)
