@@ -8,6 +8,7 @@ from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
     FigureCanvas
+import matplotlib as plt
 from matplotlib.figure import Figure
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
@@ -22,6 +23,8 @@ from neural_network.predictor import PredictCourse
 from securities.securiries_types import SecurityType
 from securities.securities import Security
 from ui_dev.loading import LoadingDialog
+
+plt.use("Qt5Agg")
 
 
 candles_dict = {

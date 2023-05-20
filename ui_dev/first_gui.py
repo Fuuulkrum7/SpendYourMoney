@@ -1,20 +1,15 @@
 import os
 import sys
-from datetime import timedelta
 from platform import system
 
 import PyQt5
-import matplotlib as plt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
     QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
-from tinkoff.invest import CandleInterval
-from tinkoff.invest.utils import now
 
 from api_requests.get_security import GetSecurity
-from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
 from api_requests.user_methods import CheckUser, CreateUser
@@ -27,8 +22,6 @@ from ui_dev.settings import Settings, set_theme_and_font
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
-
-plt.use("Qt5Agg")
 
 
 class LoginWindow(QtWidgets.QDialog):
