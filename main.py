@@ -21,5 +21,5 @@ if __name__ == '__main__':
     if not (settings is None):
         set_theme_and_font(app, settings)
     wndw = CreateWindow(app)
-    wndw.create_main(app)
+    wndw.create_main()
     sys.exit(app.exec_())

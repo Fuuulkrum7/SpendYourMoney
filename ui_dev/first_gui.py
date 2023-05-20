@@ -164,7 +164,6 @@ class RegisterWindow(QtWidgets.QDialog):
         self.setParent(parent)
         self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
 
-
     def setup_register_ui(self):
         """
         Отвечает за настройку виджетов в диалоговом окне
@@ -257,7 +256,7 @@ class Window(QMainWindow):
     res = None
     delta = 0
 
-    def __init__(self, app):
+    def __init__(self, app, settings, path):
         super(Window, self).__init__()
         self.app = app
         self.security = None
@@ -275,25 +274,8 @@ class Window(QMainWindow):
         self.user: User = None
         self.is_advanced = False
 
-        sep = "\\" if system() == "Windows" else "/"
-        # Получаем путь до папки, где лежит файл
-        folder = os.path.abspath("security_info_tabs.py").split(sep)
-        # Удаляем папку, где лежит файл, из пути
-        folder.pop()
-        # Сохраняем его
-        self.__path = sep.join(folder)
-        self.settings = FileLoader.get_json(
-            self.__path + "/info/files/.current_settings.json"
-        )
-        if self.settings is None:
-            self.settings = FileLoader.get_json(
-                self.__path + "/info/files/.default_settings.json"
-            )
-
-            FileLoader.save_json(
-                self.__path + "/info/files/.current_settings.json",
-                self.settings
-            )
+        self.__path = path
+        self.settings = settings
 
         self.init_ui()
 
@@ -385,8 +367,7 @@ class Window(QMainWindow):
 
         if not self.is_advanced and self.textbox.text() or self.is_advanced \
                 and (self.figi.text() or self.name.text() or
-                 self.ticker.text() or self.classcode.text()):
-
+                     self.ticker.text() or self.classcode.text()):
             self.securities_thread = GetSecurity(
                 StandardQuery(
                     SecurityInfo(
@@ -457,13 +438,13 @@ class Window(QMainWindow):
             #
             #     self.securities_thread.start()
 
-                # self.subscribe_thread = SubscribeOnMarket(
-                #     data[0],
-                #     self.user.get_token(),
-                #     self.show_course
-                # )
-                #
-                # self.subscribe_thread.start()
+            # self.subscribe_thread = SubscribeOnMarket(
+            #     data[0],
+            #     self.user.get_token(),
+            #     self.show_course
+            # )
+            #
+            # self.subscribe_thread.start()
 
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
@@ -520,10 +501,33 @@ class CreateWindow:
     def __init__(self, app):
         self.app = app
 
-    def create_main(self, app):
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder_path = os.path.abspath("first_gui.py.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder_path.pop()
+        # Сохраняем его
+        self.__path = sep.join(folder_path)
+        self.settings: dict = FileLoader.get_json(
+            self.__path + "/info/files/.current_settings.json"
+        )
+
+        target = FileLoader.get_json(
+            self.__path + "/info/files/.default_settings.json"
+        )
+
+        if self.settings is None or not ("version" in self.settings) or \
+                self.settings["version"] != target["version"]:
+            FileLoader.save_json(
+                self.__path + "/info/files/.current_settings.json",
+                target
+            )
+            self.settings = target
+
+    def create_main(self):
         screen = self.app.desktop().screenGeometry()
 
-        self.main_window = Window(app)
+        self.main_window = Window(self.app, self.settings, self.__path)
         self.main_window.setGeometry((screen.width() - self.WIDTH) // 2,
                                      (screen.height() - self.HEIGHT) // 2,
                                      self.WIDTH, self.HEIGHT)
