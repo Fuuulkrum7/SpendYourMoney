@@ -1,6 +1,6 @@
 {
   "actual_db": false,
   "candle": 5,
-  "theme": 0,
-  "font": "arial"
+  "theme": "light",
+  "font": "Default (system)"
 }

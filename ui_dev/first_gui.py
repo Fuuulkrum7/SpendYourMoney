@@ -346,7 +346,7 @@ class Window(QMainWindow):
         self.output.itemClicked.connect(self.security_clicked)
 
     def open_settings(self):
-        self.settings_window = Settings(self.app)
+        self.settings_window = Settings(self.app, self.settings, self.__path)
         self.settings_window.show()
 
     def security_clicked(self, item):
