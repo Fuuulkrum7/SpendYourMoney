@@ -1,4 +1,7 @@
 {
+  "version": 1,
   "actual_db": false,
-  "candle": 5
+  "candle": 5,
+  "theme": "light",
+  "font": "Default (system)"
 }

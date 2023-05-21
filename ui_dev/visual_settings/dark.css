@@ -1,0 +1,61 @@
+/* Фоновый цвет окна */
+QMainWindow {
+    background-color: #444444;
+}
+
+QDialog {
+    background-color: #444444;
+}
+
+
+/* Цвет текста */
+QLabel, QLineEdit, QGroupBox, QListWidget {
+    color: #ffffff;
+}
+
+/* Фоновый цвет кнопок */
+QPushButton, QComboBox {
+    background-color: #212121;
+    color: #ffffff;
+}
+
+/* Цвет кнопок при наведении */
+QPushButton:hover, QComboBox:hover {
+    background-color: #323232;
+}
+
+/* Цвет кнопок при нажатии */
+QPushButton:pressed, QComboBox:pressed {
+    background-color: #191919;
+}
+
+/* Цвет рамки кнопок */
+QPushButton {
+    border: 1px solid #777777;
+}
+
+/* Цвет фона поля для ввода текста */
+QLineEdit {
+    background-color: #323232;
+    border: 1px solid #777777;
+}
+
+QListWidget, QWidget {
+    background-color: #323232;
+    selection-background-color: #191919;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #323232;
+    color: #ffffff;
+}
+
+QTabWidget QAbstractItemView {
+    background-color: #323232;
+    color: #ffffff;
+}
+
+QTabBar {
+    background-color: #444444;
+    color: #ffffff;
+}

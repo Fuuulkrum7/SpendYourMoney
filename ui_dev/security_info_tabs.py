@@ -8,6 +8,7 @@ from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
     FigureCanvas
+import matplotlib as plt
 from matplotlib.figure import Figure
 from tinkoff.invest import CandleInterval
 from tinkoff.invest.utils import now
@@ -23,6 +24,8 @@ from securities.securiries_types import SecurityType
 from securities.securities import Security
 from ui_dev.loading import LoadingDialog
 
+plt.use("Qt5Agg")
+
 
 candles_dict = {
     "1 minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
@@ -30,6 +33,7 @@ candles_dict = {
     "15 Minutes": CandleInterval.CANDLE_INTERVAL_15_MIN,
     "1 hour": CandleInterval.CANDLE_INTERVAL_HOUR,
     "1 day": CandleInterval.CANDLE_INTERVAL_DAY,
+    "1 week": CandleInterval.CANDLE_INTERVAL_WEEK,
     "Whole history": CandleInterval.CANDLE_INTERVAL_MONTH
 }
 
@@ -59,7 +63,6 @@ class SecurityWindow(QMainWindow):
         self.select_candle = None
         self.horizontal = None
         self.predict_thread = None
-        self.neural_network = None
         self.right_vertical = None
         self.left_vertical = None
         self.canvas = None
@@ -90,8 +93,9 @@ class SecurityWindow(QMainWindow):
 
         self.settings = settings
 
-        if 0 <= settings["candle"] <= 5 or settings["candle"] == \
-                CandleInterval.CANDLE_INTERVAL_MONTH.value:
+        if 0 <= settings["candle"] <= 5 or settings["candle"] in \
+                [CandleInterval.CANDLE_INTERVAL_MONTH.value,
+                 CandleInterval.CANDLE_INTERVAL_WEEK.value]:
             self.candle = CandleInterval(settings["candle"])
         else:
             self.candle = CandleInterval.CANDLE_INTERVAL_DAY
@@ -181,10 +185,15 @@ class SecurityWindow(QMainWindow):
         self.course_tab.layout = QVBoxLayout()
 
         self.horizontal = QHBoxLayout()
-        self.neural_network = QLabel()
-        self.horizontal.addWidget(self.neural_network)
+        self.neural_layout = QVBoxLayout()
+        self.horizontal.addLayout(self.neural_layout)
+
+        spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding,
+                                       QtWidgets.QSizePolicy.Minimum)
+        self.horizontal.addItem(spacer)
 
         self.select_candle = QComboBox()
+        self.select_candle.resize(80, 40)
         self.select_candle.addItems(list(candles_dict.keys()))
         self.select_candle.setCurrentIndex(list(candles_dict.values()).index(
             self.candle
@@ -222,6 +231,8 @@ class SecurityWindow(QMainWindow):
             delta = now() - timedelta(minutes=1350)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
             delta = now() - timedelta(hours=90)
+        elif self.candle == CandleInterval.CANDLE_INTERVAL_WEEK:
+            delta = now() - timedelta(days=630)
         elif self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
             delta = datetime.datetime(year=1970, month=1, day=2)
         else:
@@ -290,11 +301,23 @@ class SecurityWindow(QMainWindow):
 
             self.predict_thread.start()
         else:
-            self.neural_network.setText("Not allowed to make a prediction")
+            label1 = QLabel("Not allowed to make a prediction")
+            self.neural_layout.addWidget(label1)
 
     def on_predict_made(self, result):
         code, data = result
-        self.neural_network.setText(str(data))
+        if data:
+            # Такой перевод данных в строку нужен для их корректного
+            # отображения
+            label1 = QLabel(f'Growth probability: {str(data[2])} %')
+            label2 = QLabel(f'Flat probability: {str(data[1])} %')
+            label3 = QLabel(f'Fall probability: {str(data[0])} %')
+            self.neural_layout.addWidget(label1)
+            self.neural_layout.addWidget(label2)
+            self.neural_layout.addWidget(label3)
+        else:
+            label1 = QLabel("No data")
+            self.neural_layout.addWidget(label1)
 
     def on_load(self, result):
         code, data = result
