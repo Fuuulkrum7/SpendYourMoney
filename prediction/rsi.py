@@ -5,7 +5,12 @@ from PyQt5.QtCore import QThread as Thread, pyqtSignal
 from tinkoff.invest import CandleInterval
 
 from securities.securities import SecurityInfo
-
+delta: list = [datetime.timedelta(minutes=1), datetime.timedelta(minutes=5),
+               datetime.timedelta(minutes=15), datetime.timedelta(hours=1),
+               datetime.timedelta(days=1), datetime.timedelta(minutes=2),
+               datetime.timedelta(minutes=3), datetime.timedelta(minutes=10),
+               datetime.timedelta(minutes=30), datetime.timedelta(hours=2),
+               datetime.timedelta(hours=4), datetime.timedelta(weeks=1)]
 
 class RSI(Thread):
     status_code: int = 200
@@ -29,7 +34,8 @@ class RSI(Thread):
         self.info = info
         self.candle_interval = candle_interval
         self.start_date = start_date
-        self.to = start_date + self.rsi_step
+        self.to = self.start_date + delta[
+                candle_interval.value - 1]*self.num_candl * 2 - 1
         self.to = self.to.replace(tzinfo=datetime.timezone.utc)
 
     def run(self) -> None:
