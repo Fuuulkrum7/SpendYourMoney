@@ -30,7 +30,6 @@ from ui_dev.loading import LoadingDialog
 
 plt.use("Qt5Agg")
 
-
 candles_dict = {
     "1 minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
     "5 minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
@@ -77,6 +76,12 @@ class SecurityWindow(QMainWindow):
         self.canvas = None
         self.user = user
         self.history = []
+
+        screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
+
+        self.setGeometry((screen.width() - self.WIDTH) // 2,
+                         (screen.height() - self.HEIGHT) // 2,
+                         self.WIDTH, self.HEIGHT)
         self.setFixedSize(self.WIDTH, self.HEIGHT)
         self.setWindowTitle(item.info.name)
 
