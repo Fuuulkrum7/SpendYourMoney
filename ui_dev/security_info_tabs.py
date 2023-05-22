@@ -19,7 +19,9 @@ from api_requests.security_getter import StandardQuery
 from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo, \
     CouponInfo
 from info.file_loader import FileLoader
+from info.user import User
 from neural_network.predictor import PredictCourse
+from prediction.bollinger_bands import Bollinger
 from securities.securiries_types import SecurityType
 from securities.securities import Security
 from ui_dev.loading import LoadingDialog
@@ -56,7 +58,7 @@ class SecurityWindow(QMainWindow):
     just_created = 0
     loading = None
 
-    def __init__(self, item, user, settings, path):
+    def __init__(self, item: Security, user: User, settings: dict, path):
         super().__init__()
 
         self.__path = path
@@ -109,6 +111,16 @@ class SecurityWindow(QMainWindow):
         self.layout.addWidget(self.tabs)
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
+
+        self.bollinger_thread = Bollinger(
+            self.calculate_delta(),
+            item.info,
+            self.user.get_token(),
+            self.show_bollinger,
+            candle_interval=self.candle
+        )
+
+        self.bollinger_thread.start()
 
     def init_security_ui(self):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
@@ -222,25 +234,25 @@ class SecurityWindow(QMainWindow):
 
         self.load_plot()
 
-    def load_plot(self):
+    def calculate_delta(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            delta = now() - timedelta(minutes=90)
-        elif self.candle == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            delta = now() - timedelta(minutes=450)
-        elif self.candle == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            delta = now() - timedelta(minutes=1350)
-        elif self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
-            delta = now() - timedelta(hours=90)
-        elif self.candle == CandleInterval.CANDLE_INTERVAL_WEEK:
-            delta = now() - timedelta(days=630)
-        elif self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
-            delta = datetime.datetime(year=1970, month=1, day=2)
-        else:
-            delta = now() - timedelta(days=90)
+            return now() - timedelta(minutes=90)
+        if self.candle == CandleInterval.CANDLE_INTERVAL_5_MIN:
+            return now() - timedelta(minutes=450)
+        if self.candle == CandleInterval.CANDLE_INTERVAL_15_MIN:
+            return now() - timedelta(minutes=1350)
+        if self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
+            return now() - timedelta(hours=90)
+        if self.candle == CandleInterval.CANDLE_INTERVAL_WEEK:
+            return now() - timedelta(days=630)
+        if self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
+            return datetime.datetime(year=1970, month=1, day=2)
+        return now() - timedelta(days=90)
 
+    def load_plot(self):
         self.get_securities_hist_thread = GetSecurityHistory(
             info=self.item.info,
-            _from=delta,
+            _from=self.calculate_delta(),
             to=now(),
             interval=self.candle,
             token=self.user.get_token(),
@@ -341,6 +353,15 @@ class SecurityWindow(QMainWindow):
 
         if cleared:
             self.tab_changed(2)
+
+    def show_bollinger(self, result):
+        code, data = result
+
+        dates = [i.info_time for i in self.history]
+        for i in data:
+            self.canvas.axes.plot(dates, i, 'r')
+
+        self.canvas.draw()
 
     def save_data(self):
         self.settings["candle"] = self.candle.value
