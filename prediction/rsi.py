@@ -17,12 +17,13 @@ class RSI(Thread):
     candle_interval: CandleInterval
     data_downloaded = pyqtSignal(object)
 
-    def __init__(self, set_number_of_candl: int, token, start_date: datetime,
-                 info: SecurityInfo, on_finish, set_rsi_step: int = 14,
-                 candle_interval: CandleInterval = CandleInterval.CANDLE_INTERVAL_DAY):
+    def __init__(self, num_candl: int, token, start_date: datetime,
+                 info: SecurityInfo, on_finish, rsi_step: int = 14,
+                 candle_interval: CandleInterval =
+                 CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
-        self.rsi_step = set_rsi_step
-        self.num_candl = set_number_of_candl
+        self.rsi_step = rsi_step
+        self.num_candl = num_candl
         self.__token = token
         self.data_downloaded.connect(on_finish)
         self.info = info
@@ -66,7 +67,8 @@ class RSI(Thread):
                                 rsi_num += 1
                             else:
                                 break
-                    output.append(100 - 100 / ((up_sum / up_num) / (down_sum / down_num)))
+                    output.append(100 - 100 / ((up_sum / up_num)
+                                               / (down_sum / down_num)))
                     target_candle += 1
             except Exception as e:
                 print(e)

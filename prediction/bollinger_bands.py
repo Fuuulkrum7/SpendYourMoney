@@ -20,7 +20,8 @@ class BOLLINGER(Thread):
 
     def __init__(self, start_date: datetime, info: SecurityInfo,
                  token, on_finish, period: int = 20,
-                 set_standard_fl: int = 2, candle_interval: CandleInterval = CandleInterval.CANDLE_INTERVAL_DAY):
+                 set_standard_fl: int = 2, candle_interval: CandleInterval
+                 = CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
         self.data_downloaded.connect(on_finish)
         self.period = period
@@ -78,7 +79,8 @@ class BOLLINGER(Thread):
                 print(e)
                 self.status_code = 500
 
-        self.data_downloaded.emit((self.status_code, topline, midline, botline))
+        self.data_downloaded.emit((self.status_code, topline,
+                                   midline, botline))
 
     def on_load(self, topline, midline, botline):
         code, top = topline, mid = midline, bot = botline
