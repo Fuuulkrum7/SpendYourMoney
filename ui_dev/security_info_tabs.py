@@ -3,8 +3,9 @@ from datetime import timedelta
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
-    QMessageBox
+    QMessageBox, QCheckBox
 from PyQt5 import QtWidgets
+from matplotlib import pyplot
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
     FigureCanvas
@@ -22,6 +23,7 @@ from info.file_loader import FileLoader
 from info.user import User
 from neural_network.predictor import PredictCourse
 from prediction.bollinger_bands import Bollinger
+from prediction.rsi import RSI
 from securities.securiries_types import SecurityType
 from securities.securities import Security
 from ui_dev.loading import LoadingDialog
@@ -61,6 +63,9 @@ class SecurityWindow(QMainWindow):
     def __init__(self, item: Security, user: User, settings: dict, path):
         super().__init__()
 
+        self.rsi_thread = None
+        self.bollinger_box = None
+        self.rsi_box = None
         self.bollinger_thread = None
         self.__path = path
         self.select_candle = None
@@ -113,18 +118,6 @@ class SecurityWindow(QMainWindow):
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
 
-        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
-            self.bollinger_thread = Bollinger(
-                self.calculate_delta(),
-                self.item.info,
-                self.user.get_token(),
-                now(),
-                self.show_bollinger,
-                candle_interval=self.candle
-            )
-
-            self.bollinger_thread.start()
-
     def init_security_ui(self):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
         self.security_tab.setLayout(self.security_tab.layout)
@@ -148,7 +141,7 @@ class SecurityWindow(QMainWindow):
                 self.item.info,
                 ""
             ),
-            self.after,
+            self.on_security_load,
             self.user.get_token()
         )
         self.get_securities_thread.start()
@@ -207,6 +200,12 @@ class SecurityWindow(QMainWindow):
                                        QtWidgets.QSizePolicy.Minimum)
         self.horizontal.addItem(spacer)
 
+        self.rsi_box = QCheckBox("RSI")
+        self.bollinger_box = QCheckBox("Bollinger")
+
+        self.rsi_box.stateChanged.connect(self.rsi_changed)
+        self.bollinger_box.stateChanged.connect(self.bollinger_changed)
+
         self.select_candle = QComboBox()
         self.select_candle.resize(80, 40)
         self.select_candle.addItems(list(candles_dict.keys()))
@@ -215,6 +214,8 @@ class SecurityWindow(QMainWindow):
         ))
         self.select_candle.currentIndexChanged.connect(self.on_candle_change)
 
+        self.horizontal.addWidget(self.rsi_box)
+        self.horizontal.addWidget(self.bollinger_box)
         self.horizontal.addWidget(self.select_candle)
         self.course_tab.layout.addLayout(self.horizontal)
 
@@ -253,17 +254,20 @@ class SecurityWindow(QMainWindow):
         return now() - timedelta(days=90)
 
     def load_plot(self):
+        self.rsi_box.setEnabled(False)
+        self.bollinger_box.setEnabled(False)
+
         self.get_securities_hist_thread = GetSecurityHistory(
             info=self.item.info,
             _from=self.calculate_delta(),
             to=now(),
             interval=self.candle,
             token=self.user.get_token(),
-            on_finish=self.on_load
+            on_finish=self.on_history_load
         )
         self.get_securities_hist_thread.start()
 
-    def after(self, result):
+    def on_security_load(self, result):
         code, data = result
 
         item = data[0]
@@ -334,10 +338,10 @@ class SecurityWindow(QMainWindow):
             label1 = QLabel("No data")
             self.neural_layout.addWidget(label1)
 
-    def on_load(self, result):
+    def on_history_load(self, result):
         code, data = result
 
-        self.save_data()
+        self.save_settings()
 
         self.history = data
         dates = [i.info_time for i in self.history]
@@ -357,6 +361,50 @@ class SecurityWindow(QMainWindow):
         if cleared:
             self.tab_changed(2)
 
+        self.rsi_box.setEnabled(True)
+        self.bollinger_box.setEnabled(True)
+
+    def rsi_changed(self):
+        if self.rsi_box.isChecked() and \
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.rsi_thread = RSI(
+                90,
+                self.user.get_token(),
+                self.calculate_delta(),
+                now(),
+                self.item.info,
+                self.show_rsi,
+                candle_interval=self.candle
+            )
+
+            self.rsi_thread.start()
+
+    def show_rsi(self, result):
+        print(result)
+        code, data = result
+
+        pyplot.plot([i.info_time for i in self.history][:len(data)], data)
+        pyplot.show()
+
+    def bollinger_changed(self):
+        if self.bollinger_box.isChecked() and \
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            print("start bollinger")
+
+            self.bollinger_thread = Bollinger(
+                self.calculate_delta(),
+                self.item.info,
+                self.user.get_token(),
+                now(),
+                self.show_bollinger,
+                candle_interval=self.candle
+            )
+
+            self.bollinger_thread.start()
+        else:
+            # TODO write here what we shall do in case of plot clear
+            ...
+
     def show_bollinger(self, result):
         code, data = result
         print("finished")
@@ -368,7 +416,7 @@ class SecurityWindow(QMainWindow):
         #
         # self.canvas.draw()
 
-    def save_data(self):
+    def save_settings(self):
         self.settings["candle"] = self.candle.value
 
         FileLoader.save_json(

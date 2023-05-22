@@ -16,7 +16,7 @@ class LoadingDialog(QtWidgets.QDialog):
         self.pbar.setMinimum(0)
         self.pbar.setMaximum(0)
         self.pbar.setValue(0)
-        self.pbar.setGeometry(40, 75, 160, 20)
+        self.pbar.setGeometry(30, 75, 140, 20)
 
     def start_loading(self):
         self.show()

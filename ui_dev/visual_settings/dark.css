@@ -9,7 +9,7 @@ QDialog {
 
 
 /* Цвет текста */
-QLabel, QLineEdit, QGroupBox, QListWidget {
+QLabel, QLineEdit, QGroupBox, QListWidget, QCheckBox {
     color: #ffffff;
 }
 
