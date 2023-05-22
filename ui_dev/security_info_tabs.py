@@ -113,6 +113,18 @@ class SecurityWindow(QMainWindow):
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
 
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.bollinger_thread = Bollinger(
+                self.calculate_delta(),
+                self.item.info,
+                self.user.get_token(),
+                now(),
+                self.show_bollinger,
+                candle_interval=self.candle
+            )
+
+            self.bollinger_thread.start()
+
     def init_security_ui(self):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
         self.security_tab.setLayout(self.security_tab.layout)
@@ -342,29 +354,19 @@ class SecurityWindow(QMainWindow):
 
         self.loading.after_load()
 
-        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
-            self.bollinger_thread = Bollinger(
-                self.calculate_delta(),
-                self.item.info,
-                self.user.get_token(),
-                now(),
-                self.show_bollinger,
-                candle_interval=self.candle
-            )
-
-            self.bollinger_thread.start()
-
         if cleared:
             self.tab_changed(2)
 
     def show_bollinger(self, result):
         code, data = result
-
-        dates = [i.info_time for i in self.history]
-        for i in data:
-            self.canvas.axes.plot(dates, i, 'r')
-
-        self.canvas.draw()
+        print("finished")
+        print(code, data)
+        #
+        # dates = [i.info_time for i in self.history]
+        # for i in data:
+        #     self.canvas.axes.plot(dates, i, 'r')
+        #
+        # self.canvas.draw()
 
     def save_data(self):
         self.settings["candle"] = self.candle.value

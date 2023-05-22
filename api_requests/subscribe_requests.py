@@ -80,7 +80,7 @@ class SubscribeOnMarket(QThread):
                             security_id=self.security.info.id
                         )
 
-                        self.data_downloaded.emit((history, self.status_code))
+                        self.data_downloaded.emit((self.status_code, history))
         except RequestError as e:
             # Ошибка подключения
             print("Error in request\n", e)
@@ -89,6 +89,8 @@ class SubscribeOnMarket(QThread):
             # Рандомная бяка
             print("Error unknown\n", e)
             self.status_code = 500
+
+        self.data_downloaded.emit((self.status_code, []))
 
     def stop(self):
         # Останавливаем таким образом генератор

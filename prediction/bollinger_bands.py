@@ -14,6 +14,7 @@ delta: list = [datetime.timedelta(minutes=1), datetime.timedelta(minutes=5),
                datetime.timedelta(minutes=30), datetime.timedelta(hours=2),
                datetime.timedelta(hours=4), datetime.timedelta(weeks=1)]
 
+
 class Bollinger(Thread):
     status_code: int = 200
     get_sec: GetSecurityHistory
@@ -23,10 +24,11 @@ class Bollinger(Thread):
     standard_fl: int
     data_downloaded = pyqtSignal(object)
     start_date: datetime
+    history: list = []
 
     def __init__(self, start_date: datetime, info: SecurityInfo,
                  token, end_date: datetime,
-                 on_finish, period: int = 20,
+                 on_finish, period: int = 90,
                  set_standard_fl: int = 2,
                  candle_interval: CandleInterval
                  = CandleInterval.CANDLE_INTERVAL_DAY):
@@ -42,24 +44,29 @@ class Bollinger(Thread):
         self.to = self.to.replace(tzinfo=datetime.timezone.utc)
 
     def run(self) -> None:
-        self.load_history()
-        self.get_sec.wait()
-        self.get_bollinger()
+        self.get_sec = GetSecurityHistory(
+            info=self.info,
+            _from=self.start_date,
+            to=self.to,
+            interval=self.candle_interval,
+            token=self.__token,
+            on_finish=self.on_load
+        )
+        self.get_sec.start()
 
-    def get_bollinger(self):
+        self.get_sec.wait()
+
         topline: list = []
         midline: list = []
         botline: list = []
         if self.status_code < 300:
             try:
-                sum_prices: list = []
+                sum_prices: list = [0] * self.period
                 prices: list = []
                 stdev: list = []
+
                 i = 0
-                while i < self.period:
-                    sum_prices.append(0)
-                i = 0
-                for candle in self.get_sec.history:
+                for candle in self.history:
                     b = i - self.period + 1
                     if b < 0:
                         b = 0
@@ -87,23 +94,11 @@ class Bollinger(Thread):
                 print(e)
                 self.status_code = 500
 
-        self.data_downloaded.emit((self.status_code, topline,
-                                   midline, botline))
+        self.data_downloaded.emit((self.status_code, [topline,
+                                   midline, botline]))
 
     def on_load(self, topline):
-        code, top = topline
+        code, self.history = topline
 
         if code == 500 or code == 300:
             self.status_code = 400
-            return
-
-    def load_history(self):
-        self.get_sec = GetSecurityHistory(
-            info=self.info,
-            _from=self.start_date,
-            to=self.to,
-            interval=self.candle_interval,
-            token=self.__token,
-            on_finish=self.on_load
-        )
-        self.get_sec.start()
