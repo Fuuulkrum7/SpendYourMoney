@@ -61,6 +61,7 @@ class SecurityWindow(QMainWindow):
     def __init__(self, item: Security, user: User, settings: dict, path):
         super().__init__()
 
+        self.bollinger_thread = None
         self.__path = path
         self.select_candle = None
         self.horizontal = None
@@ -111,16 +112,6 @@ class SecurityWindow(QMainWindow):
         self.layout.addWidget(self.tabs)
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
-
-        self.bollinger_thread = Bollinger(
-            self.calculate_delta(),
-            item.info,
-            self.user.get_token(),
-            self.show_bollinger,
-            candle_interval=self.candle
-        )
-
-        self.bollinger_thread.start()
 
     def init_security_ui(self):
         self.security_tab.layout = QtWidgets.QHBoxLayout()
@@ -350,6 +341,17 @@ class SecurityWindow(QMainWindow):
         self.canvas.draw()
 
         self.loading.after_load()
+
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.bollinger_thread = Bollinger(
+                self.calculate_delta(),
+                self.item.info,
+                self.user.get_token(),
+                self.show_bollinger,
+                candle_interval=self.candle
+            )
+
+            self.bollinger_thread.start()
 
         if cleared:
             self.tab_changed(2)
