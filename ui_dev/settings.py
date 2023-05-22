@@ -31,7 +31,7 @@ class Settings(QWidget):
 
         self.font_label = QLabel("Font:")
         self.font_combo = QComboBox()
-        self.font_list = ["Default (system)", "Papyrus", "Comic Sans MS", "Mf Wedding Bells"]
+        self.font_list = ["Default (system)", "Papyrus", "Comic Sans MS"]
         self.add_fonts_from_folder()
         self.font_combo.addItems(self.font_list)
         self.font_combo.setCurrentIndex(
@@ -96,15 +96,19 @@ class Settings(QWidget):
         )
 
 
-def set_theme_and_font(app, settings):
-    selected_theme = settings["theme"]
-    selected_font = settings["font"]
-    with open(f"ui_dev/visual_settings/{selected_theme}.css",
-              "r") as theme:
-        css_theme = theme.read()
-
-    if selected_font != "Default (system)":
-        css_font = f'* {{font-family: "{selected_font}";}}'
-    else:
-        css_font = ''
-    app.setStyleSheet(css_theme + css_font)
+def set_theme_and_font(app, settings, path):
+    initial = Settings(app, settings, path)
+    initial.add_fonts_from_folder()
+    content = initial.get_css_content()
+    app.setStyleSheet(content)
+    # selected_theme = settings["theme"]
+    # selected_font = settings["font"]
+    # with open(f"ui_dev/visual_settings/{selected_theme}.css",
+    #           "r") as theme:
+    #     css_theme = theme.read()
+    #
+    # if selected_font != "Default (system)":
+    #     css_font = f'* {{font-family: "{selected_font}";}}'
+    # else:
+    #     css_font = ''
+    # app.setStyleSheet(css_theme + css_font)

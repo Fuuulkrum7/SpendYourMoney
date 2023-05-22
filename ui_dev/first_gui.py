@@ -284,7 +284,7 @@ class Window(QMainWindow):
             )
             self.settings = target
         else:
-            set_theme_and_font(app, self.settings)
+            set_theme_and_font(app, self.settings, self.__path)
 
         self.init_ui()
 
