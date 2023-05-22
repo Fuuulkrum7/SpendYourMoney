@@ -295,15 +295,15 @@ class Window(QMainWindow):
     def init_ui(self):
         # Create textbox
         self.textbox.move(20, 20)
-        self.textbox.resize(440, 40)
+        self.textbox.resize(390, 40)
         self.textbox.setPlaceholderText("Security name (more than 2 symbols)")
 
         # Create a button in the window
-        self.standard_search.move(500, 20)
-        self.standard_search.resize(120, 40)
+        self.standard_search.move(440, 20)
+        self.standard_search.resize(180, 40)
 
-        self.advanced.move(660, 20)
-        self.advanced.resize(160, 40)
+        self.advanced.move(650, 20)
+        self.advanced.resize(180, 40)
 
         # connect button to function on_click
         self.standard_search.clicked.connect(self.find_securities)
