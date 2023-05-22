@@ -90,15 +90,12 @@ class Bollinger(Thread):
         self.data_downloaded.emit((self.status_code, topline,
                                    midline, botline))
 
-    def on_load(self, topline, midline, botline):
-        code, top = topline, mid = midline, bot = botline
+    def on_load(self, topline):
+        code, top = topline
 
         if code == 500 or code == 300:
             self.status_code = 400
             return
-
-        if len(top) < self.period or len(mid) < self.period:
-            self.status_code = 300
 
     def load_history(self):
         self.get_sec = GetSecurityHistory(
