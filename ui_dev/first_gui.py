@@ -334,7 +334,8 @@ class Window(QMainWindow):
 
         self.advanced.clicked.connect(self.switch_mode)
 
-        self.hse_label.setVisible(self.settings["font"] == "HSE Sans")
+        self.hse_label.setVisible("hse" in self.settings["font"]
+                                  .lower().split())
 
         # Create a button in the window
         self.load_all_btn.move(650, 480)

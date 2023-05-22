@@ -88,7 +88,7 @@ class Settings(QWidget):
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
 
-        if self.selected_font == "HSE Sans":
+        if "hse" in self.selected_font.lower().split():
             pixmap = QPixmap(self.__path + f"/info/files/HSE_"
                                            f"{self.selected_theme}.png")
             self.hse_label.setPixmap(pixmap)
@@ -99,7 +99,7 @@ class Settings(QWidget):
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
 
-        self.hse_label.setVisible(self.selected_font == "HSE Sans")
+        self.hse_label.setVisible("hse" in self.selected_font.lower().split())
 
     def save_data(self):
         self.settings["theme"] = self.selected_theme.lower()
