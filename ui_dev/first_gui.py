@@ -420,7 +420,8 @@ class Window(QMainWindow):
 
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
-                         f"{security.info.figi}, Ticker={security.info.ticker}," \
+                         f"{security.info.figi}, " \
+                         f"Ticker={security.info.ticker}," \
                          f" Class code={security.info.class_code}"
             basic_info = f"{'*' * len(basic_info)}\n{basic_info}" \
                          f"\n{'*' * len(basic_info)}"

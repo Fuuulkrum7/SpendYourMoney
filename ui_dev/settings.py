@@ -1,4 +1,9 @@
+import os
+
+from PyQt5.QtCore import QFile, QByteArray
+from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout
+from PyQt5.uic.properties import QtGui
 
 from info.file_loader import FileLoader
 
@@ -26,7 +31,8 @@ class Settings(QWidget):
 
         self.font_label = QLabel("Font:")
         self.font_combo = QComboBox()
-        self.font_list = ["Default (system)", "Papyrus", "Comic Sans MS"]
+        self.font_list = ["Default (system)", "Papyrus", "Comic Sans MS", "Mf Wedding Bells"]
+        self.add_fonts_from_folder()
         self.font_combo.addItems(self.font_list)
         self.font_combo.setCurrentIndex(
             self.font_list.index(self.selected_font))
@@ -38,6 +44,24 @@ class Settings(QWidget):
         self.layout.addWidget(self.font_label)
         self.layout.addWidget(self.font_combo)
         self.setLayout(self.layout)
+
+
+    def add_fonts_from_folder(self):
+        folder = "ui_dev/fonts"
+        for filename in os.listdir(folder):
+            file = QFile("/".join((self.__path,folder,filename)))
+            file.open(QFile.ReadOnly)
+            font_data = file.readAll()
+            file.close()
+
+            # добавляем шрифт в базу данных шрифтов PyQt
+            font_id = QFontDatabase.addApplicationFontFromData(
+                QByteArray(font_data))
+
+            # получаем его имя
+            font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+            self.font_list.append(font_family)
+
 
     def get_css_content(self):
         with open(f"ui_dev/visual_settings/{self.selected_theme}.css",
@@ -55,14 +79,12 @@ class Settings(QWidget):
         self.save_data()
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
-        print(self.content, "from theme")
 
     def on_font_change(self, index):
         self.selected_font = self.font_list[index]
         self.save_data()
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
-        print(self.content, "from font")
 
     def save_data(self):
         self.settings["theme"] = self.selected_theme.lower()
@@ -86,4 +108,3 @@ def set_theme_and_font(app, settings):
     else:
         css_font = ''
     app.setStyleSheet(css_theme + css_font)
-    print(css_theme + css_font, "from set")

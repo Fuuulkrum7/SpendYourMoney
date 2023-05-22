@@ -73,6 +73,7 @@ class SecurityWindow(QMainWindow):
         self.predict_thread = None
         self.right_vertical = None
         self.left_vertical = None
+        self.neural_layout = None
         self.canvas = None
         self.user = user
         self.history = []
