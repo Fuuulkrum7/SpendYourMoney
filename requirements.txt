@@ -2,7 +2,7 @@ tinkoff-investments==0.2.0b50
 SQLAlchemy~=1.4.46
 SQLAlchemy-Utils==0.40.0
 function~=1.2.0
-cryptography==40.0.2
+cryptography==38.0.4
 pymysql==1.0.3
 PyQt5~=5.15.6
 tinkoff~=0.1.1

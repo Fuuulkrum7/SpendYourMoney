@@ -1,36 +1,27 @@
 import os
 import sys
-import time
-from datetime import timedelta
+from platform import system
 
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QListWidgetItem, QApplication
+    QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
-from tinkoff.invest import CandleInterval
-from tinkoff.invest.utils import now
-
-import matplotlib as plt
 
 from api_requests.get_security import GetSecurity
-from api_requests.get_security_history import GetSecurityHistory
 from api_requests.load_all_securities import LoadAllSecurities
 from api_requests.security_getter import StandardQuery
-from api_requests.subscribe_requests import SubscribeOnMarket
 from api_requests.user_methods import CheckUser, CreateUser
 from info.file_loader import FileLoader
 from info.user import User
-from neural_network.predictor import PredictCourse
-from securities.securiries_types import SecurityType
 from securities.securities import SecurityInfo
+from ui_dev.loading import LoadingDialog
 from ui_dev.security_info_tabs import SecurityWindow
+from ui_dev.settings import Settings, set_theme_and_font
 
 folder = 'platforms'
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
-
-plt.use("Qt5Agg")
 
 
 class LoginWindow(QtWidgets.QDialog):
@@ -161,7 +152,6 @@ class RegisterWindow(QtWidgets.QDialog):
         self.setParent(parent)
         self.setWindowModality(PyQt5.QtCore.Qt.WindowModal)
 
-
     def setup_register_ui(self):
         """
         Отвечает за настройку виджетов в диалоговом окне
@@ -241,9 +231,9 @@ class Window(QMainWindow):
     """
     securities_thread: GetSecurity = None
     all_securities_thread: LoadAllSecurities = None
-    predict_thread: PredictCourse = None
     subscribe_thread = None
     security_window = None
+    settings_window = None
     loading = None
 
     figis = []
@@ -253,8 +243,9 @@ class Window(QMainWindow):
     res = None
     delta = 0
 
-    def __init__(self):
+    def __init__(self, app):
         super(Window, self).__init__()
+        self.app = app
         self.security = None
         self.setWindowTitle("SpendYourMoney")
         self.textbox = QLineEdit(self)
@@ -266,8 +257,34 @@ class Window(QMainWindow):
         self.classcode = QLineEdit(self)
         self.load_all_btn = QPushButton('Load all', self)
         self.output = QListWidget(self)
+        self.settings_btn = QPushButton('Settings', self)
         self.user: User = None
         self.is_advanced = False
+
+        sep = "\\" if system() == "Windows" else "/"
+        # Получаем путь до папки, где лежит файл
+        folder_path = os.path.abspath("first_gui.py.py").split(sep)
+        # Удаляем папку, где лежит файл, из пути
+        folder_path.pop()
+        # Сохраняем его
+        self.__path = sep.join(folder_path)
+        self.settings: dict = FileLoader.get_json(
+            self.__path + "/info/files/.current_settings.json"
+        )
+
+        target = FileLoader.get_json(
+            self.__path + "/info/files/.default_settings.json"
+        )
+
+        if self.settings is None or not ("version" in self.settings) or \
+                self.settings["version"] != target["version"]:
+            FileLoader.save_json(
+                self.__path + "/info/files/.current_settings.json",
+                target
+            )
+            self.settings = target
+        else:
+            set_theme_and_font(app, self.settings)
 
         self.init_ui()
 
@@ -306,8 +323,12 @@ class Window(QMainWindow):
         self.load_all_btn.move(650, 480)
         self.load_all_btn.resize(180, 40)
 
+        self.settings_btn.move(650, 400)
+        self.settings_btn.resize(180, 40)
+
         # connect button to function on_click
         self.load_all_btn.clicked.connect(self.load_all)
+        self.settings_btn.clicked.connect(self.open_settings)
 
         # self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
@@ -315,13 +336,19 @@ class Window(QMainWindow):
         self.output.resize(600, 440)
         self.output.itemClicked.connect(self.security_clicked)
 
+    def open_settings(self):
+        self.settings_window = Settings(self.app, self.settings, self.__path)
+        self.settings_window.show()
+
     def security_clicked(self, item):
         if item.text() == "No results":
             return
         self.security = item.data(Qt.UserRole)
         if self.security_window is None or \
                 not self.security_window.get_securities_thread.isRunning():
-            self.security_window = SecurityWindow(self.security, self.user)
+            self.security_window = SecurityWindow(
+                self.security, self.user, self.settings, self.__path
+            )
             print("1", self.user)
             self.security_window.show()
 
@@ -349,8 +376,7 @@ class Window(QMainWindow):
 
         if not self.is_advanced and self.textbox.text() or self.is_advanced \
                 and (self.figi.text() or self.name.text() or
-                 self.ticker.text() or self.classcode.text()):
-
+                     self.ticker.text() or self.classcode.text()):
             self.securities_thread = GetSecurity(
                 StandardQuery(
                     SecurityInfo(
@@ -376,27 +402,6 @@ class Window(QMainWindow):
             )
             self.securities_thread.start()
 
-    def on_predict_made(self, result):
-        print(result)
-
-    def predict_it(self, result):
-        code, data = result
-
-        # self.output.addItem(f"Stock name - {data[0].info.name}. "
-        #                    f"Prediction: ")
-
-        self.predict_thread = PredictCourse(
-            data[0],
-            self.on_predict_made,
-            self.user.get_token()
-        )
-
-        self.predict_thread.start()
-
-    def show_course(self, result):
-        ...
-        # self.output.addItem(str(result))
-
     def after_search(self, result):
         code, data = result
 
@@ -404,30 +409,14 @@ class Window(QMainWindow):
         if not data:
             self.output.addItem("No results")
             return
-            # self.load_securities(data[0].info)
-            # if data[0].security_type == SecurityType.STOCK:
-            #     self.securities_thread = GetSecurity(
-            #         StandardQuery(
-            #             data[0].info,
-            #             "",
-            #             is_advanced=self.is_advanced
-            #         ),
-            #         self.predict_it,
-            #         self.user.get_token(),
-            #         load_dividends=False,
-            #         load_coupons=False,
-            #         insert_to_db=False
-            #     )
-            #
-            #     self.securities_thread.start()
 
-                # self.subscribe_thread = SubscribeOnMarket(
-                #     data[0],
-                #     self.user.get_token(),
-                #     self.show_course
-                # )
-                #
-                # self.subscribe_thread.start()
+            # self.subscribe_thread = SubscribeOnMarket(
+            #     data[0],
+            #     self.user.get_token(),
+            #     self.show_course
+            # )
+            #
+            # self.subscribe_thread.start()
 
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
@@ -439,54 +428,18 @@ class Window(QMainWindow):
             item.setData(Qt.UserRole, security)
             self.output.addItem(item)
 
-            # data = [d.get_as_dict() for d in data]
-            # parsed = [str(i) for i in data]
-            # self.output.addItem(parsed)
-
-    def start_loading(self):
-        self.loading = LoadingDialog()
-        self.loading.show()
-
-
     def load_all(self):
-        self.start_loading()
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
         if self.all_securities_thread is not None \
                 and self.all_securities_thread.isRunning():
             return
 
         self.all_securities_thread = LoadAllSecurities(
-            self.after_load,
+            self.loading.after_load,
             self.user.get_token()
         )
         self.all_securities_thread.start()
-
-    def after_load(self, result):
-        code, data = result
-        print(code)
-        self.loading.loadingLabel.setText("Done")
-        self.loading.pbar.setMaximum(100)
-        self.loading.pbar.setValue(100)
-        time.sleep(1)
-        self.loading.close()
-
-    def load_securities(self, info):
-        self.res = GetSecurityHistory(
-            info=info,
-            _from=now() - timedelta(days=1000),
-            to=now(),
-            interval=CandleInterval.CANDLE_INTERVAL_DAY,
-            token=self.user.get_token(),
-            on_finish=self.on_load
-        )
-
-        self.res.start()
-
-    def on_load(self, data):
-        x, y = data
-        print(
-            len(y),
-            sep='\n'
-        )
 
 
 class CreateWindow:
@@ -504,7 +457,7 @@ class CreateWindow:
     def create_main(self):
         screen = self.app.desktop().screenGeometry()
 
-        self.main_window = Window()
+        self.main_window = Window(self.app)
         self.main_window.setGeometry((screen.width() - self.WIDTH) // 2,
                                      (screen.height() - self.HEIGHT) // 2,
                                      self.WIDTH, self.HEIGHT)
@@ -540,18 +493,3 @@ class CreateWindow:
             self.login = None
 
         self.reg.show()
-
-
-class LoadingDialog(QtWidgets.QDialog):
-    def __init__(self):
-        super().__init__()
-        self.setFixedSize(200, 200)
-
-        self.loadingLabel = QtWidgets.QLabel('Loading...', self)
-        self.loadingLabel.setGeometry(75, 30, 100, 20)
-
-        self.pbar = QtWidgets.QProgressBar(self)
-        self.pbar.setMinimum(0)
-        self.pbar.setMaximum(0)
-        self.pbar.setValue(0)
-        self.pbar.setGeometry(30, 75, 140, 20)

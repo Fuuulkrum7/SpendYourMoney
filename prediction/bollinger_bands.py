@@ -8,7 +8,7 @@ from tinkoff.invest import CandleInterval
 from securities.securities import SecurityInfo
 
 
-class BOLLINGER(Thread):
+class Bollinger(Thread):
     status_code: int = 200
     get_sec: GetSecurityHistory
     period: int

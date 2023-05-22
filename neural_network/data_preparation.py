@@ -3,6 +3,8 @@ import math
 from datetime import datetime
 import numpy as np
 
+from info.file_loader import FileLoader
+
 
 def norm_word(word) -> int:
     parsed = 0
@@ -13,7 +15,7 @@ def norm_word(word) -> int:
 
 
 def normalize_data(data) -> np.array:
-    codes = get_json("info/files/.sector_codes.json")
+    codes = FileLoader.get_json("info/files/.sector_codes.json")
     securities_history = []
     coefs = []
 
@@ -110,18 +112,22 @@ def is_growing(seq) -> np.array:
 
     prev_0 = 0
 
+    # перебираем дни
     for i in range(len(seq) - 1):
+        # формируем массив отклонений
         deltas.append(seq[i + 1][0] - seq[i][0])
         prev_1 = prev_0
         prev_0 = seq[i][0]
         curr = seq[i + 1][0]
 
+        # И максимальных с минимальными значениям
         if prev_1 < prev_0 and prev_0 > curr:
             max_d.append(prev_0)
 
         elif prev_1 > prev_0 and prev_0 < curr:
             min_d.append(prev_0)
 
+    # Усредняем и даем оценки относительно полученных данных
     deltas = np.array(deltas)
     min_d = np.array(min_d)
     max_d = np.array(max_d)
@@ -180,22 +186,13 @@ def is_growing(seq) -> np.array:
     # plt.show()
     # plt.clf()
 
+    # если коэффициент больше 0.6, то говорим, что график возрастает
     if coef >= 0.6:
         return np.array([0, 0, 1])
 
+    # Если 0.4, то убывает
     if coef < 0.4:
         return np.array([1, 0, 0])
+
+    # Иначе боковик
     return np.array([0, 1, 0])
-
-
-def get_json(file_name: str) -> dict or None:
-    try:
-        file = open(file_name)
-        res = json.load(file)
-        file.close()
-    except FileNotFoundError:
-        res = None
-    except ValueError:
-        res = None
-
-    return res

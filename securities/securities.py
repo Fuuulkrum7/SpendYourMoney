@@ -16,15 +16,15 @@ def get_data_from_value(value: str or date) -> date:
 
 def convert_money_value(data: MoneyValue or Quotation or float):
     if isinstance(data, float):
-        return data
-    return data.units + data.nano / 10 ** ceil(
+        return round(data, 4)
+    return round(data.units + data.nano / 10 ** ceil(
         log10(data.nano if data.nano > 0 else 1)
-    )
+    ), 4)
 
 
 class SecurityInfo:
     """
-    Общая информация о цб. Содержит id, название, фиги и тикер
+    Главная информация о цб. Содержит id, название, фиги класс-код и тикер
     """
     # Сколько аргументов надо для инициализации
     required_args = 5
@@ -59,6 +59,10 @@ class SecurityInfo:
 
 
 class Coupon:
+    """
+    Класс, содержащий имеющуюся информацию о купоне по облигации.
+    Есть реализация всего для множеств
+    """
     coupon_id: int = 0
     coupon_date: date
     coupon_number: int
@@ -100,8 +104,25 @@ class Coupon:
 
         return values
 
+    # Для сравнения купонов
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return other.pay_one_bound == self.pay_one_bound and \
+            other.coupon_date == self.coupon_date
+
+    # И работы с множествами
+    def __hash__(self):
+        return hash(
+            (self.pay_one_bound, self.coupon_date)
+        )
+
 
 class Dividend:
+    """
+    Класс, содержащий основную информацию о дивидендах по акции.
+    Реализованы множества
+    """
     div_value: float
     payment_date: date
     declared_date: date
@@ -154,16 +175,20 @@ class Dividend:
         if not isinstance(other, type(self)):
             return False
         return other.div_value == self.div_value and \
-            other.payment_date == self.payment_date
+            other.declared_date == self.declared_date and \
+            other.yield_value == self.yield_value
 
-    # И работы с множествами
+    # Для работы с множествами
     def __hash__(self):
         return hash(
-            (self.payment_date, self.div_value)
+            (self.declared_date, self.div_value, self.yield_value)
         )
 
 
 class Security:
+    """
+    Общая для всех цб информация
+    """
     lot: int
     currency: str
     country: str
@@ -238,8 +263,15 @@ class Security:
     def get_as_dict_security(self):
         return self.get_as_dict()
 
+    def get_sub_data(self) -> list:
+        return []
+
 
 class Bond(Security):
+    """
+    Класс, содержащий информацию об облигации. Также содержит в себе общую
+    информацию о цб, так как является наследником класса Security
+    """
     coupon_quantity_per_year: int
     nominal: float
     amortization: bool
@@ -347,8 +379,15 @@ class Bond(Security):
         for i in self.coupon:
             i.security_id = id
 
+    def get_sub_data(self) -> list:
+        return self.coupon
+
 
 class Stock(Security):
+    """
+    Класс, содержащий в себе информацию об акции, содержит также и общую
+    информацию, так как наследник класса Security
+    """
     stock_id: int
     ipo_date: date
     issue_size: int
@@ -434,3 +473,6 @@ class Stock(Security):
         super().set_id(id)
         for i in self.dividend:
             i.security_id = id
+
+    def get_sub_data(self) -> list:
+        return self.dividend

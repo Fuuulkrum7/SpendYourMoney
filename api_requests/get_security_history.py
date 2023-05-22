@@ -77,8 +77,11 @@ class GetSecurityHistory(Thread):
         self.data_downloaded.emit((self.status_code, self.history))
 
         # Попутно запускаем сохранение в бд
-        if self.insert_data:
-            self.insert_to_database()
+        try:
+            if self.insert_data:
+                self.insert_to_database()
+        except Exception as e:
+            print(e)
 
     def insert_to_database(self):
         # Подключаемся к бд

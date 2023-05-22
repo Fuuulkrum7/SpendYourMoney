@@ -222,11 +222,17 @@ class DatabaseInterface:
             conn.close()
             return values
 
+    # Миграция со старо версии бд
     def migrate(self):
+        # В случае со совсем старыми было очень много изменений
+        # проще все снести
         if self.version < 4:
             self.clear_db()
-        elif self.version == 4:
+            return
+        # Если версия 4
+        if self.version == 4:
             try:
+                # Добавляем столбец с приоритетом
                 self.__engine.execute(
                     text(
                         f"ALTER TABLE {SecuritiesInfoTable.__tablename__} "
@@ -238,6 +244,7 @@ class DatabaseInterface:
                 print(e)
                 return
 
+            # Получаем массив всех цб
             table = SecuritiesInfoTable().get_name()
             data = self.get_data_by_sql(
                 {
@@ -247,15 +254,19 @@ class DatabaseInterface:
                 },
                 table
             )
+            # Если бд пуста, то ничего не добавляем
             if not data:
                 return
 
+            # Получаем массив фиги приоритетных
             figis = FileLoader.get_file(self.__path +
                                         "/info/files.priority_figis.txt")
 
+            # Делаем апдейт всех цб в базе данных
             query = f"UPDATE {SecuritiesInfoTable.__tablename__} " \
                     f"SET {SecuritiesInfo.PRIORITY.value} = CASE \n"
 
+            # Ставим условие, когда какой приоритет ставить
             for val in data:
                 query += f"WHEN {SecuritiesInfo.ID.value} = "
                 query += f" {val[SecuritiesInfo.ID.value]} THEN "
@@ -263,37 +274,70 @@ class DatabaseInterface:
 
             query += "ELSE 0\n END;"
 
+            # Выполняем запрос
             self.execute_sql(query)
-        else:
-            pass
+        # Если версия 5 и ниже
+        if self.version <= 5:
+            try:
+                # Delete old constraint keys
+                self.__engine.execute(
+                    text(f"ALTER TABLE {DividendInfoTable.__tablename__} "
+                         f"DROP CONSTRAINT UC_div")
+                )
+                self.__engine.execute(
+                    text(f"ALTER TABLE {CouponInfoTable.__tablename__} "
+                         f"DROP CONSTRAINT UC_div")
+                )
+
+                # Create new constraint keys
+                self.__engine.execute(
+                    text(f"ALTER TABLE {CouponInfoTable.__tablename__} "
+                         f"ADD CONSTRAINT UC_coup "
+                         f"UNIQUE(security_id, coupon_date)")
+                )
+                self.__engine.execute(
+                    text(f"ALTER TABLE {DividendInfoTable.__tablename__} "
+                         f"ADD CONSTRAINT UC_div "
+                         f"UNIQUE (security_id, declared_date, div_value)")
+                )
+            except Exception as e:
+                print(e)
+                return
+        if self.version <= 6:
+            self.__engine.execute(
+                text(f"ALTER TABLE {SecuritiesHistoryTable.__tablename__} "
+                     f"MODIFY {SecuritiesHistory.volume.name} BIGINT")
+            )
 
     def clear_db(self):
         try:
+            # Если версия выше 3, то сносим лишь часть таблиц
             if self.version >= 3:
                 scripts = FileLoader.get_file(
                     self.__path + "/info/files/delete.sql",
                     datatype=str
                 ).replace("\n", "").split(";")
 
+                # удаляем пустые элементы
                 scripts = list(filter(len, scripts))
 
+                # Загружаем скрипты для удаления таблиц
                 create = FileLoader.get_file(
-                    self.__path + "/info/files/init.sql",
-                    datatype=str)
-                create = list(
-                    filter(len, create.replace("\n", "").split(";")))
-                create.pop(0)
-                create.pop()
+                    self.__path + "/info/files/init.sql"
+                )
 
+                # Удаляем и создаем таблицы
                 for deleter in scripts:
                     self.__engine.execute(text(deleter))
-                for creater in create:
-                    self.__engine.execute(text(creater))
+                for creator in create:
+                    self.__engine.execute(text(creator))
 
             else:
+                # Если версия старовата, то удаляем бд
                 self.__engine.execute(f"DROP DATABASE {self.info['name']};")
         except Exception as e:
             print(e)
+            # Если ошибка была, отмечаем это
             self.connected = -2
         self.connected = 0
 

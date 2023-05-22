@@ -21,9 +21,12 @@ class PredictCourse(QThread):
     """
     # Интересно, что же это такое... Даже не знаю
     status_code: int = 200
+    # Текущая цб
     stock: Stock
     data_downloaded = pyqtSignal(object)
+    # Результат работы модели
     result: list = []
+    # Загруженная история
     history: list = []
 
     def __init__(self, stock: Stock, on_finish, token):
@@ -39,48 +42,67 @@ class PredictCourse(QThread):
         self.load_history()
         self.securities_thread.wait()
 
+        # Если история успешно скачана
         if self.status_code < 300:
             try:
+                # Загружаем сетку
                 model = load_model("neural_network/model_best.keras")
 
+                # Парсим данные по свечам в словари
                 parsed = [i.get_as_dict() for i in self.history]
+                # И удаляем индексы цб
                 for i in parsed:
                     i.pop("security_id")
 
+                # Получаем цб в виде словаря
                 security = self.stock.get_as_dict()
                 security.update(self.stock.get_as_dict_security())
 
+                # Добавляем к цб историю
                 security["history"] = parsed
 
+                # Нормализуем данные
                 norm = normalize_data({"data": security})[0]
 
+                # Делаем предсказание по последним 120 свечам
                 self.result = model.predict(norm[:, -120:])[0] * 100
 
-                self.result = list(np.around(self.result, decimals=5))
+                # Округляем результат
+                self.result = list(np.around(self.result, decimals=2))
             except Exception as e:
                 print(e)
                 self.status_code = 500
 
+        # Отправляем данные
         self.data_downloaded.emit((self.status_code, self.result))
 
     def on_load(self, result):
         code, data = result
 
+        # Если данных по сути нет, массив пуст,
+        # то прерываем работу
         if code == 500 or code == 300:
             self.status_code = 400
             return
 
+        # Если данных недостаточно для предсказания
         if len(data) < 120:
             self.status_code = 300
             return
 
+        # Если выбранная дата не является текущей
+        # и была ошибка при поиске цб в инете,
+        # то есть вероятность, что предсказание будет не актуальным,
+        # то есть без учета актуального курса
         if code == 400 and data[-1].info_time.date() < \
                 self.to.date():
             self.status_code = 250
 
+        # Сохраняем массив свечей
         self.history = data
 
     def load_history(self):
+        # Запускаем поток по загрузке свечи
         self.securities_thread = GetSecurityHistory(
                 info=self.stock.info,
                 _from=now() - timedelta(days=1001),
