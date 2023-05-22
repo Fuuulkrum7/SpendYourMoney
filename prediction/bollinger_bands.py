@@ -25,8 +25,10 @@ class Bollinger(Thread):
     start_date: datetime
 
     def __init__(self, start_date: datetime, info: SecurityInfo,
-                 token, on_finish, period: int = 20,
-                 set_standard_fl: int = 2, candle_interval: CandleInterval
+                 token, end_date: datetime,
+                 on_finish, period: int = 20,
+                 set_standard_fl: int = 2,
+                 candle_interval: CandleInterval
                  = CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
         self.data_downloaded.connect(on_finish)
@@ -36,8 +38,7 @@ class Bollinger(Thread):
         self.info = info
         self.candle_interval = candle_interval
         self.start_date = start_date
-        self.to = self.start_date + delta[
-                candle_interval.value - 1]*self.period * 2 - 1
+        self.to = end_date
         self.to = self.to.replace(tzinfo=datetime.timezone.utc)
 
     def run(self) -> None:

@@ -23,7 +23,8 @@ class RSI(Thread):
     data_downloaded = pyqtSignal(object)
 
     def __init__(self, num_candl: int, token, start_date: datetime,
-                 info: SecurityInfo, on_finish, rsi_step: int = 14,
+                 end_date: datetime, info: SecurityInfo, on_finish,
+                 rsi_step: int = 14,
                  candle_interval: CandleInterval =
                  CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
@@ -34,8 +35,7 @@ class RSI(Thread):
         self.info = info
         self.candle_interval = candle_interval
         self.start_date = start_date
-        self.to = self.start_date + delta[
-                candle_interval.value - 1]*self.num_candl * 2 - 1
+        self.to = end_date
         self.to = self.to.replace(tzinfo=datetime.timezone.utc)
 
     def run(self) -> None:
