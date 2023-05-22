@@ -1,7 +1,7 @@
 import os
 
 from PyQt5.QtCore import QFile, QByteArray
-from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtGui import QFontDatabase, QPixmap
 from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout
 from PyQt5.uic.properties import QtGui
 
@@ -9,18 +9,28 @@ from info.file_loader import FileLoader
 
 
 class Settings(QWidget):
-    def __init__(self, app, settings, path):
+    WIDTH = 200
+    HEIGHT = 200
+
+    def __init__(self, app, settings, path, hse_label):
         super().__init__()
         self.content = None
         self.app = app
         self.settings = settings
         self.__path = path
+        self.hse_label = hse_label
 
         self.selected_theme = settings["theme"]
         self.selected_font = settings["font"]
 
         self.setWindowTitle("Settings")
-        self.setFixedSize(200, 200)
+
+        screen = self.app.desktop().screenGeometry()
+        self.setGeometry((screen.width() - self.WIDTH) // 2,
+                         (screen.height() - self.HEIGHT) // 2,
+                         self.WIDTH, self.HEIGHT)
+        self.setFixedSize(self.WIDTH, self.HEIGHT)
+
         self.theme_label = QLabel("Theme:")
         self.theme_combo = QComboBox()
         self.theme_list = ["Light", "Dark"]
@@ -45,11 +55,10 @@ class Settings(QWidget):
         self.layout.addWidget(self.font_combo)
         self.setLayout(self.layout)
 
-
     def add_fonts_from_folder(self):
-        folder = "ui_dev/fonts"
+        folder = "info/files/fonts"
         for filename in os.listdir(folder):
-            file = QFile("/".join((self.__path,folder,filename)))
+            file = QFile("/".join((self.__path, folder, filename)))
             file.open(QFile.ReadOnly)
             font_data = file.readAll()
             file.close()
@@ -61,7 +70,6 @@ class Settings(QWidget):
             # получаем его имя
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             self.font_list.append(font_family)
-
 
     def get_css_content(self):
         with open(f"ui_dev/visual_settings/{self.selected_theme}.css",
@@ -80,11 +88,18 @@ class Settings(QWidget):
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
 
+        if self.selected_font == "HSE Sans":
+            pixmap = QPixmap(self.__path + f"/info/files/HSE_"
+                                           f"{self.selected_theme}.png")
+            self.hse_label.setPixmap(pixmap)
+
     def on_font_change(self, index):
         self.selected_font = self.font_list[index]
         self.save_data()
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
+
+        self.hse_label.setVisible(self.selected_font == "HSE Sans")
 
     def save_data(self):
         self.settings["theme"] = self.selected_theme.lower()
@@ -96,8 +111,8 @@ class Settings(QWidget):
         )
 
 
-def set_theme_and_font(app, settings, path):
-    initial = Settings(app, settings, path)
+def set_theme_and_font(app, settings, path, label):
+    initial = Settings(app, settings, path, label)
     initial.add_fonts_from_folder()
     content = initial.get_css_content()
     app.setStyleSheet(content)

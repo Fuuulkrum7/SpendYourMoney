@@ -5,6 +5,7 @@ from platform import system
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
     QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
@@ -245,11 +246,12 @@ class Window(QMainWindow):
 
     def __init__(self, app):
         super(Window, self).__init__()
+        self.hse_label = None
         self.app = app
         self.security = None
         self.setWindowTitle("SpendYourMoney")
         self.textbox = QLineEdit(self)
-        self.button = QPushButton('Find security', self)
+        self.standard_search = QPushButton('Find security', self)
         self.advanced = QPushButton('Advanced search', self)
         self.figi = QLineEdit(self)
         self.name = QLineEdit(self)
@@ -284,25 +286,27 @@ class Window(QMainWindow):
             )
             self.settings = target
         else:
-            set_theme_and_font(app, self.settings, self.__path)
+            set_theme_and_font(app, self.settings, self.__path, self.hse_label)
+
+        self.hse_label = QtWidgets.QLabel(self)
 
         self.init_ui()
 
     def init_ui(self):
         # Create textbox
         self.textbox.move(20, 20)
-        self.textbox.resize(460, 40)
+        self.textbox.resize(440, 40)
         self.textbox.setPlaceholderText("Security name (more than 2 symbols)")
 
         # Create a button in the window
-        self.button.move(500, 20)
-        self.button.resize(120, 40)
+        self.standard_search.move(500, 20)
+        self.standard_search.resize(120, 40)
 
-        self.advanced.move(640, 20)
+        self.advanced.move(660, 20)
         self.advanced.resize(160, 40)
 
         # connect button to function on_click
-        self.button.clicked.connect(self.find_securities)
+        self.standard_search.clicked.connect(self.find_securities)
 
         self.figi.move(650, 80)
         self.figi.setPlaceholderText('Figi')
@@ -317,7 +321,20 @@ class Window(QMainWindow):
         self.classcode.setPlaceholderText('Class code')
         self.classcode.setVisible(False)
 
+        pixmap = QPixmap(self.__path +
+                         f"/info/files/HSE_{self.settings['theme']}.png")
+
+        self.hse_label.setPixmap(
+            pixmap
+        )
+
+        self.hse_label.resize(pixmap.width(),
+                              pixmap.height())
+        self.hse_label.move(675, 250)
+
         self.advanced.clicked.connect(self.switch_mode)
+
+        self.hse_label.setVisible(self.settings["font"] == "HSE Sans")
 
         # Create a button in the window
         self.load_all_btn.move(650, 480)
@@ -337,7 +354,8 @@ class Window(QMainWindow):
         self.output.itemClicked.connect(self.security_clicked)
 
     def open_settings(self):
-        self.settings_window = Settings(self.app, self.settings, self.__path)
+        self.settings_window = Settings(self.app, self.settings, self.__path,
+                                        self.hse_label)
         self.settings_window.show()
 
     def security_clicked(self, item):
