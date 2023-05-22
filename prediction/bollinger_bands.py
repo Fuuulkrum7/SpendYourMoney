@@ -83,6 +83,7 @@ class Bollinger(Thread):
                     b = i
                     while b < i + self.period:
                         sum_de_pow += math.pow(prices[b] - ml, 2)
+                        b += 1
                     stdev.append(math.sqrt(sum_de_pow / self.period))
                     i += 1
                 i = 0

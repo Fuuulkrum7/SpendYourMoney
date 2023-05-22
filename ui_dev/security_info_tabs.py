@@ -409,12 +409,13 @@ class SecurityWindow(QMainWindow):
         code, data = result
         print("finished")
         print(code, data)
-        #
-        # dates = [i.info_time for i in self.history]
-        # for i in data:
-        #     self.canvas.axes.plot(dates, i, 'r')
-        #
-        # self.canvas.draw()
+
+        dates = [i.info_time for i in self.history]
+        for i in data:
+            if i:
+                self.canvas.axes.plot(dates, i[90 - len(dates):], 'r')
+
+        self.canvas.draw()
 
     def save_settings(self):
         self.settings["candle"] = self.candle.value
