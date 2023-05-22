@@ -347,6 +347,7 @@ class SecurityWindow(QMainWindow):
                 self.calculate_delta(),
                 self.item.info,
                 self.user.get_token(),
+                now(),
                 self.show_bollinger,
                 candle_interval=self.candle
             )
