@@ -116,14 +116,3 @@ def set_theme_and_font(app, settings, path, label):
     initial.add_fonts_from_folder()
     content = initial.get_css_content()
     app.setStyleSheet(content)
-    # selected_theme = settings["theme"]
-    # selected_font = settings["font"]
-    # with open(f"ui_dev/visual_settings/{selected_theme}.css",
-    #           "r") as theme:
-    #     css_theme = theme.read()
-    #
-    # if selected_font != "Default (system)":
-    #     css_font = f'* {{font-family: "{selected_font}";}}'
-    # else:
-    #     css_font = ''
-    # app.setStyleSheet(css_theme + css_font)

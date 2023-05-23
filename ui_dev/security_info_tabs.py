@@ -17,6 +17,7 @@ from tinkoff.invest.utils import now
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.security_getter import StandardQuery
+from api_requests.subscribe_requests import SubscribeOnMarket
 from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo, \
     CouponInfo
 from info.file_loader import FileLoader
@@ -70,6 +71,7 @@ class SecurityWindow(QMainWindow):
         self.select_candle = None
         self.horizontal = None
         self.predict_thread = None
+        self.subscribe_thread = None
         self.right_vertical = None
         self.left_vertical = None
         self.neural_layout = None
@@ -233,11 +235,35 @@ class SecurityWindow(QMainWindow):
 
         self.course_tab.setLayout(self.course_tab.layout)
 
+        self.subscribe_thread = SubscribeOnMarket(
+            self.item.info,
+            self.user.get_token(),
+            self.on_subscribe_update()
+        )
+
         self.loading = LoadingDialog()
         self.loading.start_loading()
         self.load_plot()
 
+    def on_subscribe_update(self, data):
+        code, new_candle = data
+        if new_candle == self.history[-1]:
+            return
+
+        if new_candle.info_time != self.history[-1].info_time:
+            self.history.pop(0)
+            self.history.append(new_candle)
+        else:
+            self.history[-1] = new_candle
+        self.on_history_load((200, self.history))
+
     def on_candle_change(self, val):
+        if val == 0:
+            self.subscribe_thread.start()
+        else:
+            self.subscribe_thread.stop()
+
+        self.subscribe_thread.start()
         self.candle = list(candles_dict.values())[val]
         self.loading = LoadingDialog()
         self.loading.start_loading()
@@ -344,17 +370,9 @@ class SecurityWindow(QMainWindow):
             label1 = QLabel("No data")
             self.neural_layout.addWidget(label1)
 
-    def on_history_load(self, result):
-        code, data = result
-
-        self.save_settings()
-
-        self.history = data
+    def draw_plot(self):
         dates = [i.info_time for i in self.history]
         prices = [i.price for i in self.history]
-
-        cleared = self.just_created
-        self.just_created = 2 if len(data) > 1 else 1
 
         if self.canvas:
             self.canvas.axes.clear()
@@ -362,6 +380,16 @@ class SecurityWindow(QMainWindow):
         self.canvas.axes.plot(dates, prices)
         self.canvas.draw()
 
+    def on_history_load(self, result):
+        code, data = result
+
+        self.save_settings()
+
+        self.history = data
+        cleared = self.just_created
+        self.just_created = 2 if len(self.history) > 1 else 1
+
+        self.draw_plot()
         self.loading.after_load()
 
         if cleared:
