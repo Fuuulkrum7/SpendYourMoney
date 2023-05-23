@@ -235,13 +235,13 @@ class SecurityWindow(QMainWindow):
 
         self.course_tab.setLayout(self.course_tab.layout)
 
-        self.subscribe_thread = SubscribeOnMarket(
-            self.item.info,
-            self.user.get_token(),
-            self.on_subscribe_update
-        )
-
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.subscribe_thread = SubscribeOnMarket(
+                self.item.info,
+                self.user.get_token(),
+                self.on_subscribe_update
+            )
+
             self.subscribe_thread.start()
 
         self.loading = LoadingDialog()
@@ -264,8 +264,14 @@ class SecurityWindow(QMainWindow):
 
     def on_candle_change(self, val):
         if val == 0:
+            self.subscribe_thread = SubscribeOnMarket(
+                self.item.info,
+                self.user.get_token(),
+                self.on_subscribe_update
+            )
+
             self.subscribe_thread.start()
-        else:
+        elif self.subscribe_thread is not None:
             self.subscribe_thread.stop()
 
         self.candle = list(candles_dict.values())[val]
@@ -382,6 +388,18 @@ class SecurityWindow(QMainWindow):
             self.canvas.axes.clear()
 
         self.canvas.axes.plot(dates, prices)
+        self.canvas.axes.plot(dates, [max(prices)] * len(dates), 'g',
+                              linestyle='dashed')
+        self.canvas.axes.plot(dates, [min(prices)] * len(dates), 'y',
+                              linestyle='dashed')
+        self.canvas.axes.plot(dates, [prices[-1]] * len(dates), 'c',
+                              linestyle='dashed')
+
+        self.canvas.axes.text(dates[-1], prices[-1], str(prices[-1]))
+        self.canvas.axes.text(dates[-1], max(prices), str(max(prices)))
+        self.canvas.axes.text(dates[-1], min(prices), str(min(prices)))
+
+        self.canvas.axes.margins(x=0)
         self.canvas.draw()
 
     def on_history_load(self, result):
@@ -427,7 +445,9 @@ class SecurityWindow(QMainWindow):
 
     def bollinger_changed(self):
         if self.bollinger_box.isChecked() and \
-                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH \
+                and self.bollinger_thread is not None \
+                and not self.bollinger_thread.isRunning():
             print("start bollinger")
 
             self.bollinger_thread = Bollinger(
@@ -440,20 +460,19 @@ class SecurityWindow(QMainWindow):
             )
 
             self.bollinger_thread.start()
-        else:
-            # TODO write here what we shall do in case of plot clear
-            ...
+        elif self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.draw_plot()
 
     def show_bollinger(self, result):
         code, data = result
         print("finished")
         print(code, data)
-        #
-        # dates = [i.info_time for i in self.history]
-        # for i in data:
-        #     self.canvas.axes.plot(dates, i, 'r')
-        #
-        # self.canvas.draw()
+
+        dates = [i.info_time for i in self.history]
+        for i in data:
+            self.canvas.axes.plot(dates, i, 'r')
+
+        self.canvas.draw()
 
     def save_settings(self):
         self.settings["candle"] = self.candle.value
