@@ -241,6 +241,9 @@ class SecurityWindow(QMainWindow):
             self.on_subscribe_update
         )
 
+        if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.subscribe_thread.start()
+
         self.loading = LoadingDialog()
         self.loading.start_loading()
         self.load_plot()
@@ -248,15 +251,16 @@ class SecurityWindow(QMainWindow):
     def on_subscribe_update(self, data):
         code, new_candle = data
         print(new_candle)
-        if new_candle == self.history[-1]:
+        if new_candle == self.history[-1] or new_candle is None:
             return
 
+        print(code)
         if new_candle.info_time != self.history[-1].info_time:
             self.history.pop(0)
             self.history.append(new_candle)
         else:
             self.history[-1] = new_candle
-        self.on_history_load((200, self.history))
+        self.draw_plot()
 
     def on_candle_change(self, val):
         if val == 0:

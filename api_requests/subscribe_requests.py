@@ -90,7 +90,7 @@ class SubscribeOnMarket(QThread):
             print("Error unknown\n", e)
             self.status_code = 500
 
-        self.data_downloaded.emit((self.status_code, []))
+        self.data_downloaded.emit((self.status_code, None))
 
     def stop(self):
         # Останавливаем таким образом генератор

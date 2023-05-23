@@ -42,8 +42,9 @@ When work with this app would be ended, run this command
 deactivate
 ```
 
-### Use GUI for search
+## Main window
 
+### How to use search
 In opened window click "go to registration" and then enter login, password and 
 tinkoff token to create new user in db. After successful registration or login 
 (next launch) you will be able to use the currently available functionality - 
@@ -61,6 +62,29 @@ Stocks and Bonds has same tickers, and in such cases advanced search is very use
 If you want to use it, just press button "Advanced search". Four text fields named
 __figi__, __security name__, __ticker__ and __class code__. Standard text field would
 be disabled. Remember that search runs with button "Find Security" too.
+
+### Settings
+In the bottom left corner if wain window is located "Settings" button. Click
+it to open window "Settings". In this window are located theme modes (dark mode and light mode)
+and fonts list. If you want to add your font, open folder info/files/fonts and 
+copy your font file in this folder.
+
+
+## Security window
+As you remember, you can get list of securities using search. You can click on any of 
+these securities and this click will open a window with three tabs in it.
+
+### Main info tab
+In this tab you can find information about this security - country, where company is located,
+issue size and a lot of other information. 
+
+### Subdata tab
+In this tab are located coupons or dividends (depends on type of security).
+You click on them, but nothing would happen
+
+### Course tab
+In this tab you can find plot, that shows security course using candles, type of which
+can be chosen in list of 
 
 #### GetSecurity
 So, if you want to find security using backend
