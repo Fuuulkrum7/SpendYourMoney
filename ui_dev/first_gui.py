@@ -372,18 +372,14 @@ class Window(QMainWindow):
             self.security_window.show()
 
     def switch_mode(self):
-        if self.figi.isVisible():
-            self.figi.setVisible(False)
-            self.name.setVisible(False)
-            self.ticker.setVisible(False)
-            self.classcode.setVisible(False)
-            self.is_advanced = False
-        else:
-            self.figi.setVisible(True)
-            self.name.setVisible(True)
-            self.ticker.setVisible(True)
-            self.classcode.setVisible(True)
-            self.is_advanced = True
+        self.textbox.setEnabled(self.is_advanced)
+
+        self.is_advanced = not self.is_advanced
+
+        self.figi.setVisible(self.is_advanced)
+        self.name.setVisible(self.is_advanced)
+        self.ticker.setVisible(self.is_advanced)
+        self.classcode.setVisible(self.is_advanced)
 
     def set_user(self, user):
         self.user = user
