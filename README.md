@@ -49,12 +49,18 @@ tinkoff token to create new user in db. After successful registration or login
 (next launch) you will be able to use the currently available functionality - 
 security search and download. Using search, you will be able to get list of 
 different securities you were looking for. Keywords for this search can be: name of
-company, figi, ticker or class-code. For example, you can write ticker "LKOH" to see information on "Лукойл" securities.
+company, figi, ticker or class-code. For example, you can write ticker "LKOH" 
+and press search button named "Find Security" to see information on "Лукойл" securities.
 By clicking "Load all" you will significantly increase the speed of securities 
 search. You should press it, when you run this program for first time or if you
 want to update local database (but don't run it very often).
 
-Also
+Also, you can use advanced search. This method is useful, for example, 
+if security has part of ticker in its name. It should be mentioned, that some
+Stocks and Bonds has same tickers, and in such cases advanced search is very useful too.
+If you want to use it, just press button "Advanced search". Four text fields named
+__figi__, __security name__, __ticker__ and __class code__. Standard text field would
+be disabled. Remember that search runs with button "Find Security" too.
 
 #### GetSecurity
 So, if you want to find security using backend

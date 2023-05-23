@@ -77,7 +77,7 @@ class SubscribeOnMarket(QThread):
                             info_time=candle.time,
                             volume=candle.volume,
                             price=candle.close,
-                            security_id=self.security.info.id
+                            security_id=self.security.id
                         )
 
                         self.data_downloaded.emit((self.status_code, history))
