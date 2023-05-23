@@ -5,7 +5,7 @@ from tinkoff.invest import MarketDataRequest, SubscribeCandlesRequest, \
     SubscriptionAction, CandleInstrument, SubscriptionInterval, Client, \
     RequestError
 
-from securities.securities import Security
+from securities.securities import Security, SecurityInfo
 from securities.securities_history import SecurityHistory
 
 
@@ -24,11 +24,11 @@ class SubscribeOnMarket(QThread):
     # Интервал подписки
     interval: SubscriptionInterval
     # ЦБ
-    security: Security
+    security: SecurityInfo
 
     data_downloaded = pyqtSignal(object)
 
-    def __init__(self, security: Security,
+    def __init__(self, security: SecurityInfo,
                  token: str, on_finish,
                  subscription: SubscriptionAction =
                  SubscriptionAction.SUBSCRIPTION_ACTION_SUBSCRIBE,
@@ -52,7 +52,7 @@ class SubscribeOnMarket(QThread):
                     subscription_action=self.subscription,
                     instruments=[
                         CandleInstrument(
-                            figi=self.security.info.figi,
+                            figi=self.security.figi,
                             interval=self.interval,
                         )
                     ],

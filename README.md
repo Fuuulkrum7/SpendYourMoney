@@ -1,3 +1,5 @@
+# User documentation
+
 ## First of all, you need to create a user in your database.
 For making it, run mysql, enter your root password and then execute this commands:
 
@@ -9,8 +11,22 @@ CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
 ```
 
-Open project folder in terminal and execute this to install necessary modules
+Open project folder in terminal and create venv
+```commandline
+python -m venv /path/to/project/venv
+```
 
+Then you should activate venv. Run this command if you are using Linux or
+macOS
+```commandline
+source /path/to/project/venv/bin/activate
+```
+If you are using Windows, run
+```commandline
+.\venv\Scripts\activate
+```
+
+Then execute this to install necessary modules
 ```commandline
 pip install -r requirements.txt
 ```
@@ -21,19 +37,24 @@ Now, you need to run __main.py__ using command line.
 python main.py
 ```
 
-As it is a pre-version and GUI is in alpha-version, most part of information you can
-get would be written in console.
+When work with this app would be ended, run this command
+```commandline
+deactivate
+```
 
 ### Use GUI for search
 
 In opened window click "go to registration" and then enter login, password and 
 tinkoff token to create new user in db. After successful registration or login 
 (next launch) you will be able to use the currently available functionality - 
-security search and download. Using search, you will be able to get list of JSON
--formatted data about securities by keywords. This keyword can be name of
+security search and download. Using search, you will be able to get list of 
+different securities you were looking for. Keywords for this search can be: name of
 company, figi, ticker or class-code. For example, you can write ticker "LKOH" to see information on "Лукойл" securities.
 By clicking "Load all" you will significantly increase the speed of securities 
-search. You should press it, when you run this program for first time
+search. You should press it, when you run this program for first time or if you
+want to update local database (but don't run it very often).
+
+Also
 
 #### GetSecurity
 So, if you want to find security using backend
