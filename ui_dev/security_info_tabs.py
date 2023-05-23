@@ -381,11 +381,14 @@ class SecurityWindow(QMainWindow):
             self.neural_layout.addWidget(label1)
 
     def draw_plot(self):
-        dates = [i.info_time for i in self.history]
-        prices = [i.price for i in self.history]
-
         if self.canvas:
             self.canvas.axes.clear()
+
+        if len(self.history) < 2:
+            return
+
+        dates = [i.info_time for i in self.history]
+        prices = [i.price for i in self.history]
 
         self.canvas.axes.plot(dates, prices)
         self.canvas.axes.plot(dates, [max(prices)] * len(dates), 'g',
