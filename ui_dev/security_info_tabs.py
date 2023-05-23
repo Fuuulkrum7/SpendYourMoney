@@ -238,7 +238,7 @@ class SecurityWindow(QMainWindow):
         self.subscribe_thread = SubscribeOnMarket(
             self.item.info,
             self.user.get_token(),
-            self.on_subscribe_update()
+            self.on_subscribe_update
         )
 
         self.loading = LoadingDialog()
@@ -247,6 +247,7 @@ class SecurityWindow(QMainWindow):
 
     def on_subscribe_update(self, data):
         code, new_candle = data
+        print(new_candle)
         if new_candle == self.history[-1]:
             return
 
@@ -263,7 +264,6 @@ class SecurityWindow(QMainWindow):
         else:
             self.subscribe_thread.stop()
 
-        self.subscribe_thread.start()
         self.candle = list(candles_dict.values())[val]
         self.loading = LoadingDialog()
         self.loading.start_loading()
@@ -389,6 +389,7 @@ class SecurityWindow(QMainWindow):
         cleared = self.just_created
         self.just_created = 2 if len(self.history) > 1 else 1
 
+        print("update")
         self.draw_plot()
         self.loading.after_load()
 
