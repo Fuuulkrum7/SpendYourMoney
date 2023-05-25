@@ -82,7 +82,6 @@ class PredictCourse(QThread):
             except Exception as e:
                 print(e)
                 self.status_code = 500
-                raise e
 
         # Отправляем данные
         self.data_downloaded.emit((self.status_code, self.result))

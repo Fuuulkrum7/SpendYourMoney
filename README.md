@@ -94,11 +94,18 @@ Near this list you can find two checkboxes - RSI and Bollinger. Using them you
 can get rsi plot and draw (automatically) bollinger lines.
 
 In the left upper corner you can find result of prediction, made by neural network.
-
+If result is colored red - chance of mistake is really high. In case of cyan color chance is a bit lower.
+Remember that neural network in case of white text cn make mistakes to, it is not recommendation
 
 # Developer documentation
 
-#### GetSecurity
+### SecurityInfo
+This class has 5 fields - __id__, __figi__, __ticker__, __security_name__, __class_code__,
+or main info about security. This class is used for securities search. 
+
+## API requests
+
+### GetSecurity
 So, if you want to find security using backend
 by _figi_, you need to write its name in field __figi=__. Other parts of your response should be written in such way. 
 __ticker__=_ticker_, etc. Field __id__ is not necessary to be changed.
