@@ -39,9 +39,19 @@ class PredictCourse(QThread):
         self.to = self.to.replace(tzinfo=timezone.utc)
 
     def run(self) -> None:
-        self.load_history()
-        self.securities_thread.wait()
+        # Запускаем поток по загрузке свечи
+        self.securities_thread = GetSecurityHistory(
+            info=self.stock.info,
+            _from=now() - timedelta(days=1001),
+            to=self.to,
+            interval=CandleInterval.CANDLE_INTERVAL_DAY,
+            token=self.__token,
+            on_finish=self.on_load
+        )
 
+        self.securities_thread.start()
+
+    def predict(self):
         # Если история успешно скачана
         if self.status_code < 300:
             try:
@@ -72,44 +82,30 @@ class PredictCourse(QThread):
             except Exception as e:
                 print(e)
                 self.status_code = 500
+                raise e
 
         # Отправляем данные
         self.data_downloaded.emit((self.status_code, self.result))
 
     def on_load(self, result):
-        code, data = result
+        # Сохраняем массив свечей
+        code, self.history = result
 
         # Если данных по сути нет, массив пуст,
         # то прерываем работу
         if code == 500 or code == 300:
             self.status_code = 400
-            return
 
         # Если данных недостаточно для предсказания
-        if len(data) < 120:
+        elif len(self.history) < 120:
             self.status_code = 300
-            return
 
         # Если выбранная дата не является текущей
         # и была ошибка при поиске цб в инете,
         # то есть вероятность, что предсказание будет не актуальным,
         # то есть без учета актуального курса
-        if code == 400 and data[-1].info_time.date() < \
+        elif code == 400 and self.history[-1].info_time.date() < \
                 self.to.date():
             self.status_code = 250
 
-        # Сохраняем массив свечей
-        self.history = data
-
-    def load_history(self):
-        # Запускаем поток по загрузке свечи
-        self.securities_thread = GetSecurityHistory(
-                info=self.stock.info,
-                _from=now() - timedelta(days=1001),
-                to=self.to,
-                interval=CandleInterval.CANDLE_INTERVAL_DAY,
-                token=self.__token,
-                on_finish=self.on_load
-            )
-
-        self.securities_thread.start()
+        self.predict()

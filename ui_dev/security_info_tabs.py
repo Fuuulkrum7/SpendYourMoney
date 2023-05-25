@@ -368,11 +368,22 @@ class SecurityWindow(QMainWindow):
     def on_predict_made(self, result):
         code, data = result
         if data:
+            s = sum(data)
+
             # Такой перевод данных в строку нужен для их корректного
             # отображения
             label1 = QLabel(f'Growth probability: {str(data[2])} %')
             label2 = QLabel(f'Flat probability: {str(data[1])} %')
             label3 = QLabel(f'Fall probability: {str(data[0])} %')
+
+            if s >= 110:
+                label1.setStyleSheet("color: cyan")
+                label2.setStyleSheet("color: cyan")
+                label3.setStyleSheet("color: cyan")
+            elif s <= 90:
+                label1.setStyleSheet("color: red")
+                label2.setStyleSheet("color: red")
+                label3.setStyleSheet("color: red")
             self.neural_layout.addWidget(label1)
             self.neural_layout.addWidget(label2)
             self.neural_layout.addWidget(label3)
@@ -384,25 +395,24 @@ class SecurityWindow(QMainWindow):
         if self.canvas:
             self.canvas.axes.clear()
 
-        if len(self.history) < 2:
-            return
+        if len(self.history) > 1:
+            dates = [i.info_time for i in self.history]
+            prices = [i.price for i in self.history]
 
-        dates = [i.info_time for i in self.history]
-        prices = [i.price for i in self.history]
+            self.canvas.axes.plot(dates, prices)
+            self.canvas.axes.plot(dates, [max(prices)] * len(dates), 'g',
+                                  linestyle='dashed')
+            self.canvas.axes.plot(dates, [min(prices)] * len(dates), 'y',
+                                  linestyle='dashed')
+            self.canvas.axes.plot(dates, [prices[-1]] * len(dates), 'c',
+                                  linestyle='dashed')
 
-        self.canvas.axes.plot(dates, prices)
-        self.canvas.axes.plot(dates, [max(prices)] * len(dates), 'g',
-                              linestyle='dashed')
-        self.canvas.axes.plot(dates, [min(prices)] * len(dates), 'y',
-                              linestyle='dashed')
-        self.canvas.axes.plot(dates, [prices[-1]] * len(dates), 'c',
-                              linestyle='dashed')
+            self.canvas.axes.text(dates[-1], prices[-1], str(prices[-1]))
+            self.canvas.axes.text(dates[-1], max(prices), str(max(prices)))
+            self.canvas.axes.text(dates[-1], min(prices), str(min(prices)))
 
-        self.canvas.axes.text(dates[-1], prices[-1], str(prices[-1]))
-        self.canvas.axes.text(dates[-1], max(prices), str(max(prices)))
-        self.canvas.axes.text(dates[-1], min(prices), str(min(prices)))
+            self.canvas.axes.margins(x=0)
 
-        self.canvas.axes.margins(x=0)
         self.canvas.draw()
 
     def on_history_load(self, result):
