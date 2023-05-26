@@ -55,7 +55,7 @@ class SecurityWindow(QMainWindow):
     get_securities_hist_thread: GetSecurityHistory = None
 
     WIDTH = 1200
-    HEIGHT = 860
+    HEIGHT = 760
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -244,6 +244,12 @@ class SecurityWindow(QMainWindow):
 
         self.canvas_layout.addWidget(toolbar)
         self.canvas_layout.addWidget(self.canvas)
+
+        self.canvas2 = MplCanvas()
+        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+        self.canvas2.setVisible(False)
+        self.canvas_layout.addWidget(self.canvas2)
+
         self.canvas_widget.setLayout(self.canvas_layout)
         self.scroll_area.setWidget(self.canvas_widget)
 
@@ -267,14 +273,16 @@ class SecurityWindow(QMainWindow):
 
     def add_rsi_canvas(self):
         if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
-            self.canvas2 = MplCanvas()
-            self.canvas2.setFixedSize(self.WIDTH - 70, 320)
-            self.canvas_layout.addWidget(self.canvas2)
+            # self.canvas2 = MplCanvas()
+            # self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+            # self.canvas_layout.addWidget(self.canvas2)
+            self.canvas2.setVisible(True)
             QTimer.singleShot(0, self.update_scroll_size)
 
     def delete_rsi_canvas(self):
         if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
-            self.canvas_layout.takeAt(2).widget().deleteLater()
+            # self.canvas_layout.takeAt(2).widget().deleteLater()
+            self.canvas2.setVisible(False)
             QTimer.singleShot(0, self.update_scroll_size)
 
     def on_subscribe_update(self, data):
@@ -308,6 +316,7 @@ class SecurityWindow(QMainWindow):
         self.loading.start_loading()
 
         self.load_plot()
+        self.rsi_changed()
 
     def calculate_delta(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
