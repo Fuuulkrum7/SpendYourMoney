@@ -468,7 +468,8 @@ class SecurityWindow(QMainWindow):
 
     def rsi_changed(self):
         if self.rsi_box.isChecked() and \
-                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH and \
+                (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.rsi_thread = RSI(
                 90,
                 self.user.get_token(),
@@ -482,7 +483,8 @@ class SecurityWindow(QMainWindow):
             self.rsi_thread.start()
             self.canvas.setFixedSize(self.WIDTH - 70, 540)
             self.add_rsi_canvas()
-        else:
+        elif not self.rsi_box.isChecked() and \
+                (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.canvas.setFixedSize(self.WIDTH - 70, 640)
             self.delete_rsi_canvas()
 
@@ -500,8 +502,8 @@ class SecurityWindow(QMainWindow):
     def bollinger_changed(self):
         if self.bollinger_box.isChecked() and \
                 self.candle != CandleInterval.CANDLE_INTERVAL_MONTH \
-                and self.bollinger_thread is not None \
-                and not self.bollinger_thread.isRunning():
+                and (self.bollinger_thread is None
+                     or not self.bollinger_thread.isRunning()):
             print("start bollinger")
 
             self.bollinger_thread = Bollinger(
