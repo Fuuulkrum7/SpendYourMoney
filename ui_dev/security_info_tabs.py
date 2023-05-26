@@ -1,6 +1,7 @@
 import datetime
 from datetime import timedelta
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
     QMessageBox, QCheckBox, QScrollArea
@@ -63,6 +64,10 @@ class SecurityWindow(QMainWindow):
     def __init__(self, item: Security, user: User, settings: dict, path):
         super().__init__()
 
+        self.canvas_layout = None
+        self.canvas_widget = None
+        self.scroll_area = None
+        self.canvas2 = None
         self.rsi_thread = None
         self.bollinger_box = None
         self.rsi_box = None
@@ -230,23 +235,20 @@ class SecurityWindow(QMainWindow):
         self.canvas = MplCanvas()
         toolbar = NavigationToolbar2QT(self.canvas, self)
 
-        self.canvas2 = MplCanvas()
-
         self.canvas.setFixedSize(self.WIDTH - 70, 640)
-        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
 
         self.scroll_area = QScrollArea()
 
         self.canvas_widget = QWidget()
         self.canvas_layout = QVBoxLayout()
 
-        self.course_tab.layout.addWidget(self.scroll_area)
-
         self.canvas_layout.addWidget(toolbar)
         self.canvas_layout.addWidget(self.canvas)
-        self.canvas_layout.addWidget(self.canvas2)
         self.canvas_widget.setLayout(self.canvas_layout)
         self.scroll_area.setWidget(self.canvas_widget)
+
+        self.scroll_area.setWidgetResizable(True)
+        self.course_tab.layout.addWidget(self.scroll_area)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
@@ -262,6 +264,16 @@ class SecurityWindow(QMainWindow):
         self.loading = LoadingDialog()
         self.loading.start_loading()
         self.load_plot()
+
+    def add_rsi_canvas(self):
+        self.canvas2 = MplCanvas()
+        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+        self.canvas_layout.addWidget(self.canvas2)
+        QTimer.singleShot(0, self.update_scroll_size)
+
+    def delete_rsi_canvas(self):
+        self.canvas_layout.takeAt(2).widget().deleteLater()
+        QTimer.singleShot(0, self.update_scroll_size)
 
     def on_subscribe_update(self, data):
         code, new_candle = data
@@ -449,6 +461,11 @@ class SecurityWindow(QMainWindow):
         self.rsi_box.setEnabled(True)
         self.bollinger_box.setEnabled(True)
 
+    def update_scroll_size(self):
+        left, top, right, bottom = self.canvas_layout.getContentsMargins()
+        hint = self.canvas_layout.sizeHint()
+        self.scroll_area.setMaximumHeight(hint.height() + top + bottom + 1)
+
     def rsi_changed(self):
         if self.rsi_box.isChecked() and \
                 self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
@@ -463,12 +480,21 @@ class SecurityWindow(QMainWindow):
             )
 
             self.rsi_thread.start()
+            self.canvas.setFixedSize(self.WIDTH - 70, 540)
+            self.add_rsi_canvas()
+        else:
+            self.canvas.setFixedSize(self.WIDTH - 70, 640)
+            self.delete_rsi_canvas()
 
     def show_rsi(self, result):
         print(result)
         code, data = result
 
-        self.canvas2.axes.plot([i.info_time for i in self.history][:len(data)], data)
+        self.canvas2.axes.clear()
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)], data
+        )
+
         self.canvas2.draw()
 
     def bollinger_changed(self):
