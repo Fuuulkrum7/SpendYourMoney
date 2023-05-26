@@ -86,6 +86,9 @@ class SecurityWindow(QMainWindow):
 
         screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
 
+        if screen.height() > 900:
+            self.HEIGHT = 860
+
         self.setGeometry((screen.width() - self.WIDTH) // 2,
                          (screen.height() - self.HEIGHT) // 2,
                          self.WIDTH, self.HEIGHT)
@@ -286,6 +289,9 @@ class SecurityWindow(QMainWindow):
             QTimer.singleShot(0, self.update_scroll_size)
 
     def on_subscribe_update(self, data):
+        if self.candle != CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.subscribe_thread.stop()
+            return
         code, new_candle = data
         print(new_candle)
         if new_candle == self.history[-1] or new_candle is None:
@@ -300,6 +306,9 @@ class SecurityWindow(QMainWindow):
         self.draw_plot()
 
     def on_candle_change(self, val):
+        if self.subscribe_thread is not None:
+            print()
+            self.subscribe_thread.stop()
         if val == 0:
             self.subscribe_thread = SubscribeOnMarket(
                 self.item.info,
@@ -308,8 +317,6 @@ class SecurityWindow(QMainWindow):
             )
 
             self.subscribe_thread.start()
-        elif self.subscribe_thread is not None:
-            self.subscribe_thread.stop()
 
         self.candle = list(candles_dict.values())[val]
         self.loading = LoadingDialog()
