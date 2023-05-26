@@ -3,5 +3,6 @@
   "actual_db": false,
   "candle": 5,
   "theme": "light",
-  "font": "Default (system)"
+  "font": "Default (system)",
+  "size": "Default"
 }

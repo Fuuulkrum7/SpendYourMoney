@@ -2,7 +2,8 @@ import os
 
 from PyQt5.QtCore import QFile, QByteArray
 from PyQt5.QtGui import QFontDatabase, QPixmap
-from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout, \
+    QHBoxLayout
 from PyQt5.uic.properties import QtGui
 
 from info.file_loader import FileLoader
@@ -22,6 +23,7 @@ class Settings(QWidget):
 
         self.selected_theme = settings["theme"]
         self.selected_font = settings["font"]
+        self.selected_size = settings["size"]
 
         self.setWindowTitle("Settings")
 
@@ -48,11 +50,21 @@ class Settings(QWidget):
             self.font_list.index(self.selected_font))
         self.font_combo.currentIndexChanged.connect(self.on_font_change)
 
+        self.size_label = QLabel("Size:")
+        self.size_combo = QComboBox()
+        self.size_list = ["Default"]+[str(i) for i in range(8, 15)]
+        self.size_combo.addItems(self.size_list)
+        self.size_combo.setCurrentIndex(
+            self.size_list.index(self.selected_size))
+        self.size_combo.currentIndexChanged.connect(self.on_size_change)
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.theme_label)
         self.layout.addWidget(self.theme_combo)
         self.layout.addWidget(self.font_label)
         self.layout.addWidget(self.font_combo)
+        self.layout.addWidget(self.size_label)
+        self.layout.addWidget(self.size_combo)
         self.setLayout(self.layout)
 
     def add_fonts_from_folder(self):
@@ -80,7 +92,14 @@ class Settings(QWidget):
             css_font = f'* {{font-family: "{self.selected_font}";}}'
         else:
             css_font = ''
-        return css_theme + css_font
+
+        if self.selected_size != "Default":
+            css_size = f'* {{font-size: {self.selected_size}pt;}}'
+            print(css_size)
+        else:
+            css_size = ''
+
+        return css_theme + css_font + css_size
 
     def on_theme_change(self, index):
         self.selected_theme = self.theme_list[index].lower()
@@ -101,9 +120,16 @@ class Settings(QWidget):
 
         self.hse_label.setVisible("hse" in self.selected_font.lower().split())
 
+    def on_size_change(self, index):
+        self.selected_size = self.size_list[index]
+        self.save_data()
+        self.content = self.get_css_content()
+        self.app.setStyleSheet(self.content)
+
     def save_data(self):
         self.settings["theme"] = self.selected_theme.lower()
         self.settings["font"] = self.selected_font
+        self.settings["size"] = self.selected_size
 
         FileLoader.save_json(
             self.__path + "/info/files/.current_settings.json",
