@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
-    QMessageBox, QCheckBox
+    QMessageBox, QCheckBox, QScrollArea
 from PyQt5 import QtWidgets
 from matplotlib import pyplot
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
@@ -53,8 +53,8 @@ class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
-    WIDTH = 1080
-    HEIGHT = 720
+    WIDTH = 1200
+    HEIGHT = 860
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -229,12 +229,24 @@ class SecurityWindow(QMainWindow):
 
         self.canvas = MplCanvas()
         toolbar = NavigationToolbar2QT(self.canvas, self)
-        self.canvas2 = MplCanvas()
-        self.canvas2.setFixedSize(self.WIDTH, self.HEIGHT)
 
-        self.course_tab.layout.addWidget(toolbar)
-        self.course_tab.layout.addWidget(self.canvas)
-        self.course_tab.layout.addWidget(self.canvas2)
+        self.canvas2 = MplCanvas()
+
+        self.canvas.setFixedSize(self.WIDTH - 70, 640)
+        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+
+        self.scroll_area = QScrollArea()
+
+        self.canvas_widget = QWidget()
+        self.canvas_layout = QVBoxLayout()
+
+        self.course_tab.layout.addWidget(self.scroll_area)
+
+        self.canvas_layout.addWidget(toolbar)
+        self.canvas_layout.addWidget(self.canvas)
+        self.canvas_layout.addWidget(self.canvas2)
+        self.canvas_widget.setLayout(self.canvas_layout)
+        self.scroll_area.setWidget(self.canvas_widget)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
@@ -456,8 +468,8 @@ class SecurityWindow(QMainWindow):
         print(result)
         code, data = result
 
-        pyplot.plot([i.info_time for i in self.history][:len(data)], data)
-        pyplot.show()
+        self.canvas2.axes.plot([i.info_time for i in self.history][:len(data)], data)
+        self.canvas2.draw()
 
     def bollinger_changed(self):
         if self.bollinger_box.isChecked() and \
