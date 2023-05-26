@@ -266,14 +266,16 @@ class SecurityWindow(QMainWindow):
         self.load_plot()
 
     def add_rsi_canvas(self):
-        self.canvas2 = MplCanvas()
-        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
-        self.canvas_layout.addWidget(self.canvas2)
-        QTimer.singleShot(0, self.update_scroll_size)
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.canvas2 = MplCanvas()
+            self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+            self.canvas_layout.addWidget(self.canvas2)
+            QTimer.singleShot(0, self.update_scroll_size)
 
     def delete_rsi_canvas(self):
-        self.canvas_layout.takeAt(2).widget().deleteLater()
-        QTimer.singleShot(0, self.update_scroll_size)
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.canvas_layout.takeAt(2).widget().deleteLater()
+            QTimer.singleShot(0, self.update_scroll_size)
 
     def on_subscribe_update(self, data):
         code, new_candle = data
