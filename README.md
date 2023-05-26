@@ -1,7 +1,8 @@
 # User documentation
 
-## First of all, you need to create a user in your database.
-For making it, run mysql, enter your root password and then execute this commands:
+## First steps
+Firstly you need to crete user for MySQL database.
+Run mysql, enter your root password and then execute this commands:
 
 ```
 CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
@@ -21,17 +22,21 @@ macOS
 ```commandline
 source /path/to/project/venv/bin/activate
 ```
+
 If you are using Windows, run
 ```commandline
 .\venv\Scripts\activate
 ```
+
+These commands should be run each time, when you want to use this app
+
 
 Then execute this to install necessary modules
 ```commandline
 pip install -r requirements.txt
 ```
 
-Now, you need to run __main.py__ using command line. 
+Now you need to run __main.py__ using command line. 
 
 ```commandline
 python main.py
@@ -84,9 +89,23 @@ You click on them, but nothing would happen
 
 ### Course tab
 In this tab you can find plot, that shows security course using candles, type of which
-can be chosen in list of 
+can be chosen in list of different time candles - 1 minute, 5 minute, 1 hour e.t.c.
+Near this list you can find two checkboxes - RSI and Bollinger. Using them you
+can get rsi plot and draw (automatically) bollinger lines.
 
-#### GetSecurity
+In the left upper corner you can find result of prediction, made by neural network.
+If result is colored red - chance of mistake is really high. In case of cyan color chance is a bit lower.
+Remember that neural network in case of white text cn make mistakes to, it is not recommendation
+
+# Developer documentation
+
+### SecurityInfo
+This class has 5 fields - __id__, __figi__, __ticker__, __security_name__, __class_code__,
+or main info about security. This class is used for securities search. 
+
+## API requests
+
+### GetSecurity
 So, if you want to find security using backend
 by _figi_, you need to write its name in field __figi=__. Other parts of your response should be written in such way. 
 __ticker__=_ticker_, etc. Field __id__ is not necessary to be changed.

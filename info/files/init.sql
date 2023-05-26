@@ -86,10 +86,3 @@ CREATE TABLE IF NOT EXISTS securities_history (
     candle_interval INT NOT NULL,
     CONSTRAINT UC_history PRIMARY KEY (security_id, info_time, candle_interval)
 );
-
-CREATE TABLE IF NOT EXISTS history_of_predictions (
-    security_id INT,
-    price DOUBLE,
-    info_time DATETIME,
-    CONSTRAINT UC_history PRIMARY KEY (security_id, info_time)
-);

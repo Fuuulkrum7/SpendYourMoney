@@ -348,27 +348,3 @@ class SecuritiesHistoryTable(Base):
 
     def get_name(self):
         return self.__tablename__
-
-
-class HistoryOfPredictionsTable(Base):
-    __tablename__ = "history_of_predictions"
-
-    security_id = sqlalchemy.Column("security_id", sqlalchemy.Integer,
-                                    nullable=False, primary_key=True)
-    price = sqlalchemy.Column("price", DOUBLE)
-    info_time = sqlalchemy.Column("info_time", sqlalchemy.DateTime,
-                                  nullable=False, primary_key=True)
-
-    __table__ = sqlalchemy.Table(
-        __tablename__,
-        Base.metadata,
-        security_id,
-        price,
-        info_time
-    )
-
-    def get_table(self):
-        return self.__table__
-
-    def get_name(self):
-        return self.__tablename__
