@@ -496,6 +496,19 @@ class SecurityWindow(QMainWindow):
         self.canvas2.axes.plot(
             [i.info_time for i in self.history][:len(data)], data
         )
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)],
+            [70] * len(data),
+            'c',
+            linestyle='dashed'
+        )
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)],
+            [30] * len(data),
+            'r',
+            linestyle='dashed'
+        )
+        self.canvas2.axes.margins(x=0)
 
         self.canvas2.draw()
 
@@ -526,7 +539,8 @@ class SecurityWindow(QMainWindow):
 
         dates = [i.info_time for i in self.history]
         for i in data:
-            self.canvas.axes.plot(dates, i, 'r')
+            if i:
+                self.canvas.axes.plot(dates, i, 'r')
 
         self.canvas.draw()
 
