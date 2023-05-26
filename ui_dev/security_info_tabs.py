@@ -229,9 +229,12 @@ class SecurityWindow(QMainWindow):
 
         self.canvas = MplCanvas()
         toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.canvas2 = MplCanvas()
+        self.canvas2.setFixedSize(self.WIDTH, self.HEIGHT)
 
         self.course_tab.layout.addWidget(toolbar)
         self.course_tab.layout.addWidget(self.canvas)
+        self.course_tab.layout.addWidget(self.canvas2)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
