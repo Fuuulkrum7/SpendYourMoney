@@ -1,3 +1,6 @@
+"""
+Модуль с классами главного окна и окна входа
+"""
 import os
 import sys
 from platform import system
@@ -265,7 +268,7 @@ class Window(QMainWindow):
 
         sep = "\\" if system() == "Windows" else "/"
         # Получаем путь до папки, где лежит файл
-        folder_path = os.path.abspath("first_gui.py.py").split(sep)
+        folder_path = os.path.abspath("menu.py.py").split(sep)
         # Удаляем папку, где лежит файл, из пути
         folder_path.pop()
         # Сохраняем его
@@ -353,18 +356,23 @@ class Window(QMainWindow):
         self.load_all_btn.clicked.connect(self.load_all)
         self.settings_btn.clicked.connect(self.open_settings)
 
-        # self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
         self.output.move(20, 80)
         self.output.resize(600, 440)
         self.output.itemClicked.connect(self.security_clicked)
 
     def open_settings(self):
+        """
+        Открытие окна настроек
+        """
         self.settings_window = Settings(self.app, self.settings, self.__path,
                                         self.hse_label)
         self.settings_window.show()
 
     def security_clicked(self, item):
+        """
+        Отображение информации о ЦБ по клику - создание нового окна
+        """
         if item.text() == "No results":
             return
         self.security = item.data(Qt.UserRole)
@@ -377,6 +385,9 @@ class Window(QMainWindow):
             self.security_window.show()
 
     def switch_mode(self):
+        """
+        Смена расширенного и обычного режима поиска
+        """
         self.textbox.setEnabled(self.is_advanced)
 
         self.is_advanced = not self.is_advanced
@@ -390,6 +401,9 @@ class Window(QMainWindow):
         self.user = user
 
     def find_securities(self):
+        """
+        Поиск ЦБ по их параметрам
+        """
         if not (self.securities_thread is None) \
                 and self.securities_thread.isRunning():
             return
@@ -423,20 +437,15 @@ class Window(QMainWindow):
             self.securities_thread.start()
 
     def after_search(self, result):
+        """
+        Отображение результатов поиска
+        """
         code, data = result
 
         self.output.clear()
         if not data:
             self.output.addItem("No results")
             return
-
-            # self.subscribe_thread = SubscribeOnMarket(
-            #     data[0],
-            #     self.user.get_token(),
-            #     self.show_course
-            # )
-            #
-            # self.subscribe_thread.start()
 
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
@@ -450,6 +459,9 @@ class Window(QMainWindow):
             self.output.addItem(item)
 
     def load_all(self):
+        """
+        Загрузка всех ЦБ в БД
+        """
         self.loading = LoadingDialog()
         self.loading.start_loading()
         if self.all_securities_thread is not None \
@@ -464,6 +476,9 @@ class Window(QMainWindow):
 
 
 class CreateWindow:
+    """
+    Класс, связывающий работу окон входа, регистрации и меню
+    """
     login: LoginWindow = None
     reg: RegisterWindow = None
     main_window: Window

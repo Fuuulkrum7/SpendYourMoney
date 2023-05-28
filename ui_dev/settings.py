@@ -1,15 +1,18 @@
+"""
+Модуль с классом окна настроек
+"""
 import os
 
 from PyQt5.QtCore import QFile, QByteArray
 from PyQt5.QtGui import QFontDatabase, QPixmap
-from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout, \
-    QHBoxLayout
-from PyQt5.uic.properties import QtGui
-
+from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QVBoxLayout
 from info.file_loader import FileLoader
 
 
 class Settings(QWidget):
+    """
+    Класс применения настроек к интерфейсу
+    """
     WIDTH = 200
     HEIGHT = 200
 
@@ -68,6 +71,9 @@ class Settings(QWidget):
         self.setLayout(self.layout)
 
     def add_fonts_from_folder(self):
+        """
+        Обнаружение пользовательских шрифтов в папке
+        """
         folder = "info/files/fonts"
         for filename in os.listdir(folder):
             file = QFile("/".join((self.__path, folder, filename)))
@@ -84,6 +90,9 @@ class Settings(QWidget):
             self.font_list.append(font_family)
 
     def get_css_content(self):
+        """
+        Сборка css из трех настроек
+        """
         with open(f"ui_dev/visual_settings/{self.selected_theme}.css",
                   "r") as theme:
             css_theme = theme.read()
@@ -102,6 +111,9 @@ class Settings(QWidget):
         return css_theme + css_font + css_size
 
     def on_theme_change(self, index):
+        """
+        Смена темы
+        """
         self.selected_theme = self.theme_list[index].lower()
         self.save_data()
         self.content = self.get_css_content()
@@ -113,6 +125,9 @@ class Settings(QWidget):
             self.hse_label.setPixmap(pixmap)
 
     def on_font_change(self, index):
+        """
+        Смена шрифта
+        """
         self.selected_font = self.font_list[index]
         self.save_data()
         self.content = self.get_css_content()
@@ -121,12 +136,18 @@ class Settings(QWidget):
         self.hse_label.setVisible("hse" in self.selected_font.lower().split())
 
     def on_size_change(self, index):
+        """
+        Смена размера шрифта
+        """
         self.selected_size = self.size_list[index]
         self.save_data()
         self.content = self.get_css_content()
         self.app.setStyleSheet(self.content)
 
     def save_data(self):
+        """
+        Сохранение всех настроек
+        """
         self.settings["theme"] = self.selected_theme.lower()
         self.settings["font"] = self.selected_font
         self.settings["size"] = self.selected_size
@@ -138,6 +159,9 @@ class Settings(QWidget):
 
 
 def set_theme_and_font(app, settings, path, label):
+    """
+    Применение всех настроек при открытии приложения
+    """
     initial = Settings(app, settings, path, label)
     initial.add_fonts_from_folder()
     content = initial.get_css_content()

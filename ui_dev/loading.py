@@ -1,9 +1,15 @@
+"""
+Модуль с классом окна настроек
+"""
 import time
 
 from PyQt5 import QtWidgets
 
 
 class LoadingDialog(QtWidgets.QDialog):
+    """
+    Класс отображения загрузки во время работы процесса
+    """
     def __init__(self):
         super().__init__()
         self.setFixedSize(200, 200)
@@ -22,8 +28,9 @@ class LoadingDialog(QtWidgets.QDialog):
         self.show()
 
     def after_load(self):
-        # code, data = result
-        # print(code)
+        """
+        Завершает цикл загрузки
+        """
         self.loadingLabel.setText("Done")
         self.pbar.setMaximum(100)
         self.pbar.setValue(100)
