@@ -261,14 +261,7 @@ class SecurityWindow(QMainWindow):
 
         self.course_tab.setLayout(self.course_tab.layout)
 
-        if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            self.subscribe_thread = SubscribeOnMarket(
-                self.item.info,
-                self.user.get_token(),
-                self.on_subscribe_update
-            )
-
-            self.subscribe_thread.start()
+        self.check_subscription()
 
         self.loading = LoadingDialog()
         self.loading.start_loading()
@@ -289,6 +282,7 @@ class SecurityWindow(QMainWindow):
             QTimer.singleShot(0, self.update_scroll_size)
 
     def on_subscribe_update(self, data):
+        print("data check", data)
         if self.candle != CandleInterval.CANDLE_INTERVAL_1_MIN:
             self.subscribe_thread.stop()
             return
@@ -297,7 +291,6 @@ class SecurityWindow(QMainWindow):
         if new_candle is None or new_candle == self.history[-1]:
             return
 
-        print(code)
         if new_candle.info_time != self.history[-1].info_time:
             self.history.pop(0)
             self.history.append(new_candle)
@@ -305,11 +298,11 @@ class SecurityWindow(QMainWindow):
             self.history[-1] = new_candle
         self.draw_plot()
 
-    def on_candle_change(self, val):
+    def check_subscription(self):
         if self.subscribe_thread is not None:
-            print()
             self.subscribe_thread.stop()
-        if val == 0:
+            print("subscribtion stopped")
+        if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
             self.subscribe_thread = SubscribeOnMarket(
                 self.item.info,
                 self.user.get_token(),
@@ -317,8 +310,13 @@ class SecurityWindow(QMainWindow):
             )
 
             self.subscribe_thread.start()
+            print("subscription started")
 
+    def on_candle_change(self, val):
         self.candle = list(candles_dict.values())[val]
+
+        self.check_subscription()
+
         self.loading = LoadingDialog()
         self.loading.start_loading()
 
@@ -469,7 +467,6 @@ class SecurityWindow(QMainWindow):
         cleared = self.just_created
         self.just_created = 2 if len(self.history) > 1 else 1
 
-        print("update")
         self.draw_plot()
         self.loading.after_load()
 
@@ -552,7 +549,7 @@ class SecurityWindow(QMainWindow):
 
     def show_bollinger(self, result):
         code, data = result
-        print("finished")
+        print("bollinger finished")
         print(code, data)
 
         dates = [i.info_time for i in self.history]
