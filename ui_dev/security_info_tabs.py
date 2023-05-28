@@ -294,7 +294,7 @@ class SecurityWindow(QMainWindow):
             return
         code, new_candle = data
         print(new_candle)
-        if new_candle == self.history[-1] or new_candle is None:
+        if new_candle is None or new_candle == self.history[-1]:
             return
 
         print(code)
