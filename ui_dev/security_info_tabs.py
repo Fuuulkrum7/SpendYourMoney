@@ -54,8 +54,8 @@ class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
-    WIDTH = 1200
-    HEIGHT = 760
+    WIDTH = 900
+    HEIGHT = 660
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -475,6 +475,7 @@ class SecurityWindow(QMainWindow):
 
         self.rsi_box.setEnabled(True)
         self.bollinger_box.setEnabled(True)
+        self.bollinger_changed()
 
     def update_scroll_size(self):
         left, top, right, bottom = self.canvas_layout.getContentsMargins()
@@ -540,6 +541,7 @@ class SecurityWindow(QMainWindow):
                 self.user.get_token(),
                 now(),
                 self.show_bollinger,
+                period=len(self.history),
                 candle_interval=self.candle
             )
 
