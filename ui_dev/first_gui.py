@@ -280,13 +280,18 @@ class Window(QMainWindow):
 
         if self.settings is None or not ("version" in self.settings) or \
                 self.settings["version"] != target["version"]:
-            FileLoader.save_json(
-                self.__path + "/info/files/.current_settings.json",
-                target
-            )
-            self.settings = target
-        else:
-            set_theme_and_font(app, self.settings, self.__path, self.hse_label)
+            if self.settings is None or not ("version" in self.settings):
+                FileLoader.save_json(
+                    self.__path + "/info/files/.current_settings.json",
+                    target
+                )
+                self.settings = target
+            if self.settings["version"] == 1:
+                self.settings["size"] = "Default"
+
+            self.settings["version"] = target["version"]
+
+        set_theme_and_font(app, self.settings, self.__path, self.hse_label)
 
         self.hse_label = QtWidgets.QLabel(self)
 

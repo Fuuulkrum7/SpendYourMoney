@@ -1,9 +1,10 @@
 import datetime
 from datetime import timedelta
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
-    QMessageBox, QCheckBox
+    QMessageBox, QCheckBox, QScrollArea
 from PyQt5 import QtWidgets
 from matplotlib import pyplot
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
@@ -53,8 +54,8 @@ class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
-    WIDTH = 1080
-    HEIGHT = 720
+    WIDTH = 900
+    HEIGHT = 660
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -63,6 +64,10 @@ class SecurityWindow(QMainWindow):
     def __init__(self, item: Security, user: User, settings: dict, path):
         super().__init__()
 
+        self.canvas_layout = None
+        self.canvas_widget = None
+        self.scroll_area = None
+        self.canvas2 = None
         self.rsi_thread = None
         self.bollinger_box = None
         self.rsi_box = None
@@ -80,6 +85,9 @@ class SecurityWindow(QMainWindow):
         self.history = []
 
         screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
+
+        if screen.height() > 900:
+            self.HEIGHT = 860
 
         self.setGeometry((screen.width() - self.WIDTH) // 2,
                          (screen.height() - self.HEIGHT) // 2,
@@ -229,15 +237,71 @@ class SecurityWindow(QMainWindow):
 
         self.canvas = MplCanvas()
         toolbar = NavigationToolbar2QT(self.canvas, self)
-        self.canvas2 = MplCanvas()
-        self.canvas2.setFixedSize(self.WIDTH, self.HEIGHT)
 
-        self.course_tab.layout.addWidget(toolbar)
-        self.course_tab.layout.addWidget(self.canvas)
-        self.course_tab.layout.addWidget(self.canvas2)
+        self.canvas.setFixedSize(self.WIDTH - 70, 640)
+
+        self.scroll_area = QScrollArea()
+
+        self.canvas_widget = QWidget()
+        self.canvas_layout = QVBoxLayout()
+
+        self.canvas_layout.addWidget(toolbar)
+        self.canvas_layout.addWidget(self.canvas)
+
+        self.canvas2 = MplCanvas()
+        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+        self.canvas2.setVisible(False)
+        self.canvas_layout.addWidget(self.canvas2)
+
+        self.canvas_widget.setLayout(self.canvas_layout)
+        self.scroll_area.setWidget(self.canvas_widget)
+
+        self.scroll_area.setWidgetResizable(True)
+        self.course_tab.layout.addWidget(self.scroll_area)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
+        self.check_subscription()
+
+        self.loading = LoadingDialog()
+        self.loading.start_loading()
+        self.load_plot()
+
+    def add_rsi_canvas(self):
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            # self.canvas2 = MplCanvas()
+            # self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+            # self.canvas_layout.addWidget(self.canvas2)
+            self.canvas2.setVisible(True)
+            QTimer.singleShot(0, self.update_scroll_size)
+
+    def delete_rsi_canvas(self):
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            # self.canvas_layout.takeAt(2).widget().deleteLater()
+            self.canvas2.setVisible(False)
+            QTimer.singleShot(0, self.update_scroll_size)
+
+    def on_subscribe_update(self, data):
+        print("data check", data)
+        if self.candle != CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.subscribe_thread.stop()
+            return
+        code, new_candle = data
+        print(new_candle)
+        if new_candle is None or new_candle == self.history[-1]:
+            return
+
+        if new_candle.info_time != self.history[-1].info_time:
+            self.history.pop(0)
+            self.history.append(new_candle)
+        else:
+            self.history[-1] = new_candle
+        self.draw_plot()
+
+    def check_subscription(self):
+        if self.subscribe_thread is not None:
+            self.subscribe_thread.stop()
+            print("subscribtion stopped")
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
             self.subscribe_thread = SubscribeOnMarket(
                 self.item.info,
@@ -246,42 +310,18 @@ class SecurityWindow(QMainWindow):
             )
 
             self.subscribe_thread.start()
-
-        self.loading = LoadingDialog()
-        self.loading.start_loading()
-        self.load_plot()
-
-    def on_subscribe_update(self, data):
-        code, new_candle = data
-        print(new_candle)
-        if new_candle == self.history[-1] or new_candle is None:
-            return
-
-        print(code)
-        if new_candle.info_time != self.history[-1].info_time:
-            self.history.pop(0)
-            self.history.append(new_candle)
-        else:
-            self.history[-1] = new_candle
-        self.draw_plot()
+            print("subscription started")
 
     def on_candle_change(self, val):
-        if val == 0:
-            self.subscribe_thread = SubscribeOnMarket(
-                self.item.info,
-                self.user.get_token(),
-                self.on_subscribe_update
-            )
-
-            self.subscribe_thread.start()
-        elif self.subscribe_thread is not None:
-            self.subscribe_thread.stop()
-
         self.candle = list(candles_dict.values())[val]
+
+        self.check_subscription()
+
         self.loading = LoadingDialog()
         self.loading.start_loading()
 
         self.load_plot()
+        self.rsi_changed()
 
     def calculate_delta(self):
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
@@ -427,7 +467,6 @@ class SecurityWindow(QMainWindow):
         cleared = self.just_created
         self.just_created = 2 if len(self.history) > 1 else 1
 
-        print("update")
         self.draw_plot()
         self.loading.after_load()
 
@@ -436,10 +475,17 @@ class SecurityWindow(QMainWindow):
 
         self.rsi_box.setEnabled(True)
         self.bollinger_box.setEnabled(True)
+        self.bollinger_changed()
+
+    def update_scroll_size(self):
+        left, top, right, bottom = self.canvas_layout.getContentsMargins()
+        hint = self.canvas_layout.sizeHint()
+        self.scroll_area.setMaximumHeight(hint.height() + top + bottom + 1)
 
     def rsi_changed(self):
         if self.rsi_box.isChecked() and \
-                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH and \
+                (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.rsi_thread = RSI(
                 90,
                 self.user.get_token(),
@@ -451,19 +497,42 @@ class SecurityWindow(QMainWindow):
             )
 
             self.rsi_thread.start()
+            self.canvas.setFixedSize(self.WIDTH - 70, 540)
+            self.add_rsi_canvas()
+        elif not self.rsi_box.isChecked() and \
+                (self.rsi_thread is None or not self.rsi_thread.isRunning()):
+            self.canvas.setFixedSize(self.WIDTH - 70, 640)
+            self.delete_rsi_canvas()
 
     def show_rsi(self, result):
         print(result)
         code, data = result
 
-        pyplot.plot([i.info_time for i in self.history][:len(data)], data)
-        pyplot.show()
+        self.canvas2.axes.clear()
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)], data
+        )
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)],
+            [70] * len(data),
+            'c',
+            linestyle='dashed'
+        )
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)],
+            [30] * len(data),
+            'r',
+            linestyle='dashed'
+        )
+        self.canvas2.axes.margins(x=0)
+
+        self.canvas2.draw()
 
     def bollinger_changed(self):
         if self.bollinger_box.isChecked() and \
                 self.candle != CandleInterval.CANDLE_INTERVAL_MONTH \
-                and self.bollinger_thread is not None \
-                and not self.bollinger_thread.isRunning():
+                and (self.bollinger_thread is None
+                     or not self.bollinger_thread.isRunning()):
             print("start bollinger")
 
             self.bollinger_thread = Bollinger(
@@ -472,6 +541,7 @@ class SecurityWindow(QMainWindow):
                 self.user.get_token(),
                 now(),
                 self.show_bollinger,
+                period=len(self.history),
                 candle_interval=self.candle
             )
 
@@ -481,12 +551,13 @@ class SecurityWindow(QMainWindow):
 
     def show_bollinger(self, result):
         code, data = result
-        print("finished")
+        print("bollinger finished")
         print(code, data)
 
         dates = [i.info_time for i in self.history]
         for i in data:
-            self.canvas.axes.plot(dates, i, 'r')
+            if i:
+                self.canvas.axes.plot(dates, i, 'r')
 
         self.canvas.draw()
 
