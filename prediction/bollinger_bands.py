@@ -100,10 +100,13 @@ class Bollinger(Thread):
                     if ml == 0:
                         topline.append(float('nan'))
                         botline.append(float('nan'))
-                        ml = float('nan') #jhgjhghjgjhgjhgjhgjhghjgjhgjhgjhgjhgjhgjhgjhg
+                        midline[i] = float('nan') #jhgjhghjgjhgjhgjhgjhghjgjhgjhgjhgjhgjhgjhgjhg
                     else:
-                        topline.append(ml + (self.standard_fl * stdev[i]))
-                        botline.append(ml - (self.standard_fl * stdev[i]))
+                        topline.append(ml + (self.standard_fl *
+                                             stdev[i - (old - self.period)]))
+                        botline.append(ml - (self.standard_fl *
+                                             stdev[i - (old - self.period)]))
+                    i += 1
             except Exception as e:
                 print(e)
                 self.status_code = 500
