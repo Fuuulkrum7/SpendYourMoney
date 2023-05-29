@@ -21,7 +21,7 @@ class Bollinger(Thread):
     period: int
     info: SecurityInfo
     candle_interval: CandleInterval
-    standard_fl: int
+    standard_fl: float
     data_downloaded = pyqtSignal(object)
     start_date: datetime
     history: list = []
@@ -29,7 +29,7 @@ class Bollinger(Thread):
     def __init__(self, start_date: datetime, info: SecurityInfo,
                  token, end_date: datetime,
                  on_finish, period: int = 90,
-                 set_standard_fl: int = 1,
+                 set_standard_fl: float = 1.0,
                  candle_interval: CandleInterval
                  = CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
@@ -67,6 +67,10 @@ class Bollinger(Thread):
                 n_midline: list = []
                 stdev: list = []
                 candel_num = 0
+                maxi: float = 0.0
+                for candle in self.history:
+                    if candle.price > maxi:
+                        maxi = candle.price
                 for candle in self.history:
                     b = candel_num
                     if b >= self.period:
@@ -77,10 +81,23 @@ class Bollinger(Thread):
                     prices.append(candle.price)
                     candel_num += 1
                 for price in sum_prices:
-                    n_midline.append(price / len(prices))
+                    n = price / len(prices)
+                    if self.candle_interval.value == 4:
+                        if n < maxi / 2:
+                            n = n * (maxi / (1.185 * (n + 1)))
+                    n_midline.append(n)
                 i = len(n_midline) - 1
                 while i >= 0:
-                    midline.append(n_midline[i])
+                    n = 1.0
+                    if self.candle_interval == CandleInterval.CANDLE_INTERVAL_DAY:
+                        n = 1.3
+                    else:
+                        if self.candle_interval == CandleInterval.CANDLE_INTERVAL_HOUR:
+                            n = 1.2
+                        else:
+                            if self.candle_interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
+                                n = 1.5
+                    midline.append(n * n_midline[i])
                     i -= 1
                 i = 0
                 for ml in midline:

@@ -413,7 +413,7 @@ class SecurityWindow(QMainWindow):
         dates = [i.info_time for i in self.history]
         for i in data:
             if i:
-                self.canvas.axes.plot(dates, i[90 - len(dates):], 'r')
+                self.canvas.axes.plot(dates, i[:len(dates)], 'r')
 
         self.canvas.draw()
 
