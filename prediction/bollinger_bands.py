@@ -29,7 +29,7 @@ class Bollinger(Thread):
     def __init__(self, start_date: datetime, info: SecurityInfo,
                  token, end_date: datetime,
                  on_finish, period: int = 90,
-                 set_standard_fl: float = 1.0,
+                 set_standard_fl: float = 2,
                  candle_interval: CandleInterval
                  = CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
@@ -63,56 +63,47 @@ class Bollinger(Thread):
         if self.status_code < 300:
             try:
                 sum_prices: list = [0] * self.period
-                prices: list = []
-                n_midline: list = []
                 stdev: list = []
-                candel_num = 0
-                maxi: float = 0.0
-                for candle in self.history:
-                    if candle.price > maxi:
-                        maxi = candle.price
-                for candle in self.history:
-                    b = candel_num
-                    if b >= self.period:
-                        b = self.period - 1
-                    while b >= 0:
-                        sum_prices[b] += candle.price
-                        b -= 1
-                    prices.append(candle.price)
-                    candel_num += 1
-                for price in sum_prices:
-                    n = price / len(prices)
-                    if self.candle_interval.value == 4:
-                        if n < maxi / 2:
-                            n = n * (maxi / (1.185 * (n + 1)))
-                    n_midline.append(n)
-                i = len(n_midline) - 1
-                while i >= 0:
-                    n = 1.0
-                    if self.candle_interval == CandleInterval.CANDLE_INTERVAL_DAY:
-                        n = 1.3
-                    else:
-                        if self.candle_interval == CandleInterval.CANDLE_INTERVAL_HOUR:
-                            n = 1.2
-                        else:
-                            if self.candle_interval == CandleInterval.CANDLE_INTERVAL_15_MIN:
-                                n = 1.5
-                    midline.append(n * n_midline[i])
-                    i -= 1
+                candles: list = []
+                for candle in self.get_sec.history:
+                    candles.append(candle.price)
+                old = self.period
+                self.period = int(len(candles)/2)
+                curr = old - self.period
+                curr_num = 0
+                while curr < old:
+                    b = 0
+                    while b < self.period:
+                        sum_prices[curr] += candles[curr_num + b]
+                        b += 1
+                    curr += 1
+                    curr_num += 1
+                print(self.period)
+                print(len(candles))
+                print(old - self.period)
+                print(sum_prices)
                 i = 0
+                for s_pr in sum_prices:
+                    midline.append(s_pr/(len(sum_prices)-(old - self.period)))
+                    i += 1
                 for ml in midline:
                     sum_de_pow = 0
-                    b = len(prices) - 1
-                    while b >= 0:
-                        sum_de_pow += math.pow(prices[b] - ml, 2)
+                    b = len(candles) - 1
+                    while b >= old - self.period:
+                        sum_de_pow += math.pow(candles[b] - ml, 2)
                         b -= 1
-                    stdev.append(math.sqrt(sum_de_pow / len(midline)))
+                    stdev.append(math.sqrt(sum_de_pow /
+                                           (len(midline) -
+                                            (old - self.period))))
                     i += 1
                 i = 0
                 for ml in midline:
-                    topline.append(ml + (self.standard_fl * stdev[i]))
-                    botline.append(ml - (self.standard_fl * stdev[i]))
-                    i += 1
+                    if ml == 0:
+                        topline.append(0)
+                        botline.append(0)
+                    else:
+                        topline.append(ml + (self.standard_fl * stdev[i]))
+                        botline.append(ml - (self.standard_fl * stdev[i]))
             except Exception as e:
                 print(e)
                 self.status_code = 500

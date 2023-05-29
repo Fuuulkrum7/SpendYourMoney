@@ -47,9 +47,9 @@ class RSI(Thread):
                 target_candle = 1
                 while target_candle < self.num_candl:
                     up_sum = 0
-                    up_num = 0
+                    up_num: int = 0
                     down_sum = 0
-                    down_num = 0
+                    down_num: int = 0
                     prev_candle = 0
                     skiped_candle = 0
                     rsi_num = 0
@@ -70,12 +70,12 @@ class RSI(Thread):
                                 rsi_num += 1
                             else:
                                 break
-                    if up_sum == 0:
-                        up_sum = down_sum / 2
-                        up_num = down_num / 2
-                    if down_sum == 0:
-                        down_sum = up_sum / 2
-                        down_num = up_num / 2
+                    if up_num == 0:
+                        up_sum = down_sum
+                        up_num = down_num * 2
+                    if down_num == 0:
+                        down_sum = up_sum
+                        down_num = up_num * 2
                     output.append(100 - 100 / (self.sensitive + (up_sum / up_num)
                                                / (down_sum / down_num)))
                     target_candle += 1
