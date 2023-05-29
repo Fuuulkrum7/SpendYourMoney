@@ -68,7 +68,8 @@ class Bollinger(Thread):
                 for candle in self.get_sec.history:
                     candles.append(candle.price)
                 old = self.period
-                self.period = int(len(candles)/2)
+                if int(len(candles)/2) < self.period:
+                    self.period = int(len(candles)/2)
                 curr = old - self.period
                 curr_num = 0
                 while curr < old:
@@ -86,15 +87,17 @@ class Bollinger(Thread):
                 for s_pr in sum_prices:
                     midline.append(s_pr/(len(sum_prices)-(old - self.period)))
                     i += 1
+                i = 0
                 for ml in midline:
-                    sum_de_pow = 0
-                    b = len(candles) - 1
-                    while b >= old - self.period:
-                        sum_de_pow += math.pow(candles[b] - ml, 2)
-                        b -= 1
-                    stdev.append(math.sqrt(sum_de_pow /
-                                           (len(midline) -
-                                            (old - self.period))))
+                    if i >= old - self.period:
+                        sum_de_pow = 0
+                        b = len(candles) - 1
+                        while b >= old - self.period:
+                            sum_de_pow += math.pow(candles[b] - ml, 2)
+                            b -= 1
+                        stdev.append(math.sqrt(sum_de_pow /
+                                               (len(midline) -
+                                                (old - self.period))))
                     i += 1
                 i = 0
                 for ml in midline:
