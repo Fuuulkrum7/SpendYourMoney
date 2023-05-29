@@ -1,3 +1,6 @@
+"""
+Using class SecurityHistory in this file you can download historic candles
+"""
 from datetime import datetime, timezone
 from math import log10, ceil
 
@@ -144,7 +147,6 @@ class GetSecurityHistory(Thread):
 
     # Здесь обращаемся к серверу
     def get_from_api(self):
-        result = ()
         # Создаем подключение
         with Client(self.__token) as client:
             start = self._from

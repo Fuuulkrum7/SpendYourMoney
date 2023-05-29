@@ -1,3 +1,6 @@
+"""
+Здесь лежит класс для работы с нейросетью
+"""
 from datetime import timedelta, timezone
 
 import numpy as np

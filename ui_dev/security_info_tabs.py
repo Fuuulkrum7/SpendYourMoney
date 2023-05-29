@@ -96,6 +96,7 @@ class SecurityWindow(QMainWindow):
 
         if screen.height() > 900:
             self.HEIGHT = 860
+            self.WIDTH = 1200
 
         self.setGeometry((screen.width() - self.WIDTH) // 2,
                          (screen.height() - self.HEIGHT) // 2,
@@ -349,19 +350,20 @@ class SecurityWindow(QMainWindow):
         self.rsi_changed()
 
     def calculate_delta(self):
+        coef = 2
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            return now() - timedelta(minutes=90)
+            return now() - timedelta(minutes=90 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            return now() - timedelta(minutes=450)
+            return now() - timedelta(minutes=450 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            return now() - timedelta(minutes=1350)
+            return now() - timedelta(minutes=1350 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
-            return now() - timedelta(hours=90)
+            return now() - timedelta(hours=90 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_WEEK:
-            return now() - timedelta(days=630)
+            return now() - timedelta(days=630 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
             return datetime.datetime(year=1970, month=1, day=2)
-        return now() - timedelta(days=90)
+        return now() - timedelta(days=90 * coef)
 
     def load_plot(self):
         """
@@ -503,7 +505,8 @@ class SecurityWindow(QMainWindow):
 
         self.save_settings()
 
-        self.history = data
+        self.history = data[max(len(data) - 90, 0):]
+        print(len(self.history))
         cleared = self.just_created
         self.just_created = 2 if len(self.history) > 1 else 1
 

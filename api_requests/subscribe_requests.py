@@ -1,3 +1,7 @@
+"""
+В данном файле находится класс для создания подписки на
+обновления ценной бумаги
+"""
 import time
 
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -5,7 +9,7 @@ from tinkoff.invest import MarketDataRequest, SubscribeCandlesRequest, \
     SubscriptionAction, CandleInstrument, SubscriptionInterval, Client, \
     RequestError
 
-from securities.securities import Security, SecurityInfo
+from securities.securities import SecurityInfo
 from securities.securities_history import SecurityHistory
 
 
@@ -58,7 +62,8 @@ class SubscribeOnMarket(QThread):
                     ],
                 )
             )
-            while True:
+            while self.subscription == \
+                    SubscriptionAction.SUBSCRIPTION_ACTION_SUBSCRIBE:
                 time.sleep(1)
         try:
             # Создаем подключение

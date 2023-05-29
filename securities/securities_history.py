@@ -1,3 +1,6 @@
+"""
+Класс SecurityHistory, свеча, содержащая инфу по курсу цб в точке
+"""
 from datetime import datetime, timezone
 from math import log10, ceil
 

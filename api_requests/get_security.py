@@ -1,3 +1,6 @@
+"""
+In this file is located class GetSecurity, used for security search
+"""
 from time import time
 
 import function

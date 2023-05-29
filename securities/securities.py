@@ -1,3 +1,7 @@
+"""
+Классы SecurityInfo, Security, Stocks, Bonds, Dividends, Coupons
+То бишь тут общая инфа по цб
+"""
 from database.database_info import SecuritiesInfo, \
     CouponInfo, DividendInfo, BondsInfo, StocksInfo
 from securities.securiries_types import StockType, CouponType, SecurityType

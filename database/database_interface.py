@@ -1,10 +1,12 @@
+"""
+В файле находится класс для работы с базой данных
+"""
 import os
 from platform import system
 
-from sqlalchemy.engine.base import Engine
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import insert
-from sqlalchemy.sql import ColumnCollection
+from sqlalchemy.engine.base import Engine
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *

@@ -1,3 +1,7 @@
+"""
+Здесь находятся классы для создания пользователя и проверки
+его существования. 
+"""
 import hashlib
 from PyQt5.QtCore import QThread as Thread, pyqtSignal
 
