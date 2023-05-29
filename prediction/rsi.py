@@ -52,15 +52,15 @@ class RSI(Thread):
             self.num_candl = len(self.get_sec.history) - self.rsi_step
         if self.status_code < 300:
             try:
-                target_candle = 1
-                while target_candle <= self.num_candl:
+                target_candle = 0
+                while target_candle < self.num_candl:
                     gain: list = []
                     lost: list = []
                     prev_candle = 0
                     skipped_candle = 0
                     rsi_num = 0
                     for candle in self.get_sec.history:
-                        if skipped_candle < target_candle - 1:
+                        if skipped_candle < target_candle:
                             skipped_candle += 1
                         else:
                             if rsi_num < self.rsi_step:
@@ -84,11 +84,13 @@ class RSI(Thread):
                     if sum(lost) == 0:
                         lost.append(1)
                     output.append((100 / (1 +
-                                                ((sum(gain) / len(gain))
-                                                 / (sum(lost) / len(lost))))))
+                                          ((sum(gain) / len(gain))
+                                           / (sum(lost) / len(lost))))))
                     target_candle += 1
             except Exception as e:
                 self.status_code = 500
+            print(self.num_candl)
+            print(len(output))
         self.data_downloaded.emit((self.status_code, output))
 
     def on_load(self, output):
