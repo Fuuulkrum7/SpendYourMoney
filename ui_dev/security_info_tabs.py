@@ -62,8 +62,8 @@ class SecurityWindow(QMainWindow):
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
-    WIDTH = 900
-    HEIGHT = 660
+    WIDTH = 1000
+    HEIGHT = 760
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -317,6 +317,8 @@ class SecurityWindow(QMainWindow):
         else:
             self.history[-1] = new_candle
         self.draw_plot()
+        self.bollinger_changed()
+        self.rsi_changed()
 
     def check_subscription(self):
         """
@@ -347,7 +349,6 @@ class SecurityWindow(QMainWindow):
         self.loading.start_loading()
 
         self.load_plot()
-        self.rsi_changed()
 
     def calculate_delta(self):
         coef = 2
@@ -519,6 +520,7 @@ class SecurityWindow(QMainWindow):
         self.rsi_box.setEnabled(True)
         self.bollinger_box.setEnabled(True)
         self.bollinger_changed()
+        self.rsi_changed()
 
     def update_scroll_size(self):
         """
