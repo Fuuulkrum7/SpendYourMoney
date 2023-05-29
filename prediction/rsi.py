@@ -5,12 +5,7 @@ from PyQt5.QtCore import QThread as Thread, pyqtSignal
 from tinkoff.invest import CandleInterval
 
 from securities.securities import SecurityInfo
-delta: list = [datetime.timedelta(minutes=1), datetime.timedelta(minutes=5),
-               datetime.timedelta(minutes=15), datetime.timedelta(hours=1),
-               datetime.timedelta(days=1), datetime.timedelta(minutes=2),
-               datetime.timedelta(minutes=3), datetime.timedelta(minutes=10),
-               datetime.timedelta(minutes=30), datetime.timedelta(hours=2),
-               datetime.timedelta(hours=4), datetime.timedelta(weeks=1)]
+
 
 class RSI(Thread):
     status_code: int = 200
@@ -21,13 +16,15 @@ class RSI(Thread):
     info: SecurityInfo
     candle_interval: CandleInterval
     data_downloaded = pyqtSignal(object)
+    sensitive: float
 
     def __init__(self, num_candl: int, token, start_date: datetime,
                  end_date: datetime, info: SecurityInfo, on_finish,
-                 rsi_step: int = 14,
+                 rsi_step: int = 14, sensitive: float = 1.0,
                  candle_interval: CandleInterval =
                  CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
+        self.sensitive = sensitive
         self.rsi_step = rsi_step
         self.num_candl = num_candl
         self.__token = token
@@ -73,7 +70,13 @@ class RSI(Thread):
                                 rsi_num += 1
                             else:
                                 break
-                    output.append(100 - 100 / ((up_sum / up_num)
+                    if up_sum == 0:
+                        up_sum = down_sum / 2
+                        up_num = down_num / 2
+                    if down_sum == 0:
+                        down_sum = up_sum / 2
+                        down_num = up_num / 2
+                    output.append(100 - 100 / (self.sensitive + (up_sum / up_num)
                                                / (down_sum / down_num)))
                     target_candle += 1
             except Exception as e:
