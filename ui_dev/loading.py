@@ -15,8 +15,8 @@ class LoadingDialog(QtWidgets.QDialog):
         self.setFixedSize(200, 200)
         self.setWindowTitle("SpendYourMoney")
 
-        self.loadingLabel = QtWidgets.QLabel('Loading...', self)
-        self.loadingLabel.setGeometry(75, 30, 100, 20)
+        self.loading_label = QtWidgets.QLabel('Loading...', self)
+        self.loading_label.setGeometry(75, 30, 100, 20)
 
         self.pbar = QtWidgets.QProgressBar(self)
         self.pbar.setMinimum(0)
@@ -25,13 +25,16 @@ class LoadingDialog(QtWidgets.QDialog):
         self.pbar.setGeometry(30, 75, 140, 20)
 
     def start_loading(self):
+        """
+        Начать загрузку
+        """
         self.show()
 
     def after_load(self):
         """
         Завершает цикл загрузки
         """
-        self.loadingLabel.setText("Done")
+        self.loading_label.setText("Done")
         self.pbar.setMaximum(100)
         self.pbar.setValue(100)
         time.sleep(0.2)
