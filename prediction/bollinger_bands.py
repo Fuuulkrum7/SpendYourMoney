@@ -79,10 +79,6 @@ class Bollinger(Thread):
                         b += 1
                     curr += 1
                     curr_num += 1
-                print(self.period)
-                print(len(candles))
-                print(old - self.period)
-                print(sum_prices)
                 i = 0
                 for s_pr in sum_prices:
                     midline.append(s_pr/(len(sum_prices)-(old - self.period)))
@@ -110,9 +106,6 @@ class Bollinger(Thread):
             except Exception as e:
                 print(e)
                 self.status_code = 500
-        print(topline)
-        print(midline)
-        print(botline)
         self.data_downloaded.emit((self.status_code, [topline,
                                                       midline, botline]))
 
