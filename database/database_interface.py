@@ -1,10 +1,12 @@
+"""
+В файле находится класс для работы с базой данных
+"""
 import os
 from platform import system
 
-from sqlalchemy.engine.base import Engine
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import insert
-from sqlalchemy.sql import ColumnCollection
+from sqlalchemy.engine.base import Engine
 from sqlalchemy_utils import database_exists
 
 from database.database_info import *
@@ -307,6 +309,10 @@ class DatabaseInterface:
             self.__engine.execute(
                 text(f"ALTER TABLE {SecuritiesHistoryTable.__tablename__} "
                      f"MODIFY {SecuritiesHistory.volume.name} BIGINT")
+            )
+        if self.version <= 7:
+            self.__engine.execute(
+                text(F"DROP TABLE IF EXISTS history_of_predictions")
             )
 
     def clear_db(self):

@@ -1,3 +1,6 @@
+"""
+Модуль с классами главного окна и окна входа
+"""
 import os
 import sys
 from platform import system
@@ -5,6 +8,7 @@ from platform import system
 import PyQt5
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
     QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
@@ -245,11 +249,12 @@ class Window(QMainWindow):
 
     def __init__(self, app):
         super(Window, self).__init__()
+        self.hse_label = None
         self.app = app
         self.security = None
         self.setWindowTitle("SpendYourMoney")
         self.textbox = QLineEdit(self)
-        self.button = QPushButton('Find security', self)
+        self.standard_search = QPushButton('Find security', self)
         self.advanced = QPushButton('Advanced search', self)
         self.figi = QLineEdit(self)
         self.name = QLineEdit(self)
@@ -263,7 +268,7 @@ class Window(QMainWindow):
 
         sep = "\\" if system() == "Windows" else "/"
         # Получаем путь до папки, где лежит файл
-        folder_path = os.path.abspath("first_gui.py.py").split(sep)
+        folder_path = os.path.abspath("menu.py.py").split(sep)
         # Удаляем папку, где лежит файл, из пути
         folder_path.pop()
         # Сохраняем его
@@ -278,31 +283,38 @@ class Window(QMainWindow):
 
         if self.settings is None or not ("version" in self.settings) or \
                 self.settings["version"] != target["version"]:
-            FileLoader.save_json(
-                self.__path + "/info/files/.current_settings.json",
-                target
-            )
-            self.settings = target
-        else:
-            set_theme_and_font(app, self.settings)
+            if self.settings is None or not ("version" in self.settings):
+                FileLoader.save_json(
+                    self.__path + "/info/files/.current_settings.json",
+                    target
+                )
+                self.settings = target
+            if self.settings["version"] == 1:
+                self.settings["size"] = "Default"
+
+            self.settings["version"] = target["version"]
+
+        set_theme_and_font(app, self.settings, self.__path, self.hse_label)
+
+        self.hse_label = QtWidgets.QLabel(self)
 
         self.init_ui()
 
     def init_ui(self):
         # Create textbox
         self.textbox.move(20, 20)
-        self.textbox.resize(460, 40)
+        self.textbox.resize(390, 40)
         self.textbox.setPlaceholderText("Security name (more than 2 symbols)")
 
         # Create a button in the window
-        self.button.move(500, 20)
-        self.button.resize(120, 40)
+        self.standard_search.move(440, 20)
+        self.standard_search.resize(180, 40)
 
-        self.advanced.move(640, 20)
-        self.advanced.resize(160, 40)
+        self.advanced.move(650, 20)
+        self.advanced.resize(180, 40)
 
         # connect button to function on_click
-        self.button.clicked.connect(self.find_securities)
+        self.standard_search.clicked.connect(self.find_securities)
 
         self.figi.move(650, 80)
         self.figi.setPlaceholderText('Figi')
@@ -317,7 +329,21 @@ class Window(QMainWindow):
         self.classcode.setPlaceholderText('Class code')
         self.classcode.setVisible(False)
 
+        pixmap = QPixmap(self.__path +
+                         f"/info/files/HSE_{self.settings['theme']}.png")
+
+        self.hse_label.setPixmap(
+            pixmap
+        )
+
+        self.hse_label.resize(pixmap.width(),
+                              pixmap.height())
+        self.hse_label.move(675, 250)
+
         self.advanced.clicked.connect(self.switch_mode)
+
+        self.hse_label.setVisible("hse" in self.settings["font"]
+                                  .lower().split())
 
         # Create a button in the window
         self.load_all_btn.move(650, 480)
@@ -330,17 +356,23 @@ class Window(QMainWindow):
         self.load_all_btn.clicked.connect(self.load_all)
         self.settings_btn.clicked.connect(self.open_settings)
 
-        # self.output.setGeometry(QtCore.QRect(10, 10, 680, 360))
         self.output.setObjectName("output")
         self.output.move(20, 80)
         self.output.resize(600, 440)
         self.output.itemClicked.connect(self.security_clicked)
 
     def open_settings(self):
-        self.settings_window = Settings(self.app, self.settings, self.__path)
+        """
+        Открытие окна настроек
+        """
+        self.settings_window = Settings(self.app, self.settings, self.__path,
+                                        self.hse_label)
         self.settings_window.show()
 
     def security_clicked(self, item):
+        """
+        Отображение информации о ЦБ по клику - создание нового окна
+        """
         if item.text() == "No results":
             return
         self.security = item.data(Qt.UserRole)
@@ -353,23 +385,25 @@ class Window(QMainWindow):
             self.security_window.show()
 
     def switch_mode(self):
-        if self.figi.isVisible():
-            self.figi.setVisible(False)
-            self.name.setVisible(False)
-            self.ticker.setVisible(False)
-            self.classcode.setVisible(False)
-            self.is_advanced = False
-        else:
-            self.figi.setVisible(True)
-            self.name.setVisible(True)
-            self.ticker.setVisible(True)
-            self.classcode.setVisible(True)
-            self.is_advanced = True
+        """
+        Смена расширенного и обычного режима поиска
+        """
+        self.textbox.setEnabled(self.is_advanced)
+
+        self.is_advanced = not self.is_advanced
+
+        self.figi.setVisible(self.is_advanced)
+        self.name.setVisible(self.is_advanced)
+        self.ticker.setVisible(self.is_advanced)
+        self.classcode.setVisible(self.is_advanced)
 
     def set_user(self, user):
         self.user = user
 
     def find_securities(self):
+        """
+        Поиск ЦБ по их параметрам
+        """
         if not (self.securities_thread is None) \
                 and self.securities_thread.isRunning():
             return
@@ -403,6 +437,9 @@ class Window(QMainWindow):
             self.securities_thread.start()
 
     def after_search(self, result):
+        """
+        Отображение результатов поиска
+        """
         code, data = result
 
         self.output.clear()
@@ -410,17 +447,10 @@ class Window(QMainWindow):
             self.output.addItem("No results")
             return
 
-            # self.subscribe_thread = SubscribeOnMarket(
-            #     data[0],
-            #     self.user.get_token(),
-            #     self.show_course
-            # )
-            #
-            # self.subscribe_thread.start()
-
         for security in data:
             basic_info = f"Security name={security.info.name}, Figi=" \
-                         f"{security.info.figi}, Ticker={security.info.ticker}," \
+                         f"{security.info.figi}, " \
+                         f"Ticker={security.info.ticker}," \
                          f" Class code={security.info.class_code}"
             basic_info = f"{'*' * len(basic_info)}\n{basic_info}" \
                          f"\n{'*' * len(basic_info)}"
@@ -429,6 +459,9 @@ class Window(QMainWindow):
             self.output.addItem(item)
 
     def load_all(self):
+        """
+        Загрузка всех ЦБ в БД
+        """
         self.loading = LoadingDialog()
         self.loading.start_loading()
         if self.all_securities_thread is not None \
@@ -443,6 +476,9 @@ class Window(QMainWindow):
 
 
 class CreateWindow:
+    """
+    Класс, связывающий работу окон входа, регистрации и меню
+    """
     login: LoginWindow = None
     reg: RegisterWindow = None
     main_window: Window

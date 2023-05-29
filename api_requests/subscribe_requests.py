@@ -1,3 +1,7 @@
+"""
+В данном файле находится класс для создания подписки на
+обновления ценной бумаги
+"""
 import time
 
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -5,7 +9,7 @@ from tinkoff.invest import MarketDataRequest, SubscribeCandlesRequest, \
     SubscriptionAction, CandleInstrument, SubscriptionInterval, Client, \
     RequestError
 
-from securities.securities import Security
+from securities.securities import SecurityInfo
 from securities.securities_history import SecurityHistory
 
 
@@ -24,11 +28,11 @@ class SubscribeOnMarket(QThread):
     # Интервал подписки
     interval: SubscriptionInterval
     # ЦБ
-    security: Security
+    security: SecurityInfo
 
     data_downloaded = pyqtSignal(object)
 
-    def __init__(self, security: Security,
+    def __init__(self, security: SecurityInfo,
                  token: str, on_finish,
                  subscription: SubscriptionAction =
                  SubscriptionAction.SUBSCRIPTION_ACTION_SUBSCRIBE,
@@ -52,13 +56,14 @@ class SubscribeOnMarket(QThread):
                     subscription_action=self.subscription,
                     instruments=[
                         CandleInstrument(
-                            figi=self.security.info.figi,
+                            figi=self.security.figi,
                             interval=self.interval,
                         )
                     ],
                 )
             )
-            while True:
+            while self.subscription == \
+                    SubscriptionAction.SUBSCRIPTION_ACTION_SUBSCRIBE:
                 time.sleep(1)
         try:
             # Создаем подключение
@@ -77,7 +82,7 @@ class SubscribeOnMarket(QThread):
                             info_time=candle.time,
                             volume=candle.volume,
                             price=candle.close,
-                            security_id=self.security.info.id
+                            security_id=self.security.id
                         )
 
                         self.data_downloaded.emit((self.status_code, history))
@@ -90,7 +95,7 @@ class SubscribeOnMarket(QThread):
             print("Error unknown\n", e)
             self.status_code = 500
 
-        self.data_downloaded.emit((self.status_code, []))
+        self.data_downloaded.emit((self.status_code, None))
 
     def stop(self):
         # Останавливаем таким образом генератор

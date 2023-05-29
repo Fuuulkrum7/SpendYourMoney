@@ -1,3 +1,6 @@
+"""
+Тут у нас лежит сама сетка
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from keras import Sequential, models

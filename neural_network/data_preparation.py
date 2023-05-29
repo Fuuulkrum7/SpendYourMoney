@@ -1,6 +1,9 @@
-import json
+"""
+В файле лежит функции для разметки данных и их нормализации
+"""
 import math
 from datetime import datetime
+
 import numpy as np
 
 from info.file_loader import FileLoader

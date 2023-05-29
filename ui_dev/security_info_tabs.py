@@ -1,11 +1,14 @@
+"""
+Модуль с классом окна ЦБ
+"""
 import datetime
 from datetime import timedelta
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QTabWidget, \
     QMainWindow, QListWidget, QComboBox, QHBoxLayout, \
-    QMessageBox, QCheckBox
+    QMessageBox, QCheckBox, QScrollArea
 from PyQt5 import QtWidgets
-from matplotlib import pyplot
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as \
     FigureCanvas
@@ -17,6 +20,7 @@ from tinkoff.invest.utils import now
 from api_requests.get_security import GetSecurity
 from api_requests.get_security_history import GetSecurityHistory
 from api_requests.security_getter import StandardQuery
+from api_requests.subscribe_requests import SubscribeOnMarket
 from database.database_info import BondsInfo, StocksInfo, SecuritiesInfo, \
     CouponInfo
 from info.file_loader import FileLoader
@@ -30,7 +34,6 @@ from ui_dev.loading import LoadingDialog
 
 plt.use("Qt5Agg")
 
-
 candles_dict = {
     "1 minute": CandleInterval.CANDLE_INTERVAL_1_MIN,
     "5 minute": CandleInterval.CANDLE_INTERVAL_5_MIN,
@@ -43,6 +46,9 @@ candles_dict = {
 
 
 class MplCanvas(FigureCanvas):
+    """
+    Создание холста для графика
+    """
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
@@ -50,11 +56,14 @@ class MplCanvas(FigureCanvas):
 
 
 class SecurityWindow(QMainWindow):
+    """
+    Класс отображения всей информации по одной ЦБ
+    """
     get_securities_thread: GetSecurity = None
     get_securities_hist_thread: GetSecurityHistory = None
 
-    WIDTH = 1080
-    HEIGHT = 720
+    WIDTH = 900
+    HEIGHT = 660
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -63,6 +72,10 @@ class SecurityWindow(QMainWindow):
     def __init__(self, item: Security, user: User, settings: dict, path):
         super().__init__()
 
+        self.canvas_layout = None
+        self.canvas_widget = None
+        self.scroll_area = None
+        self.canvas2 = None
         self.rsi_thread = None
         self.bollinger_box = None
         self.rsi_box = None
@@ -71,11 +84,23 @@ class SecurityWindow(QMainWindow):
         self.select_candle = None
         self.horizontal = None
         self.predict_thread = None
+        self.subscribe_thread = None
         self.right_vertical = None
         self.left_vertical = None
+        self.neural_layout = None
         self.canvas = None
         self.user = user
         self.history = []
+
+        screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
+
+        if screen.height() > 900:
+            self.HEIGHT = 860
+            self.WIDTH = 1200
+
+        self.setGeometry((screen.width() - self.WIDTH) // 2,
+                         (screen.height() - self.HEIGHT) // 2,
+                         self.WIDTH, self.HEIGHT)
         self.setFixedSize(self.WIDTH, self.HEIGHT)
         self.setWindowTitle(item.info.name)
 
@@ -156,6 +181,9 @@ class SecurityWindow(QMainWindow):
         self.divs_and_coupons.resize(self.WIDTH - 40, self.HEIGHT - 40)
 
     def after_divs_load(self, data, flag):
+        """
+        Отображение дивидендов/купонов
+        """
         if not data:
             self.divs_and_coupons.addItem(self.no_result)
             return
@@ -177,6 +205,9 @@ class SecurityWindow(QMainWindow):
             self.divs_and_coupons.addItem(f"{divider}\n{parsed}\n{divider}")
 
     def tab_changed(self, index):
+        """
+        Обработка смены вкладки
+        """
         if index == 2 and self.just_created == 1:
             self.just_created = 2
 
@@ -222,38 +253,122 @@ class SecurityWindow(QMainWindow):
         self.canvas = MplCanvas()
         toolbar = NavigationToolbar2QT(self.canvas, self)
 
-        self.course_tab.layout.addWidget(toolbar)
-        self.course_tab.layout.addWidget(self.canvas)
+        self.canvas.setFixedSize(self.WIDTH - 70, 640)
+
+        self.scroll_area = QScrollArea()
+
+        self.canvas_widget = QWidget()
+        self.canvas_layout = QVBoxLayout()
+
+        self.canvas_layout.addWidget(toolbar)
+        self.canvas_layout.addWidget(self.canvas)
+
+        self.canvas2 = MplCanvas()
+        self.canvas2.setFixedSize(self.WIDTH - 70, 320)
+        self.canvas2.setVisible(False)
+        self.canvas_layout.addWidget(self.canvas2)
+
+        self.canvas_widget.setLayout(self.canvas_layout)
+        self.scroll_area.setWidget(self.canvas_widget)
+
+        self.scroll_area.setWidgetResizable(True)
+        self.course_tab.layout.addWidget(self.scroll_area)
 
         self.course_tab.setLayout(self.course_tab.layout)
 
+        self.check_subscription()
+
         self.loading = LoadingDialog()
         self.loading.start_loading()
         self.load_plot()
+
+    def add_rsi_canvas(self):
+        """
+        Отображение RSI графика
+        """
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.canvas2.setVisible(True)
+            QTimer.singleShot(0, self.update_scroll_size)
+
+    def delete_rsi_canvas(self):
+        """
+        Скрытие RSI графика
+        """
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.canvas2.setVisible(False)
+            QTimer.singleShot(0, self.update_scroll_size)
+
+    def on_subscribe_update(self, data):
+        """
+        Обновление по подписке на ЦБ
+        """
+        print("data check", data)
+        if self.candle != CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.subscribe_thread.stop()
+            return
+        code, new_candle = data
+        print(new_candle)
+        if new_candle is None or new_candle == self.history[-1]:
+            return
+
+        if new_candle.info_time != self.history[-1].info_time:
+            self.history.pop(0)
+            self.history.append(new_candle)
+        else:
+            self.history[-1] = new_candle
+        self.draw_plot()
+
+    def check_subscription(self):
+        """
+        Включение/выключение подписки
+        """
+        if self.subscribe_thread is not None:
+            self.subscribe_thread.stop()
+            print("subscribtion stopped")
+        if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
+            self.subscribe_thread = SubscribeOnMarket(
+                self.item.info,
+                self.user.get_token(),
+                self.on_subscribe_update
+            )
+
+            self.subscribe_thread.start()
+            print("subscription started")
 
     def on_candle_change(self, val):
+        """
+        Обработка смены свечи
+        """
         self.candle = list(candles_dict.values())[val]
+
+        self.check_subscription()
+
         self.loading = LoadingDialog()
         self.loading.start_loading()
 
         self.load_plot()
+        self.rsi_changed()
 
     def calculate_delta(self):
+        coef = 2
         if self.candle == CandleInterval.CANDLE_INTERVAL_1_MIN:
-            return now() - timedelta(minutes=90)
+            return now() - timedelta(minutes=90 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_5_MIN:
-            return now() - timedelta(minutes=450)
+            return now() - timedelta(minutes=450 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_15_MIN:
-            return now() - timedelta(minutes=1350)
+            return now() - timedelta(minutes=1350 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_HOUR:
-            return now() - timedelta(hours=90)
+            return now() - timedelta(hours=90 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_WEEK:
-            return now() - timedelta(days=630)
+            return now() - timedelta(days=630 * coef)
         if self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
             return datetime.datetime(year=1970, month=1, day=2)
-        return now() - timedelta(days=90)
+        return now() - timedelta(days=90 * coef)
 
     def load_plot(self):
+        """
+        Загрузка данных для графика
+        """
         self.rsi_box.setEnabled(False)
         self.bollinger_box.setEnabled(False)
 
@@ -268,6 +383,9 @@ class SecurityWindow(QMainWindow):
         self.get_securities_hist_thread.start()
 
     def on_security_load(self, result):
+        """
+        Загрузка полной информации о ЦБ
+        """
         code, data = result
 
         item = data[0]
@@ -303,8 +421,8 @@ class SecurityWindow(QMainWindow):
             self.left.append(QLabel(key.replace("_", " ").capitalize()))
             self.right.append(QLabel(str(value)))
 
-        for l, r in zip(self.left, self.right):
-            self.left_vertical.addWidget(l)
+        for le, r in zip(self.left, self.right):
+            self.left_vertical.addWidget(le)
             self.right_vertical.addWidget(r)
 
         self.item = item
@@ -324,13 +442,27 @@ class SecurityWindow(QMainWindow):
             self.neural_layout.addWidget(label1)
 
     def on_predict_made(self, result):
+        """
+        Отображение предсказания нейросети
+        """
         code, data = result
         if data:
+            s = sum(data)
+
             # Такой перевод данных в строку нужен для их корректного
             # отображения
             label1 = QLabel(f'Growth probability: {str(data[2])} %')
             label2 = QLabel(f'Flat probability: {str(data[1])} %')
             label3 = QLabel(f'Fall probability: {str(data[0])} %')
+
+            if s >= 110:
+                label1.setStyleSheet("color: cyan")
+                label2.setStyleSheet("color: cyan")
+                label3.setStyleSheet("color: cyan")
+            elif s <= 90:
+                label1.setStyleSheet("color: red")
+                label2.setStyleSheet("color: red")
+                label3.setStyleSheet("color: red")
             self.neural_layout.addWidget(label1)
             self.neural_layout.addWidget(label2)
             self.neural_layout.addWidget(label3)
@@ -338,24 +470,47 @@ class SecurityWindow(QMainWindow):
             label1 = QLabel("No data")
             self.neural_layout.addWidget(label1)
 
+    def draw_plot(self):
+        """
+        Построение графика
+        """
+        if self.canvas:
+            self.canvas.axes.clear()
+
+        if len(self.history) > 1:
+            dates = [i.info_time for i in self.history]
+            prices = [i.price for i in self.history]
+
+            self.canvas.axes.plot(dates, prices)
+            self.canvas.axes.plot(dates, [max(prices)] * len(dates), 'g',
+                                  linestyle='dashed')
+            self.canvas.axes.plot(dates, [min(prices)] * len(dates), 'y',
+                                  linestyle='dashed')
+            self.canvas.axes.plot(dates, [prices[-1]] * len(dates), 'c',
+                                  linestyle='dashed')
+
+            self.canvas.axes.text(dates[-1], prices[-1], str(prices[-1]))
+            self.canvas.axes.text(dates[-1], max(prices), str(max(prices)))
+            self.canvas.axes.text(dates[-1], min(prices), str(min(prices)))
+
+            self.canvas.axes.margins(x=0)
+
+        self.canvas.draw()
+
     def on_history_load(self, result):
+        """
+        Завершение полной загрузки ЦБ
+        """
         code, data = result
 
         self.save_settings()
 
-        self.history = data
-        dates = [i.info_time for i in self.history]
-        prices = [i.price for i in self.history]
-
+        self.history = data[max(len(data) - 90, 0):]
+        print(len(self.history))
         cleared = self.just_created
-        self.just_created = 2 if len(data) > 1 else 1
+        self.just_created = 2 if len(self.history) > 1 else 1
 
-        if self.canvas:
-            self.canvas.axes.clear()
-
-        self.canvas.axes.plot(dates, prices)
-        self.canvas.draw()
-
+        self.draw_plot()
         self.loading.after_load()
 
         if cleared:
@@ -363,10 +518,23 @@ class SecurityWindow(QMainWindow):
 
         self.rsi_box.setEnabled(True)
         self.bollinger_box.setEnabled(True)
+        self.bollinger_changed()
+
+    def update_scroll_size(self):
+        """
+        Настройка размера прокрутки
+        """
+        left, top, right, bottom = self.canvas_layout.getContentsMargins()
+        hint = self.canvas_layout.sizeHint()
+        self.scroll_area.setMaximumHeight(hint.height() + top + bottom + 1)
 
     def rsi_changed(self):
+        """
+        Включение/выключение RSI
+        """
         if self.rsi_box.isChecked() and \
-                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH and \
+                (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.rsi_thread = RSI(
                 90,
                 self.user.get_token(),
@@ -378,17 +546,48 @@ class SecurityWindow(QMainWindow):
             )
 
             self.rsi_thread.start()
+            self.canvas.setFixedSize(self.WIDTH - 70, 540)
+            self.add_rsi_canvas()
+        elif not self.rsi_box.isChecked() and \
+                (self.rsi_thread is None or not self.rsi_thread.isRunning()):
+            self.canvas.setFixedSize(self.WIDTH - 70, 640)
+            self.delete_rsi_canvas()
 
     def show_rsi(self, result):
+        """
+        Построение RSI
+        """
         print(result)
         code, data = result
 
-        pyplot.plot([i.info_time for i in self.history][:len(data)], data)
-        pyplot.show()
+        self.canvas2.axes.clear()
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)], data
+        )
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)],
+            [70] * len(data),
+            'c',
+            linestyle='dashed'
+        )
+        self.canvas2.axes.plot(
+            [i.info_time for i in self.history][:len(data)],
+            [30] * len(data),
+            'r',
+            linestyle='dashed'
+        )
+        self.canvas2.axes.margins(x=0)
+
+        self.canvas2.draw()
 
     def bollinger_changed(self):
+        """
+        Включение/выключение боллинджера
+        """
         if self.bollinger_box.isChecked() and \
-                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+                self.candle != CandleInterval.CANDLE_INTERVAL_MONTH \
+                and (self.bollinger_thread is None
+                     or not self.bollinger_thread.isRunning()):
             print("start bollinger")
 
             self.bollinger_thread = Bollinger(
@@ -397,27 +596,32 @@ class SecurityWindow(QMainWindow):
                 self.user.get_token(),
                 now(),
                 self.show_bollinger,
+                period=len(self.history),
                 candle_interval=self.candle
             )
 
             self.bollinger_thread.start()
-        else:
-            # TODO write here what we shall do in case of plot clear
-            ...
+        elif self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.draw_plot()
 
     def show_bollinger(self, result):
+        """
+        Отображение линий боллинджера
+        """
         code, data = result
-        print("finished")
+        print("bollinger finished")
         print(code, data)
 
         dates = [i.info_time for i in self.history]
         for i in data:
             if i:
-                self.canvas.axes.plot(dates, i[:len(dates)], 'r')
-
+                self.canvas.axes.plot(dates, i, 'r')
         self.canvas.draw()
 
     def save_settings(self):
+        """
+        Сохранение настроек
+        """
         self.settings["candle"] = self.candle.value
 
         FileLoader.save_json(

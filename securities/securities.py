@@ -1,3 +1,7 @@
+"""
+Классы SecurityInfo, Security, Stocks, Bonds, Dividends, Coupons
+То бишь тут общая инфа по цб
+"""
 from database.database_info import SecuritiesInfo, \
     CouponInfo, DividendInfo, BondsInfo, StocksInfo
 from securities.securiries_types import StockType, CouponType, SecurityType
@@ -175,13 +179,12 @@ class Dividend:
         if not isinstance(other, type(self)):
             return False
         return other.div_value == self.div_value and \
-            other.declared_date == self.declared_date and \
-            other.yield_value == self.yield_value
+            other.declared_date == self.declared_date
 
     # Для работы с множествами
     def __hash__(self):
         return hash(
-            (self.declared_date, self.div_value, self.yield_value)
+            (self.declared_date, self.div_value)
         )
 
 

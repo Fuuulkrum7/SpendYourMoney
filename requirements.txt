@@ -1,4 +1,4 @@
-tinkoff-investments==0.2.0b50
+tinkoff-investments==0.2.0b57
 SQLAlchemy~=1.4.46
 SQLAlchemy-Utils==0.40.0
 function~=1.2.0

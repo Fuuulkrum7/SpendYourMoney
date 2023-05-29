@@ -1,19 +1,6 @@
-from datetime import datetime
-
-import function
-from PyQt5.QtCore import pyqtSignal
-
-from database.database_info import CouponInfoTable, DividendInfoTable, \
-    CouponInfo, DividendInfo
-from api_requests.security_getter import StandardQuery, SecurityGetter
-from securities.securities import Coupon, Dividend
-from database.database_interface import DatabaseInterface
-
-from tinkoff.invest import Client
-from tinkoff.invest.exceptions import RequestError
-
-
 """
+В файле находятся классы для загрузки дивидендов и купонов.
+
 Информация о статус-кодах
 
 100 - данных нет
@@ -33,6 +20,20 @@ from tinkoff.invest.exceptions import RequestError
 400 - ошибка при загрузке данных основных
 410 - дополнительных
 """
+
+from datetime import datetime
+
+import function
+from PyQt5.QtCore import pyqtSignal
+
+from database.database_info import CouponInfoTable, DividendInfoTable, \
+    CouponInfo, DividendInfo
+from api_requests.security_getter import StandardQuery, SecurityGetter
+from securities.securities import Coupon, Dividend
+from database.database_interface import DatabaseInterface
+
+from tinkoff.invest import Client
+from tinkoff.invest.exceptions import RequestError
 
 
 class GetCoupons(SecurityGetter):

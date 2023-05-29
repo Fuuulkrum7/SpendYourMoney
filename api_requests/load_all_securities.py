@@ -1,3 +1,6 @@
+"""
+В данном файле находится класс, отвечающий за скачивание всех цб
+"""
 import os
 from platform import system
 from time import time

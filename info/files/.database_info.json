@@ -1,17 +1,6 @@
 {
-  "version": 7,
+  "version": 8,
   "name": "SpendYourMoney",
-  "tables":
-          [
-            "user",
-            "securities_info",
-            "bonds_info",
-            "coupon_info",
-            "stocks_info",
-            "dividend_info",
-            "securities_history",
-            "history_of_predictions"
-          ],
   "password": "1nVestm$nt",
   "username": "TinkoffUser"
 }

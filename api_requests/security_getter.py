@@ -1,13 +1,19 @@
-from abc import ABC, abstractmethod
-import function
+"""
+Здесь находятся классы для стандартного запроса и
+абстрактный класс, который наследуют классы, предназначенные для
+работы с базой данных и апи одновременно
+"""
+from abc import abstractmethod
 
+import function
 from PyQt5.QtCore import QThread as Thread
+
 from securities.securities import SecurityInfo
 
 
 class StandardQuery:
     """
-    Стандартизированный поисковый запрос
+    Стандартизированный поисковый запрос;
     мы можем искать по любому полю из security_info. Или, если мы не знаем,
     по какому полю искать, храним текст запроса
     """
