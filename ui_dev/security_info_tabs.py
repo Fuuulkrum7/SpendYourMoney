@@ -63,7 +63,7 @@ class SecurityWindow(QMainWindow):
     get_securities_hist_thread: GetSecurityHistory = None
 
     WIDTH = 1000
-    HEIGHT = 760
+    HEIGHT = 700
     no_result = "Nothing found"
     item: Security = None
     just_created = 0
@@ -538,7 +538,7 @@ class SecurityWindow(QMainWindow):
                 self.candle != CandleInterval.CANDLE_INTERVAL_MONTH and \
                 (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.rsi_thread = RSI(
-                90,
+                len(self.history),
                 self.user.get_token(),
                 self.calculate_delta(),
                 now(),
@@ -610,6 +610,8 @@ class SecurityWindow(QMainWindow):
         """
         Отображение линий боллинджера
         """
+        if not self.bollinger_box.isChecked():
+            return
         code, data = result
         print("bollinger finished")
         print(code, data)
@@ -617,6 +619,7 @@ class SecurityWindow(QMainWindow):
         dates = [i.info_time for i in self.history]
         for i in data:
             if i:
+                print(len(i))
                 self.canvas.axes.plot(dates, i, 'r')
         self.canvas.draw()
 
