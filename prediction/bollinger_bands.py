@@ -100,7 +100,7 @@ class Bollinger(Thread):
                     if ml == 0:
                         topline.append(float('nan'))
                         botline.append(float('nan'))
-                        midline[i] = float('nan') #jhgjhghjgjhgjhgjhgjhghjgjhgjhgjhgjhgjhgjhgjhg
+                        midline[i] = float('nan')
                     else:
                         topline.append(ml + (self.standard_fl *
                                              stdev[i - (old - self.period)]))
