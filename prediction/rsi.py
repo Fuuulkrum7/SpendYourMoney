@@ -20,7 +20,7 @@ class RSI(Thread):
 
     def __init__(self, num_candl: int, token, start_date: datetime,
                  end_date: datetime, info: SecurityInfo, on_finish,
-                 rsi_step: int = 14, sensitive: float = 1.0,
+                 rsi_step: int = 14, sensitive: float = 2.0,
                  candle_interval: CandleInterval =
                  CandleInterval.CANDLE_INTERVAL_DAY):
         super().__init__()
@@ -62,22 +62,27 @@ class RSI(Thread):
                                     prev_candle = candle.price
                                 else:
                                     if prev_candle >= candle.price:
-                                        down_sum = down_sum + candle.price
+                                        down_sum = down_sum + 100 * \
+                                                   (1 - candle.price /
+                                                    prev_candle)
                                         down_num = down_num + 1
                                     else:
-                                        up_sum = up_sum + candle.price
+                                        up_sum = up_sum + 100 * \
+                                                 (1 - prev_candle /
+                                                  candle.price)
                                         up_num = up_num + 1
                                 rsi_num += 1
                             else:
                                 break
                     if up_num == 0:
-                        up_sum = down_sum / 2
-                        up_num = down_num / 2
+                        up_sum = down_sum
+                        up_num = down_num
                     if down_num == 0:
-                        down_sum = up_sum / 2
-                        down_num = up_num / 2
-                    output.append(100 - 100 / (self.sensitive + (up_sum / up_num)
-                                               / (down_sum / down_num)))
+                        down_sum = up_sum
+                        down_num = up_num
+                    output.append(100 - 100 / (1 +
+                                               ((up_sum / up_num)
+                                                /(down_sum / down_num))))
                     target_candle += 1
             except Exception as e:
                 print(e)
