@@ -71,11 +71,11 @@ class RSI(Thread):
                             else:
                                 break
                     if up_num == 0:
-                        up_sum = down_sum
-                        up_num = down_num * 2
+                        up_sum = down_sum / 2
+                        up_num = down_num / 2
                     if down_num == 0:
-                        down_sum = up_sum
-                        down_num = up_num * 2
+                        down_sum = up_sum / 2
+                        down_num = up_num / 2
                     output.append(100 - 100 / (self.sensitive + (up_sum / up_num)
                                                / (down_sum / down_num)))
                     target_candle += 1
