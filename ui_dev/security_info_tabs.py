@@ -421,8 +421,8 @@ class SecurityWindow(QMainWindow):
             self.left.append(QLabel(key.replace("_", " ").capitalize()))
             self.right.append(QLabel(str(value)))
 
-        for l, r in zip(self.left, self.right):
-            self.left_vertical.addWidget(l)
+        for le, r in zip(self.left, self.right):
+            self.left_vertical.addWidget(le)
             self.right_vertical.addWidget(r)
 
         self.item = item
