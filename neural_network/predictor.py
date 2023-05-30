@@ -1,6 +1,7 @@
 """
 Здесь лежит класс для работы с нейросетью
 """
+import traceback
 from datetime import timedelta, timezone
 
 import numpy as np
@@ -83,7 +84,8 @@ class PredictCourse(QThread):
                 # Округляем результат
                 self.result = list(np.around(self.result, decimals=2))
             except Exception as e:
-                print(e)
+                print(repr(e))
+                traceback.print_exc()
                 self.status_code = 500
 
         # Отправляем данные

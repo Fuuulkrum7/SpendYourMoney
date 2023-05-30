@@ -215,7 +215,7 @@ class SecurityWindow(QMainWindow):
             msg.setIcon(QMessageBox.Critical)
 
             msg.setText("Data to display not found")
-            msg.setWindowTitle("Critical MessageBox")
+            msg.setWindowTitle("No data")
             msg.setStandardButtons(QMessageBox.Ok)
 
             msg.exec_()
@@ -389,6 +389,8 @@ class SecurityWindow(QMainWindow):
         Загрузка полной информации о ЦБ
         """
         code, data = result
+        if not data:
+            return
 
         item = data[0]
 
@@ -506,6 +508,16 @@ class SecurityWindow(QMainWindow):
         code, data = result
 
         self.save_settings()
+
+        if code >= 400:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+
+            msg.setText("Bad connection")
+            msg.setWindowTitle("No data loaded")
+            msg.setStandardButtons(QMessageBox.Ok)
+
+            msg.exec_()
 
         if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
             self.history = data[max(len(data) - 90, 0):]

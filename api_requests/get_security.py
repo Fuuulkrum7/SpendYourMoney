@@ -1,6 +1,7 @@
 """
 In this file is located class GetSecurity, used for security search
 """
+import traceback
 from time import time
 
 import function
@@ -72,7 +73,7 @@ class GetSecurity(SecurityGetter):
             try:
                 self.insert_to_database()
             except Exception as e:
-                print(e)
+                print(repr(e))
                 self.status_code = 301
 
         self.data_downloaded.emit((self.status_code, self.securities))
@@ -84,7 +85,7 @@ class GetSecurity(SecurityGetter):
             if self.check_locally:
                 self.get_from_bd()
         except Exception as e:
-            print(e)
+            print(repr(e))
             self.status_code = 300
 
         if not self.securities and not self.check_only_locally:
@@ -109,6 +110,8 @@ class GetSecurity(SecurityGetter):
 
             # Имя таблицы, куда по умолчанию данные сохранятся
             table = SecuritiesInfoTable()
+            search = f"WHERE {SecuritiesInfo.FIGI.value} = "\
+                     f"'{security.info.figi}';"
 
             # Если надо добавить данные в прочие таблицы
             if self.load_full_info:
@@ -121,7 +124,10 @@ class GetSecurity(SecurityGetter):
                 # Получаем курсор, из него мы
                 # вытянем id только что добавленной цб
                 cursor: sqlalchemy.engine.cursor = \
-                    db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
+                    db.execute_sql(
+                        "SELECT ID FROM " + table.get_name() +
+                        f" {search}"
+                    )
 
                 # Собственно, тут мы их и получаем.
                 # И обновляем индекс security_id
@@ -129,13 +135,14 @@ class GetSecurity(SecurityGetter):
                 for val in cursor:
                     security.set_security_id(val[0])
                     break
+                search = f"WHERE security_id = {security.info.id};"
 
             # Если надо добавить облигации или акции, меняем таблицу на нужную
             if self.load_full_info and \
-                    security.SECURITY_TYPE == SecurityType.BOND:
+                    security.security_type == SecurityType.BOND:
                 table = BondsInfoTable()
             elif self.load_full_info and \
-                    security.SECURITY_TYPE == SecurityType.STOCK:
+                    security.security_type == SecurityType.STOCK:
                 table = StocksInfoTable()
 
             # Добавление данных в нужную таблицу
@@ -147,7 +154,8 @@ class GetSecurity(SecurityGetter):
             # Аналогично с получением индекса.
             # На этот раз будет использоваться собственный индекс
             cursor: sqlalchemy.engine.cursor = \
-                db.execute_sql("SELECT MAX(ID) FROM " + table.get_name())
+                db.execute_sql("SELECT ID FROM " + table.get_name() +
+                               f" {search}")
             for val in cursor:
                 security.set_id(val[0])
                 break
@@ -402,7 +410,7 @@ class GetSecurity(SecurityGetter):
                 r = client.instruments.find_instrument(query=data)
                 results = r.instruments
             except RequestError as e:
-                print(e)
+                print(repr(e))
                 self.status_code = 401
                 return
 
@@ -451,7 +459,7 @@ class GetSecurity(SecurityGetter):
                             id=result.figi
                         ).instrument
                     except RequestError as e:
-                        print(e)
+                        print(repr(e))
                         self.status_code = 400
                         break
 
@@ -464,7 +472,7 @@ class GetSecurity(SecurityGetter):
                                 id=result.figi).instrument
                     # Защита от ошибок при запросе в интернет
                     except RequestError as e:
-                        print(e)
+                        print(repr(e))
                         self.status_code = 400
                         break
 
@@ -568,15 +576,15 @@ class GetSecurity(SecurityGetter):
                         dividend=divs
                     )
 
-                    # И если данные были реально получены
-                    if security.info.id != -1:
-                        if sub is not None:
-                            # Добавляем поток и цб
-                            self.sub_data.append(sub)
-                        if self.load_full_info:
-                            self.securities.append(security)
+                # И если данные были реально получены
+                if security.info.id != -1:
+                    if sub is not None:
+                        # Добавляем поток и цб
+                        self.sub_data.append(sub)
+                    if self.load_full_info:
+                        self.securities.append(security)
 
-                        self.for_insert.append(security)
+                    self.for_insert.append(security)
 
             # Пишем то, сколько инструментов мы нашли
             print(len(self.securities))
