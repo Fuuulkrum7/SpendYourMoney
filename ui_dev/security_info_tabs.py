@@ -315,9 +315,11 @@ class SecurityWindow(QMainWindow):
             self.history.append(new_candle)
         else:
             self.history[-1] = new_candle
+
         self.draw_plot()
-        self.bollinger_changed()
-        self.rsi_changed()
+        if new_candle.info_time != self.history[-1].info_time:
+            self.bollinger_changed()
+            self.rsi_changed()
 
     def check_subscription(self):
         """
