@@ -55,7 +55,7 @@ class Settings(QWidget):
 
         self.size_label = QLabel("Size:")
         self.size_combo = QComboBox()
-        self.size_list = ["Default"]+[str(i) for i in range(8, 15)]
+        self.size_list = ["Default"]+[str(i) for i in range(8, 19)]
         self.size_combo.addItems(self.size_list)
         self.size_combo.setCurrentIndex(
             self.size_list.index(self.selected_size))
@@ -76,18 +76,19 @@ class Settings(QWidget):
         """
         folder = "info/files/fonts"
         for filename in os.listdir(folder):
-            file = QFile("/".join((self.__path, folder, filename)))
-            file.open(QFile.ReadOnly)
-            font_data = file.readAll()
-            file.close()
+            if filename.lower()[-4:] in ('.ttf', '.otf'):
+                file = QFile("/".join((self.__path, folder, filename)))
+                file.open(QFile.ReadOnly)
+                font_data = file.readAll()
+                file.close()
 
-            # добавляем шрифт в базу данных шрифтов PyQt
-            font_id = QFontDatabase.addApplicationFontFromData(
-                QByteArray(font_data))
+                # добавляем шрифт в базу данных шрифтов PyQt
+                font_id = QFontDatabase.addApplicationFontFromData(
+                    QByteArray(font_data))
 
-            # получаем его имя
-            font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-            self.font_list.append(font_family)
+                # получаем его имя
+                font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+                self.font_list.append(font_family)
 
     def get_css_content(self):
         """
