@@ -166,6 +166,7 @@ class GetSecurityHistory(Thread):
                 print(e, self.status_code)
                 if self.status_code == 300:
                     self.status_code = 500
+                    return
                 self.status_code = 400
                 return
 

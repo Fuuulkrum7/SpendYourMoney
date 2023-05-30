@@ -453,6 +453,11 @@ class SecurityWindow(QMainWindow):
         Отображение предсказания нейросети
         """
         code, data = result
+
+        if code != 200:
+            QMessageBox.warning(self, 'Error',
+                                'Something went wrong with neural network')
+
         if data:
             s = sum(data)
 
@@ -582,6 +587,10 @@ class SecurityWindow(QMainWindow):
         Построение RSI
         """
         code, data = result
+
+        if code != 200:
+            QMessageBox.warning(self, 'Error',
+                                'Something went wrong in RSI calculation')
         print("rsi len", len(data))
 
         self.canvas2.axes.clear()
@@ -640,6 +649,13 @@ class SecurityWindow(QMainWindow):
         if not self.bollinger_box.isChecked():
             return
         code, data = result
+
+        if code != 200:
+            QMessageBox.warning(
+                self, 'Error',
+                'Something went wrong in Bollinger calculation'
+            )
+
         print("bollinger finished")
         print("bollinger len", len(data[0]))
 

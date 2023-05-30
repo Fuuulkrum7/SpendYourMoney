@@ -472,9 +472,9 @@ class Window(QMainWindow):
         """
         Отображение результатов поиска
         """
-        _, data = result
-
+        code, data = result
         self.output.clear()
+
         if not data:
             self.output.addItem("No results")
             return
@@ -489,6 +489,9 @@ class Window(QMainWindow):
             item = QListWidgetItem(basic_info)
             item.setData(Qt.UserRole, security)
             self.output.addItem(item)
+
+        if code >= 300:
+            QMessageBox.warning(self, 'Error', 'Could not load securities')
 
     def load_all(self):
         """
