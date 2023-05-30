@@ -585,9 +585,12 @@ class SecurityWindow(QMainWindow):
                 self, 'Not allowed',
                 "It's not permitted to use RSI with such candle interval"
             )
+            self.rsi_box.setChecked(False)
+            self.canvas2.setVisible(False)
 
     def show_rsi(self, result):
         if self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.canvas2.setVisible(False)
             return
         """
         Построение RSI
@@ -599,12 +602,14 @@ class SecurityWindow(QMainWindow):
                 'Nothing to show'
             )
             self.rsi_box.setChecked(False)
+            self.canvas2.setVisible(False)
             return
 
         if code != 200:
             QMessageBox.warning(self, 'Error',
                                 'Something went wrong in RSI calculation')
             self.rsi_box.setChecked(False)
+            self.canvas2.setVisible(False)
             return
 
         print("rsi len", len(data))
@@ -669,6 +674,7 @@ class SecurityWindow(QMainWindow):
                 self, 'Not allowed',
                 "It's not permitted to use Bollinger with such candle interval"
             )
+            self.bollinger_box.setChecked(False)
 
     def show_bollinger(self, result):
         """
