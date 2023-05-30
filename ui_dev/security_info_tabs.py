@@ -307,7 +307,6 @@ class SecurityWindow(QMainWindow):
             self.subscribe_thread.stop()
             return
         code, new_candle = data
-        print(new_candle)
         if new_candle is None or new_candle == self.history[-1]:
             return
 
@@ -506,8 +505,12 @@ class SecurityWindow(QMainWindow):
 
         self.save_settings()
 
-        self.history = data[max(len(data) - 90, 0):]
-        print(len(self.history))
+        if self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
+            self.history = data[max(len(data) - 90, 0):]
+        else:
+            self.history = data
+
+        print("history len", len(self.history))
         cleared = self.just_created
         self.just_created = 2 if len(self.history) > 1 else 1
 
@@ -559,8 +562,8 @@ class SecurityWindow(QMainWindow):
         """
         Построение RSI
         """
-        print(result)
         code, data = result
+        print("rsi len", len(data))
 
         self.canvas2.axes.clear()
         self.canvas2.axes.plot(
@@ -614,12 +617,11 @@ class SecurityWindow(QMainWindow):
             return
         code, data = result
         print("bollinger finished")
-        print(code, data)
+        print("bollinger len", len(data[0]))
 
         dates = [i.info_time for i in self.history]
         for i in data:
             if i:
-                print(len(i))
                 self.canvas.axes.plot(dates, i, 'r')
         self.canvas.draw()
 
