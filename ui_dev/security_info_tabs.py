@@ -559,6 +559,8 @@ class SecurityWindow(QMainWindow):
             self.delete_rsi_canvas()
 
     def show_rsi(self, result):
+        if self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
+            return
         """
         Построение RSI
         """
@@ -566,17 +568,21 @@ class SecurityWindow(QMainWindow):
         print("rsi len", len(data))
 
         self.canvas2.axes.clear()
+        info_time = [
+                        i.info_time for i in self.history
+                     ][max(len(self.history) - len(data), 0):]
+        
         self.canvas2.axes.plot(
-            [i.info_time for i in self.history][:len(data)], data
+            info_time, data
         )
         self.canvas2.axes.plot(
-            [i.info_time for i in self.history][:len(data)],
+            info_time,
             [70] * len(data),
             'c',
             linestyle='dashed'
         )
         self.canvas2.axes.plot(
-            [i.info_time for i in self.history][:len(data)],
+            info_time,
             [30] * len(data),
             'r',
             linestyle='dashed'

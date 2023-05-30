@@ -211,7 +211,8 @@ class GetSecurity(SecurityGetter):
                 table,
                 where=query,
                 sort_query=[f"{SecuritiesInfo.SECURITY_TYPE.value} ASC",
-                            f"{SecuritiesInfo.PRIORITY.value} DESC"],
+                            f"{SecuritiesInfo.PRIORITY.value} DESC",
+                            f"{SecuritiesInfo.FIGI.value} ASC"],
                 params=params
             )
 
