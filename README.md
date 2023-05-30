@@ -61,8 +61,10 @@ deactivate
 
 ### How to use search
 In opened window click "go to registration" and then enter login, password and 
-tinkoff token to create new user in db. After successful registration or login 
-(next launch) you will be able to use the currently available functionality - 
+tinkoff token to create new user in db. Registration will be successful provided if 
+the user's login is not empty, and the password is strong, that is, 
+from 8 to 32 characters long, contains uppercase and lowercase letters, numbers, special characters.
+After successful registration or login (next launch) you will be able to use the currently available functionality - 
 security search and download. Using search, you will be able to get list of 
 different securities you were looking for. Keywords for this search can be: name of
 company, figi, ticker or class-code. For example, you can write ticker "LKOH" 
@@ -170,7 +172,9 @@ deactivate
 
 ### Как использовать поиск
 В открывшемся окне нажмите "перейти к регистрации", а затем введите логин, пароль и
-токен tinkoff, чтобы создать нового пользователя в базе данных. После успешной регистрации или входа в систему
+токен tinkoff, чтобы создать нового пользователя в базе данных. Регистрация пройдет успешно при условии, 
+что логин пользователя не пуст, а пароль – сильный, то есть длиной от 8 до 32 символов, 
+содержит заглавные и строчные буквы, цифры, специальные символы. После успешной регистрации или входа в систему
 (следующий запуск) вы сможете использовать доступный в настоящее время функционал -
 поиск по ценным бумагам и загрузку. Используя поиск, вы сможете получить список
 различных ценных бумаг, которые вы искали. Ключевыми словами для этого поиска могут быть: название
