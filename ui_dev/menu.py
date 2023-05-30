@@ -210,7 +210,12 @@ class RegisterWindow(QtWidgets.QDialog):
                 QMessageBox.warning(self, 'Error', "Empty login")
                 return
             if not is_good_password(self.newpasswordval.text()):
-                QMessageBox.warning(self, 'Error', "Weak password")
+                QMessageBox.warning(
+                    self, 'Error',
+                    "Weak password. Use digits, symbols, upper "
+                    "and lower case. Len of password should be more "
+                    "than 8 and lower than 32 symbols"
+                )
                 return
             self.registration_thread = CreateUser(
                 User(

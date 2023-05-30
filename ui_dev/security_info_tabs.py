@@ -579,6 +579,11 @@ class SecurityWindow(QMainWindow):
                 (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.canvas.setFixedSize(self.WIDTH - 70, 640)
             self.delete_rsi_canvas()
+        elif self.rsi_box.isChecked():
+            QMessageBox.warning(
+                self, 'Not allowed',
+                "It's not permitted to use RSI with such candle interval"
+            )
 
     def show_rsi(self, result):
         if self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
@@ -641,6 +646,11 @@ class SecurityWindow(QMainWindow):
             self.bollinger_thread.start()
         elif self.candle != CandleInterval.CANDLE_INTERVAL_MONTH:
             self.draw_plot()
+        elif self.bollinger_box.isChecked():
+            QMessageBox.warning(
+                self, 'Not allowed',
+                "It's not permitted to use Bollinger with such candle interval"
+            )
 
     def show_bollinger(self, result):
         """
