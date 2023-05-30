@@ -19,7 +19,7 @@ cd full/path/to/project/
 
 Clone repository
 ```commandline
-git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git
+git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git .
 ```
 
 Now you should create venv:
@@ -128,7 +128,7 @@ cd full/path/to/project/
 
 Скопируйте репозиторий
 ```commandline
-git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git
+git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git .
 ```
 
 Теперь вы должны создать venv:
