@@ -108,7 +108,6 @@ class Settings(QWidget):
 
         if self.selected_size != "Default":
             css_size = f'* {{font-size: {self.selected_size}pt;}}'
-            print(css_size)
         else:
             css_size = ''
 

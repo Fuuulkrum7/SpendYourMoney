@@ -415,7 +415,6 @@ class Window(QMainWindow):
             self.security_window = SecurityWindow(
                 self.security, self.user, self.settings, self.__path
             )
-            print("1", self.user)
             self.security_window.show()
 
     def switch_mode(self):
