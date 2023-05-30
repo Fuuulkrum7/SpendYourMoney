@@ -400,6 +400,9 @@ class Window(QMainWindow):
     def set_user(self, user):
         self.user = user
 
+        if not self.settings["actual_db"]:
+            self.load_all()
+
     def find_securities(self):
         """
         Поиск ЦБ по их параметрам
@@ -469,10 +472,18 @@ class Window(QMainWindow):
             return
 
         self.all_securities_thread = LoadAllSecurities(
-            self.loading.after_load,
+            self.after_full_load,
             self.user.get_token()
         )
         self.all_securities_thread.start()
+
+    def after_full_load(self, *args):
+        self.loading.after_load()
+        self.settings["actual_db"] = True
+        FileLoader.save_json(
+            self.__path + "/info/files/.current_settings.json",
+            self.settings
+        )
 
     def closeEvent(self, evnt):
         for window in QApplication.topLevelWindows():
