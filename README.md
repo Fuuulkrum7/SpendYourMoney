@@ -12,15 +12,25 @@ CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
 ```
 
-Open project folder in terminal and create venv
+Now you need to create folder for project. After creating it, open terminal execute this command:
 ```commandline
-python -m venv /path/to/project/venv
+cd full/path/to/project/
+```
+
+Clone repository
+```commandline
+git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git
+```
+
+Now you should create venv:
+```commandline
+python -m venv venv
 ```
 
 Then you should activate venv. Run this command if you are using Linux or
 macOS
 ```commandline
-source /path/to/project/venv/bin/activate
+source venv/bin/activate
 ```
 
 If you are using Windows, run
@@ -111,15 +121,25 @@ CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
 ```
 
-Откройте папку проекта в терминале и создайте venv
+Теперь вам нужно создать папку для проекта. После ее создания откройте терминал и выполните эту команду:
 ```commandline
-python -m venv /path/to/project/venv
+cd full/path/to/project/
+```
+
+Скопируйте репозиторий
+```commandline
+git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git
+```
+
+Теперь вы должны создать venv:
+```commandline
+python -m venv venv
 ```
 
 Затем вы должны активировать venv. Запустите эту команду, если вы используете Linux или
 macOS
 ```commandline
-source /path/to/project/venv/bin/activate
+source venv/bin/activate
 ```
 
 Если вы используете Windows, запустите
