@@ -579,7 +579,8 @@ class SecurityWindow(QMainWindow):
                 (self.rsi_thread is None or not self.rsi_thread.isRunning()):
             self.canvas.setFixedSize(self.WIDTH - 70, 640)
             self.delete_rsi_canvas()
-        elif self.rsi_box.isChecked():
+        if self.rsi_box.isChecked() and \
+                self.candle == CandleInterval.CANDLE_INTERVAL_MONTH:
             QMessageBox.warning(
                 self, 'Not allowed',
                 "It's not permitted to use RSI with such candle interval"
