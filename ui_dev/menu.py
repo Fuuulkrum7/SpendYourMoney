@@ -10,7 +10,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
-    QListWidgetItem
+    QListWidgetItem, QApplication
 from PyQt5.QtWidgets import QMessageBox
 
 from api_requests.get_security import GetSecurity
@@ -473,6 +473,12 @@ class Window(QMainWindow):
             self.user.get_token()
         )
         self.all_securities_thread.start()
+
+    def closeEvent(self, evnt):
+        for window in QApplication.topLevelWindows():
+            if window != self:
+                window.close()
+        evnt.accept()
 
 
 class CreateWindow:
