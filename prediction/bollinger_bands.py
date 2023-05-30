@@ -82,15 +82,13 @@ class Bollinger(Thread):
                 # Изменение периода при недостатке данных
                 if int(len(candles)/2) < self.period:
                     self.period = int(len(candles)/2)
-                curr = old - self.period
                 curr_num = 0
                 # Подсчет средней скользящей
-                while curr < old:
+                for curr in range(old - self.period, old, 1):
                     b = 0
                     while b < self.period:
                         sum_prices[curr] += candles[curr_num + b]
                         b += 1
-                    curr += 1
                     curr_num += 1
                 i = 0
                 for s_pr in sum_prices:
@@ -101,10 +99,8 @@ class Bollinger(Thread):
                 for ml in midline:
                     if i >= old - self.period:
                         sum_de_pow = 0
-                        b = len(candles) - 1
-                        while b >= old - self.period:
+                        for b in range(len(candles) - 1, old - self.period, -1):
                             sum_de_pow += math.pow(candles[b] - ml, 2)
-                            b -= 1
                         stdev.append(math.sqrt(sum_de_pow /
                                                (len(midline) -
                                                 (old - self.period))))
