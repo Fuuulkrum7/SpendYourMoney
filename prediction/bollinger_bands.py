@@ -1,3 +1,7 @@
+"""
+Модуль с классом для построения линий Боллинджера
+"""
+
 import datetime
 import math
 
@@ -16,14 +20,17 @@ delta: list = [datetime.timedelta(minutes=1), datetime.timedelta(minutes=5),
 
 
 class Bollinger(Thread):
+    """
+    Класс для подсчета линий Боллинджера
+    """
     status_code: int = 200
-    get_sec: GetSecurityHistory
-    period: int
-    info: SecurityInfo
-    candle_interval: CandleInterval
-    standard_fl: float
+    get_sec: GetSecurityHistory  # Класс для запроса данных
+    period: int  # Количество свичей которые нужно просчитать
+    info: SecurityInfo  # Информация о ценной бумаге
+    candle_interval: CandleInterval  # Длина свичи
+    standard_fl: float  # значение отклонения верхней и нижней линии
     data_downloaded = pyqtSignal(object)
-    start_date: datetime
+    start_date: datetime  # Дата начала просчета
     history: list = []
 
     def __init__(self, start_date: datetime, info: SecurityInfo,
@@ -32,6 +39,9 @@ class Bollinger(Thread):
                  set_standard_fl: float = 2,
                  candle_interval: CandleInterval
                  = CandleInterval.CANDLE_INTERVAL_DAY):
+        """
+        Инициализация параметров
+        """
         super().__init__()
         self.data_downloaded.connect(on_finish)
         self.period = period
@@ -62,16 +72,19 @@ class Bollinger(Thread):
         botline: list = []
         if self.status_code < 300:
             try:
+                # Мвссив для подсчета средней скользящей
                 sum_prices: list = [0] * self.period
                 stdev: list = []
                 candles: list = []
                 for candle in self.get_sec.history:
                     candles.append(candle.price)
                 old = self.period
+                # Изменение периода при недостатке данных
                 if int(len(candles)/2) < self.period:
                     self.period = int(len(candles)/2)
                 curr = old - self.period
                 curr_num = 0
+                # Подсчет средней скользящей
                 while curr < old:
                     b = 0
                     while b < self.period:
@@ -84,6 +97,7 @@ class Bollinger(Thread):
                     midline.append(s_pr/(len(sum_prices)-(old - self.period)))
                     i += 1
                 i = 0
+                # Подсчет дисперсии
                 for ml in midline:
                     if i >= old - self.period:
                         sum_de_pow = 0
@@ -96,8 +110,10 @@ class Bollinger(Thread):
                                                 (old - self.period))))
                     i += 1
                 i = 0
+                # Подсчет верхней и нижней линии
                 for ml in midline:
                     if ml == 0:
+                        # Значение ноль заменяется на NaN
                         topline.append(float('nan'))
                         botline.append(float('nan'))
                         midline[i] = float('nan')

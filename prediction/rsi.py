@@ -1,3 +1,7 @@
+"""
+Модуль с классом для построения RSI
+"""
+
 import datetime
 import modulefinder
 
@@ -16,13 +20,16 @@ delta: list = [datetime.timedelta(minutes=1), datetime.timedelta(minutes=5),
 
 
 class RSI(Thread):
+    """
+    Класс для подсчета RSI
+    """
     status_code: int = 200
-    get_sec: GetSecurityHistory
-    rsi_step: int
-    num_candl: int
-    start_date: datetime
-    info: SecurityInfo
-    candle_interval: CandleInterval
+    get_sec: GetSecurityHistory  # Класс для запроса данных
+    rsi_step: int  # Длина просчета RSI
+    num_candl: int  # Количество свичей которые нужно просчитать
+    start_date: datetime  # Дата начала просчета
+    info: SecurityInfo  # Информация о ценной бумаге
+    candle_interval: CandleInterval  # Длина свичи
     data_downloaded = pyqtSignal(object)
 
     def __init__(self, num_candl: int, token, start_date: datetime,
@@ -30,6 +37,9 @@ class RSI(Thread):
                  rsi_step: int = 14,
                  candle_interval: CandleInterval =
                  CandleInterval.CANDLE_INTERVAL_DAY):
+        """
+        Инициализация параметров
+        """
         super().__init__()
         self.rsi_step = rsi_step
         self.num_candl = num_candl
@@ -48,14 +58,15 @@ class RSI(Thread):
 
     def get_rsi_in_point(self):
         output: list = []
+        # Изменение количества свичей если не достаточно данных
         if len(self.get_sec.history) - self.rsi_step < self.num_candl:
             self.num_candl = len(self.get_sec.history) - self.rsi_step
         if self.status_code < 300:
             try:
                 target_candle = 0
                 while target_candle < self.num_candl:
-                    gain: list = []
-                    lost: list = []
+                    gain: list = []  # Массив свечей относительного роста
+                    lost: list = []  # Массив свечей относительного падения
                     prev_candle = 0
                     skipped_candle = 0
                     rsi_num = 0
@@ -79,18 +90,19 @@ class RSI(Thread):
                                 rsi_num += 1
                             else:
                                 break
+                    # Проверка на ноль
                     if sum(gain) == 0:
                         gain.append(1)
                     if sum(lost) == 0:
                         lost.append(1)
-                    output.append((100 / (1 +
-                                          ((sum(gain) / len(gain))
-                                           / (sum(lost) / len(lost))))))
+                    # Вычисление RSI
+                    output.append(100 - (100 / (1 +
+                                                ((sum(gain) / len(gain))
+                                                 / (sum(lost) / len(lost))))))
                     target_candle += 1
             except Exception as e:
-                self.status_code = 500
+                self.status_code = 500  # Ошибка в вычислениях
             print(self.num_candl)
-            print(len(output))
         self.data_downloaded.emit((self.status_code, output))
 
     def on_load(self, output):
@@ -104,6 +116,9 @@ class RSI(Thread):
             self.status_code = 300
 
     def load_history(self):
+        """
+        Получение данных
+        """
         self.get_sec = GetSecurityHistory(
             info=self.info,
             _from=self.start_date,
