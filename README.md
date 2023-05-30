@@ -103,7 +103,7 @@ You click on them, but nothing would happen
 In this tab you can find plot, that shows security course using candles, type of which
 can be chosen in list of different time candles - 1 minute, 5 minute, 1 hour e.t.c.
 Near this list you can find two checkboxes - RSI and Bollinger. Using them you
-can get rsi plot and draw (automatically) bollinger lines.
+can get rsi plot and draw (automatically) bollinger lines. For whole history of the security rate, RSI and Bollinger cannot be plotted.
 
 In the left upper corner you can find result of prediction, made by neural network.
 If result is colored red - chance of mistake is really high. In case of cyan color chance is a bit lower.
@@ -213,7 +213,7 @@ __figi__, __security name__, __ticker__ и __class code__. Стандартно�
 На этой вкладке вы можете найти график, который показывает курс ценной бумаги с использованием свечей, тип которых
 можно выбрать из списка свечей с разным временем - 1 минута, 5 минут, 1 час и т.д.
 Рядом с этим списком вы можете найти два флажка - RSI и Bollinger. Используя их, вы
-можете получить график rsi и нарисовать (автоматически) линии Боллинджера.
+можете получить график rsi и нарисовать (автоматически) линии Боллинджера. Для всей истории курса ценной бумаги RSI и Боллинджер не могут быть построены.
 
 В левом верхнем углу вы можете найти результат предсказания, сделанного нейронной сетью.
 Если результат окрашен в красный цвет - вероятность ошибки действительно высока. В случае голубого цвета вероятность немного ниже.
