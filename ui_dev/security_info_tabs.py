@@ -606,25 +606,32 @@ class SecurityWindow(QMainWindow):
         info_time = [
                         i.info_time for i in self.history
                      ][max(len(self.history) - len(data), 0):]
-        
-        self.canvas2.axes.plot(
-            info_time, data
-        )
-        self.canvas2.axes.plot(
-            info_time,
-            [70] * len(data),
-            'c',
-            linestyle='dashed'
-        )
-        self.canvas2.axes.plot(
-            info_time,
-            [30] * len(data),
-            'r',
-            linestyle='dashed'
-        )
-        self.canvas2.axes.margins(x=0)
 
-        self.canvas2.draw()
+        try:
+            self.canvas2.axes.plot(
+                info_time, data
+            )
+            self.canvas2.axes.plot(
+                info_time,
+                [70] * len(data),
+                'c',
+                linestyle='dashed'
+            )
+            self.canvas2.axes.plot(
+                info_time,
+                [30] * len(data),
+                'r',
+                linestyle='dashed'
+            )
+            self.canvas2.axes.margins(x=0)
+
+            self.canvas2.draw()
+        except Exception:
+            QMessageBox.warning(self, 'Error',
+                                'Something went wrong in RSI calculation')
+            self.rsi_box.setChecked(False)
+            return
+
 
     def bollinger_changed(self):
         """
@@ -676,11 +683,17 @@ class SecurityWindow(QMainWindow):
         print("bollinger finished")
         print("bollinger len", len(data[0]))
 
-        dates = [i.info_time for i in self.history]
-        for i in data:
-            if i:
-                self.canvas.axes.plot(dates, i, 'r')
-        self.canvas.draw()
+        try:
+            dates = [i.info_time for i in self.history]
+            for i in data:
+                if i:
+                    self.canvas.axes.plot(dates, i, 'r')
+            self.canvas.draw()
+        except Exception:
+            QMessageBox.warning(self, 'Error',
+                                'Something went wrong in RSI calculation')
+            self.rsi_box.setChecked(False)
+            return
 
     def save_settings(self):
         """
