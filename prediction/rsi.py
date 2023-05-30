@@ -47,7 +47,8 @@ class RSI(Thread):
         self.data_downloaded.connect(on_finish)
         self.info = info
         self.candle_interval = candle_interval
-        self.start_date = start_date
+        self.start_date = start_date - delta[self.candle_interval - 1] * \
+                          self.rsi_step
         self.to = end_date
         self.to = self.to.replace(tzinfo=datetime.timezone.utc)
 
