@@ -24,4 +24,5 @@ info/files/.db_version
 parsed_*.json
 figis.txt
 /info/files/.current_settings.json
-info/files/fonts/*
+/info/files/fonts/*.otf
+/info/files/fonts/*.ttf
