@@ -101,7 +101,7 @@ class SecurityWindow(QMainWindow):
         self.setGeometry((screen.width() - self.WIDTH) // 2,
                          (screen.height() - self.HEIGHT) // 2,
                          self.WIDTH, self.HEIGHT)
-        self.setFixedSize(self.WIDTH, self.HEIGHT)
+        # self.setFixedSize(self.WIDTH, self.HEIGHT)
         self.setWindowTitle(item.info.name)
 
         self.layout = QVBoxLayout(self)
