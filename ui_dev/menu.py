@@ -6,7 +6,7 @@ import sys
 from platform import system
 
 import PyQt5
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QPushButton, QListWidget, \
@@ -24,8 +24,8 @@ from ui_dev.loading import LoadingDialog
 from ui_dev.security_info_tabs import SecurityWindow
 from ui_dev.settings import Settings, set_theme_and_font
 
-folder = 'platforms'
-os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = folder
+FOLDER = 'platforms'
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = FOLDER
 
 
 class LoginWindow(QtWidgets.QDialog):
@@ -46,7 +46,7 @@ class LoginWindow(QtWidgets.QDialog):
     verticalGroupBox: QtWidgets.QGroupBox
 
     def __init__(self, on_reg, parent):
-        super(LoginWindow, self).__init__(parent)
+        super().__init__(parent)
         self.horizontalGroupBox = None
         self.creater: CreateWindow = on_reg
         self.setWindowTitle("SpendYourMoney")
@@ -126,11 +126,11 @@ class LoginWindow(QtWidgets.QDialog):
         Закрытие окна
         """
         evnt.ignore()
-        quit(0)
+        sys.exit()
 
     def keyPressEvent(self, evnt):
         if evnt.key() == Qt.Key_Escape:
-            quit(0)
+            sys.exit()
 
 
 class RegisterWindow(QtWidgets.QDialog):
@@ -145,7 +145,7 @@ class RegisterWindow(QtWidgets.QDialog):
     registration_thread: CreateUser
 
     def __init__(self, on_login, parent):
-        super(RegisterWindow, self).__init__(parent)
+        super().__init__(parent)
         self.horizontalGroupBox = QtWidgets.QGroupBox("Sign in", self)
         self.verticalGroupBox = QtWidgets.QGroupBox("Registration", self)
         self.creater: CreateWindow = on_login
@@ -222,11 +222,11 @@ class RegisterWindow(QtWidgets.QDialog):
         Закрытие окна
         """
         evnt.ignore()
-        quit(0)
+        sys.exit()
 
     def keyPressEvent(self, evnt):
         if evnt.key() == Qt.Key_Escape:
-            quit(0)
+            sys.exit()
 
 
 class Window(QMainWindow):
@@ -248,7 +248,7 @@ class Window(QMainWindow):
     delta = 0
 
     def __init__(self, app):
-        super(Window, self).__init__()
+        super().__init__()
         self.hse_label = None
         self.app = app
         self.security = None
@@ -283,7 +283,7 @@ class Window(QMainWindow):
 
         if self.settings is None or not ("version" in self.settings) or \
                 self.settings["version"] != target["version"]:
-            if self.settings is None or not ("version" in self.settings):
+            if self.settings is None or not "version" in self.settings:
                 FileLoader.save_json(
                     self.__path + "/info/files/.current_settings.json",
                     target
@@ -440,7 +440,7 @@ class Window(QMainWindow):
         """
         Отображение результатов поиска
         """
-        code, data = result
+        _, data = result
 
         self.output.clear()
         if not data:
