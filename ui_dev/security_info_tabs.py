@@ -389,7 +389,10 @@ class SecurityWindow(QMainWindow):
         Загрузка полной информации о ЦБ
         """
         code, data = result
-        if not data:
+        if code >= 400:
+            QMessageBox.warning(self, 'Error', 'Could not load securities')
+            return
+        if not data: #395 и 396 строки без изменения
             return
 
         item = data[0]

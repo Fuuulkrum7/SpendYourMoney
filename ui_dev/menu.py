@@ -506,13 +506,18 @@ class Window(QMainWindow):
         )
         self.all_securities_thread.start()
 
-    def after_full_load(self, *args):
-        self.loading.after_load()
-        self.settings["actual_db"] = True
-        FileLoader.save_json(
-            self.__path + "/info/files/.current_settings.json",
-            self.settings
-        )
+    def after_full_load(self, result):
+        if result[0] == 200:
+            self.loading.after_load()
+            self.settings["actual_db"] = True
+            FileLoader.save_json(
+                self.__path + "/info/files/.current_settings.json",
+                self.settings
+            )
+        else:
+            self.loading.after_load()
+            QMessageBox.warning(self, 'Error', 'Could not load securities')
+
 
     def closeEvent(self, evnt):
         for window in QApplication.topLevelWindows():
