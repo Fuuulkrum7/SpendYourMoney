@@ -593,9 +593,11 @@ class SecurityWindow(QMainWindow):
         Построение RSI
         """
         code, data = result
-        if not len(data):
-            QMessageBox.warning(self, 'Error',
-                                'Something went wrong in RSI calculation')
+        if len(data) <= 1:
+            QMessageBox.warning(
+                self, 'No data',
+                'Nothing to show'
+            )
             self.rsi_box.setChecked(False)
             return
 
@@ -676,10 +678,10 @@ class SecurityWindow(QMainWindow):
                 CandleInterval.CANDLE_INTERVAL_MONTH:
             return
         code, data = result
-        if not len(data):
+        if len(data) <= 1:
             QMessageBox.warning(
-                self, 'Error',
-                'Something went wrong in Bollinger calculation'
+                self, 'No data',
+                'Nothing to show'
             )
             self.bollinger_box.setChecked(False)
             return
