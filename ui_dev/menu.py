@@ -2,6 +2,7 @@
 Модуль с классами главного окна и окна входа
 """
 import os
+import re
 import sys
 from platform import system
 
@@ -205,6 +206,12 @@ class RegisterWindow(QtWidgets.QDialog):
         Отвечает за создание пользователя в бд
         """
         if not self.register_pushed:
+            if not self.newloginval.text():
+                QMessageBox.warning(self, 'Error', "Empty login")
+                return
+            if not is_good_password(self.newpasswordval.text()):
+                QMessageBox.warning(self, 'Error', "Weak password")
+                return
             self.registration_thread = CreateUser(
                 User(
                     username=self.newloginval.text(),
@@ -228,6 +235,28 @@ class RegisterWindow(QtWidgets.QDialog):
         if evnt.key() == Qt.Key_Escape:
             sys.exit()
 
+def is_good_password(password):
+    # Проверка длины пароля
+    if len(password) < 8 or len(password) > 32:
+        return False
+
+    # Проверка наличия цифр
+    if not re.search(r'\d', password):
+        return False
+
+    # Проверка наличия букв нижнего регистра
+    if not re.search(r'[a-z]', password):
+        return False
+
+    # Проверка наличия букв верхнего регистра
+    if not re.search(r'[A-Z]', password):
+        return False
+
+    # Проверка наличия специальных символов
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False
+
+    return True
 
 class Window(QMainWindow):
     """
