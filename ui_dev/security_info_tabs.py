@@ -597,6 +597,9 @@ class SecurityWindow(QMainWindow):
         if code != 200:
             QMessageBox.warning(self, 'Error',
                                 'Something went wrong in RSI calculation')
+            self.rsi_box.setChecked(False)
+            return
+
         print("rsi len", len(data))
 
         self.canvas2.axes.clear()
@@ -657,7 +660,8 @@ class SecurityWindow(QMainWindow):
         """
         Отображение линий боллинджера
         """
-        if not self.bollinger_box.isChecked():
+        if not self.bollinger_box.isChecked() or self.candle == \
+                CandleInterval.CANDLE_INTERVAL_MONTH:
             return
         code, data = result
 
@@ -666,6 +670,8 @@ class SecurityWindow(QMainWindow):
                 self, 'Error',
                 'Something went wrong in Bollinger calculation'
             )
+            self.bollinger_box.setChecked(False)
+            return
 
         print("bollinger finished")
         print("bollinger len", len(data[0]))
