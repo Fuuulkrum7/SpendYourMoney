@@ -49,8 +49,11 @@ class Settings(QWidget):
         self.font_list = ["Default (system)", "Papyrus", "Comic Sans MS"]
         self.add_fonts_from_folder()
         self.font_combo.addItems(self.font_list)
-        self.font_combo.setCurrentIndex(
-            self.font_list.index(self.selected_font))
+        try:
+            self.font_combo.setCurrentIndex(
+                self.font_list.index(self.selected_font))
+        except ValueError:
+            self.font_combo.setCurrentIndex(0)
         self.font_combo.currentIndexChanged.connect(self.on_font_change)
 
         self.size_label = QLabel("Size:")
