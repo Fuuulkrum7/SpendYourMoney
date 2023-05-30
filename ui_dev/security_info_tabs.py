@@ -608,7 +608,8 @@ class SecurityWindow(QMainWindow):
                 now(),
                 self.show_bollinger,
                 period=len(self.history),
-                candle_interval=self.candle
+                candle_interval=self.candle,
+                set_standard_fl=0.5
             )
 
             self.bollinger_thread.start()
