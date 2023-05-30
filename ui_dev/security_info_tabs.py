@@ -49,7 +49,7 @@ class MplCanvas(FigureCanvas):
     """
     Создание холста для графика
     """
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         super().__init__(fig)
@@ -218,7 +218,7 @@ class SecurityWindow(QMainWindow):
             msg.setWindowTitle("Critical MessageBox")
             msg.setStandardButtons(QMessageBox.Ok)
 
-            retval = msg.exec_()
+            msg.exec_()
 
     def init_plot_ui(self):
         self.course_tab.layout = QVBoxLayout()
