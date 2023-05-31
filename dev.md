@@ -2,7 +2,14 @@
 
 ### SecurityInfo
 This class has 5 fields - __id__, __figi__, __ticker__, __security_name__, __class_code__,
-or main info about security. This class is used for securities search. 
+or main info about security. This class is used for securities search.
+info = SecurityInfo(
+    id=0,
+    figi="TCS009029557",
+    security_name="",
+    ticker="SBERP", 
+    class_code="SMAL"
+)
 
 ## API requests
 

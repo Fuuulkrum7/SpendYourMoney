@@ -376,7 +376,7 @@ class GetSecurity(SecurityGetter):
                         # Загружаем купоны
                         coup = GetCoupons(
                             self.query,
-                            lambda x, y: x,
+                            lambda x: x,
                             self.__token
                         )
                         coup.start()
@@ -509,7 +509,7 @@ class GetSecurity(SecurityGetter):
                         sub = GetCoupons(
                             StandardQuery(self.query.security_info,
                                           self.query.query_text),
-                            lambda x, y: x,
+                            lambda x: x,
                             self.__token,
                             insert_to_db=False,
                             check_only_locally=self.check_only_locally
