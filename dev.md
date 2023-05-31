@@ -316,6 +316,7 @@ def on_finish(self, result):
 ```
 
 data - the data passed from the data class
+
 data is an array of calculated data values
 
 # Документация разработчика
@@ -605,4 +606,5 @@ def on_finish(self, result):
 ```
 
 data - данные переданные из класса данные
+
 data представляет собой массив значений просчитанных данных
