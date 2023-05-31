@@ -14,6 +14,11 @@
    3. [Predictions](#predictions)
       1. [Bollinger](#bollinger)
       2. [RSI](#rsi)
+   4. [GUI](#gui-graphic-user-interface)
+      1. [Window](#window)
+      2. [SecurityWindow](#securitywindow)
+      3. [Settings](#settings)
+      4. [Loading](#loading)
 2. [Документация разработчика](#документация-разработчика)
    1. [Классы ценных бумаг](#классы-ценных-бумаг)
       1. [SecurityInfo](#securityinfo-1)
@@ -27,6 +32,11 @@
    3. [Предсказания](#предсказания)
       1. [Bollinger](#bollinger-1)
       2. [RSI](#rsi-1)
+   4. [GUI](#графический-пользовательский-интерфейс)
+      1. [Window](#window-1)
+      2. [SecurityWindow](#securitywindow-1)
+      3. [Settings](#settings-1)
+      4. [Loading](#loading-1)
 
 # Developer documentation
 ## Securities classes
@@ -319,6 +329,53 @@ data - the data passed from the data class
 
 data is an array of calculated data values
 
+## GUI (Graphic User Interface)
+### Window
+The class of the main window, the successor of QMainWindow. Designed to search
+for security using the graphical interface. It contains a search bar, an output
+field, search and advanced search buttons, settings, and downloads. When this
+window is closed, all child windows are also closed, and the program shuts down.
+Example:
+```
+window = Window(app)
+window.show()
+sys.exit(app.exec_())
+```
+To call the window directly, you need to pass the PyQt application variable, which is an instance of QApplication, to the app class.
+
+### SecurityWindow
+A window class with information about one security, the successor of QMainWindow. Provides detailed information about this security. It consists of three tabs, the third tab has a dynamically updating graph of the PyPlot type.
+Example:
+
+security_window = SecurityWindow(security, user, settings, path)
+security_window.show()
+
+      • security - an instance of the Security class (described earlier)
+      • user – instance of the User class (described earlier)
+      • settings – dictionary with the key “candle" and a value from 0 to 6
+      • path – the path to the file *.json, where the new settings will be saved
+
+### Settings
+The class of the settings window, the successor of QWidget. Designed to apply interface settings to the application. Includes QComboBox widgets for choosing a color theme, font, and font size. Each combination of settings corresponds to the text content of the CSS file that is stored in RAM. 
+```
+settings_window = Settings(app, settings, path, hse_label)
+settings_window.show()
+```
+    • app – application variable
+    • settings – dictionary with the keys "theme", "font", "font-size"
+    • path – path to the file *.json, where the current settings are stored
+    • hse_label – QLabel instance for inserting the logo
+
+### Loading
+The loading loop display class, the successor of QDialog. It is intended to 
+show that some content of the application has not yet been downloaded, 
+and also indicates the completion of this download.
+```
+loading = Loading()
+loading.start(loading)
+```
+Nothing needs to be passed to this class, after the background process is completed, loading.after_load() must be executed
+
 # Документация разработчика
 ## Классы ценных бумаг
 ### SecurityInfo
@@ -608,3 +665,52 @@ def on_finish(self, result):
 data - данные переданные из класса данные
 
 data представляет собой массив значений просчитанных данных
+
+## Графический пользовательский интерфейс
+### Window
+Класс главного окна, наследник QMainWindow. Предназначен для поиска ЦБ с помощью графического интерфейса. Содержит строку поиска, поле вывода, кнопки поиска и расширенного поиска, настроек, и загрузки. При закрытии этого окна все дочерние окна также закрываются, и программа завершает работу.
+Пример:
+```
+window = Window(app)
+window.show()
+sys.exit(app.exec_())
+```
+Чтобы вызвать окно напрямую, нужно передать в класс app – переменную приложения PyQt, являющуюся экземпляром QApplication.
+
+### SecurityWindow
+Класс окна с информацией об одной ЦБ, наследник QMainWindow. Предоставляет
+подробную информацию о данной ценной бумаге. Состоит из трёх вкладок, 
+на третьей вкладке встроен динамически обновляющийся график типа PyPlot.
+Пример:
+```
+security_window = SecurityWindow(security, user, settings, path)
+security_window.show()
+```
+    • security - экземпляр класса Security (описан ранее)
+    • user – экземпляр класса User (описан ранее)
+    • settings – словарь с ключом “candle” и значением от 0 до 6
+    • path – путь до файла *.json, куда сохранятся новые настройки
+
+### Settings
+Класс окна настроек, наследник QWidget. Предназначен для применения настроек 
+интерфейса к приложению. Включает в себя виджеты QComboBox для выбора цветовой 
+темы, шрифта и размера шрифта. Каждая комбинация настроек соответствует 
+текстовому содержанию CSS файла, который хранится в оперативной памяти. 
+```
+settings_window = Settings(app, settings, path, hse_label)
+settings_window.show()
+```
+    • app – переменная приложения
+    • settings – словарь с ключами "theme", "font", "font-size"
+    • path – путь до файла *.json, где хранятся актуальные настройки
+    • hse_label – экземпляр QLabel для вставки логотипа
+
+### Loading
+Класс отображения цикла загрузки, наследник QDialog. Предназначен для того, 
+чтобы показать, что некоторый контент приложения ещё не загружен, 
+а также обозначает завершение этой загрузки.
+```
+loading = Loading()
+loading.start(loading)
+ ```
+В этот класс ничего не нужно передавать, по завершении фонового процесса необходимо выполнить `loading.after_load()`
