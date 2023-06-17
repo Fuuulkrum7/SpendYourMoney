@@ -308,11 +308,17 @@ class DatabaseInterface:
         if self.version <= 6:
             self.__engine.execute(
                 text(f"ALTER TABLE {SecuritiesHistoryTable.__tablename__} "
-                     f"MODIFY {SecuritiesHistory.volume.name} BIGINT")
+                     f"MODIFY {SecuritiesHistory.volume.value} BIGINT")
             )
         if self.version <= 7:
             self.__engine.execute(
                 text(F"DROP TABLE IF EXISTS history_of_predictions")
+            )
+        if self.version <= 8:
+            self.__engine.execute(
+                text(f"ALTER TABLE {SecuritiesInfoTable.__tablename__} "
+                     f"MODIFY COLUMN {SecuritiesInfo.TICKER.value} "
+                     f"VARCHAR(20)")
             )
 
     def clear_db(self):

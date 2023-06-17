@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS user_table (
 CREATE TABLE IF NOT EXISTS securities_info (
     ID INT NOT NULL AUTO_INCREMENT,
     figi VARCHAR(14) NOT NULL,
-    ticker VARCHAR(15),
+    ticker VARCHAR(20),
     security_name VARCHAR(100),
     class_code VARCHAR(18),
     lot INT,
