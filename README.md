@@ -5,7 +5,7 @@ Firstly you need to crete user for MySQL database.
 Run mysql, enter your root password and then execute this commands:
 
 ```
-CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
+CREATE USER IF NOT EXISTS 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 ```
 
 ```
