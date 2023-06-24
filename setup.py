@@ -25,12 +25,12 @@ def create_python_venv():
 
 
 def create_user():
-    root = input("Please, enter your MySQL root name: ")
-    password = input("Input your MySQL password: ")
     sudo = "sudo -S" if os_is == "Unix" else ""
     result = "error"
 
     while "error" in result:
+        root = input("Please, enter your MySQL root name: ")
+        password = input("Input your MySQL password: ")
 
         a = f"""{sudo} mysql -u {root} -p{password} -e "CREATE USER IF NOT EXISTS 'TinkoffUser'@'localhost' 
                         IDENTIFIED BY '1nVestm$nt'; GRANT ALL PRIVILEGES ON *.* 
@@ -42,7 +42,6 @@ def create_user():
         except subprocess.CalledProcessError as e:
             print(e)
             print("Error occurred: login or password is incorrect")
-            root = input("Please, enter your MySQL root name\n")
 
 
 def load_settings():
