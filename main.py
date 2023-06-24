@@ -1,14 +1,18 @@
-import sys
+import os
 
-from PyQt5.QtWidgets import QApplication
+import setup
 
-from ui_dev.menu import CreateWindow
-from setup import load_settings
 
-if __name__ == '__main__':
-    load_settings()
-    app = QApplication(sys.argv)
+setup.load_settings()
 
-    wndw = CreateWindow(app)
-    wndw.create_main()
-    sys.exit(app.exec_())
+part = "conda activate invest"
+if setup.settings["venv"] == "conda":
+    if setup.os_is == "Unix":
+        part = "source activate invest"
+else:
+    if setup.os_is == "Unix":
+        part = "source venv2/bin/activate"
+    else:
+        part = r".\venv2\Scripts\activate"
+
+os.system(f"{part} & python blade_runner.py")
