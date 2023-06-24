@@ -16,10 +16,11 @@ def create_conda_venv():
 
 
 def create_python_venv():
-    os.system("python -m venv venv2")
     if os_is == "Unix":
+        os.system("python -m venv venv2")
         part = "venv2/bin/python"
     else:
+        os.system("py -m venv venv2")
         part = r"venv2\Scripts\python"
     os.system(f"{part} -m pip install -r requirements.txt")
 
