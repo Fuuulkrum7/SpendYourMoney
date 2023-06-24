@@ -59,6 +59,12 @@ def load_settings():
         while not (res in ['p', 'c']):
             res = input("Enter 'p' if you want to use python and 'c' "
                         "in case of conda\n")
+
+        if settings is None:
+            settings = FileLoader.get_json("info/files/.default_settings.json")
+            if settings is None:
+                print("Yoy deleted important file. Shit")
+                quit(0)
         settings["venv"] = "python" if res == 'p' else "conda"
         create_user()
 
