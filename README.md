@@ -1,7 +1,25 @@
 # User documentation
 
 ## First steps
-Firstly you need to crete user for MySQL database.
+Firstly you need to create folder for project. After creating it, open terminal execute this command:
+```commandline
+cd full/path/to/project/
+```
+
+Clone repository
+```commandline
+git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git .
+```
+
+if you prefer automatic mode of installation, run
+
+```commandline
+python main.py
+```
+
+And that's all you need to do.
+
+Else, if you prefer manual, you need to crete user for MySQL database.
 Run mysql, enter your root password and then execute this commands:
 
 ```
@@ -10,16 +28,6 @@ CREATE USER IF NOT EXISTS 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 
 ```
 GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
-```
-
-Now you need to create folder for project. After creating it, open terminal execute this command:
-```commandline
-cd full/path/to/project/
-```
-
-Clone repository
-```commandline
-git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git .
 ```
 
 Now you should create venv:
@@ -49,7 +57,7 @@ pip install -r requirements.txt
 Now you need to run __main.py__ using command line. 
 
 ```commandline
-python main.py
+python blade_runner.py
 ```
 
 When work with this app would be ended, run this command
@@ -112,7 +120,25 @@ Remember that neural network in case of normal text can make mistakes too, this 
 # Документация пользователя
 
 ## Первые шаги
-Во-первых, вам нужно создать пользователя для базы данных MySQL.
+Во-первых, вам нужно создать папку для проекта. После ее создания откройте терминал и выполните эту команду:
+```commandline
+cd full/path/to/project/
+```
+
+Скопируйте репозиторий
+```commandline
+git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git .
+```
+
+Если вы хотите установить все в ручном режиме, просто запустите main.py
+
+```commandline
+python main.py
+```
+
+И на этом ваши действия будут окончены
+
+Если же вы предпочитаете ручную установку, вам нужно создать пользователя для базы данных MySQL.
 Запустите mysql, введите свой пароль root, а затем выполните следующие команды:
 
 ```
@@ -121,16 +147,6 @@ CREATE USER 'TinkoffUser'@'localhost' IDENTIFIED BY '1nVestm$nt';
 
 ```
 GRANT ALL PRIVILEGES ON *.* TO 'TinkoffUser'@'localhost';
-```
-
-Теперь вам нужно создать папку для проекта. После ее создания откройте терминал и выполните эту команду:
-```commandline
-cd full/path/to/project/
-```
-
-Скопируйте репозиторий
-```commandline
-git clone -b release --single-branch https://github.com/Fuuulkrum7/SpendYourMoney.git .
 ```
 
 Теперь вы должны создать venv:
@@ -160,7 +176,7 @@ pip install -r requirements.txt
 Теперь вам нужно запустить __main.py__ с помощью командной строки.
 
 ```commandline
-python main.py
+python blade_runner.py
 ```
 
 Когда работа с этим приложением будет завершена, запустите эту команду
