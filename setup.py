@@ -11,15 +11,17 @@ settings = {}
 def create_conda_venv():
     os.system("conda create -y -n invest")
     os.system("conda install -y -n invest pip")
-    os.system("conda run -n invest pip install -r requirements.txt")
+    os.system(f"conda run -n invest pip{'3' if os_is == 'Unix' else ''} "
+              f"install -r requirements.txt")
 
 
 def create_python_venv():
     os.system("python -m venv venv2")
-    part = r".\venv2\Scripts\activate"
     if os_is == "Unix":
-        part = "source venv2/bin/activate"
-    os.system(f"{part} & pip install -r requirements.txt")
+        part = "venv2/bin/python"
+    else:
+        part = r"venv2\Scripts\python"
+    os.system(f"{part} -m pip install -r requirements.txt")
 
 
 def create_user():
@@ -32,7 +34,7 @@ def create_user():
 
         a = f"""{sudo} mysql -u {root} -p{password} -e "CREATE USER IF NOT EXISTS 'TinkoffUser'@'localhost' 
                         IDENTIFIED BY '1nVestm$nt'; GRANT ALL PRIVILEGES ON *.* 
-                         TO 'TinkoffUser'@'localhost';""".replace("\n", "")
+                         TO 'TinkoffUser'@'localhost';" """.replace("\n", "")
         try:
             result = subprocess.check_output(
                 a, shell=True, text=True, encoding="utf-8"

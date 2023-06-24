@@ -20,7 +20,8 @@ while not done:
             f"{part} blade_runner.py",
             shell=True, text=True, encoding="utf-8"
         )
-        done = not len(result)
+        print("res", result)
+        done = True
     except Exception as e:
         print(e)
         print("fixing...")
