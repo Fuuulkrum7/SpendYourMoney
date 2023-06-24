@@ -52,7 +52,7 @@ def load_settings():
         os_is = system()
 
     settings = FileLoader.get_json("info/files/.current_settings.json")
-    if not ("venv" in settings):
+    if settings is None or not ("venv" in settings):
         res = ""
 
         print("Hello! You need to choose conda or python.")
